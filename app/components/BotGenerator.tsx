@@ -28,9 +28,8 @@ export function BotGenerator() {
       const data = await response.json();
 
       if (data.botId) {
-        // For now, just show success
-        alert(`Bot created successfully!\n\nBot ID: ${data.botId}\nSlug: ${data.slug}\n\nCheck your Supabase database!`);
-        console.log('Bot schema:', data.schema);
+        // Redirect to preview page
+  router.push(`/preview/${data.botId}`);
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
       }
