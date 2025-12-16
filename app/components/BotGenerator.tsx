@@ -4,13 +4,21 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../providers/AuthProvider';
+import Link from 'next/link';
 
 export function BotGenerator() {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   const handleGenerate = async () => {
+    if (!user) {
+      router.push('/auth/signup');
+      return;
+    }
+
     if (!description.trim()) {
       alert('Please describe what information you need');
       return;
@@ -28,8 +36,7 @@ export function BotGenerator() {
       const data = await response.json();
 
       if (data.botId) {
-        // Redirect to preview page
-  router.push(`/preview/${data.botId}`);
+        router.push(`/preview/${data.botId}`);
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
       }
@@ -40,6 +47,37 @@ export function BotGenerator() {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8 animate-pulse">
+        <div className="h-4 bg-slate-200 rounded w-1/3 mb-4"></div>
+        <div className="h-32 bg-slate-200 rounded mb-4"></div>
+        <div className="h-12 bg-slate-200 rounded"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+        <h2 className="text-2xl font-bold mb-4">Ready to create your bot?</h2>
+        <p className="text-slate-600 mb-6">Sign up free to start collecting perfect data</p>
+        <div className="flex gap-4 justify-center">
+          <Link href="/auth/signup">
+            <Button className="bg-indigo-600 hover:bg-indigo-700">
+              Sign Up Free
+            </Button>
+          </Link>
+          <Link href="/auth/login">
+            <Button variant="outline">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">

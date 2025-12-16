@@ -1,10 +1,11 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CopyButton } from './CopyButton';
+import { QRCode } from './QRcode';
 
 export default async function PreviewPage({ 
   params 
@@ -14,6 +15,12 @@ export default async function PreviewPage({
   // Await params (Next.js 15 requirement)
   const { id } = await params;
 
+  // Create Supabase client (without auth for now - public read)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   // Fetch bot from database
   const { data: bot, error } = await supabase
     .from('bots')
@@ -21,7 +28,9 @@ export default async function PreviewPage({
     .eq('id', id)
     .single();
 
+  // If bot doesn't exist, show 404
   if (error || !bot) {
+    console.error('Bot fetch error:', error);
     notFound();
   }
 
@@ -59,6 +68,17 @@ export default async function PreviewPage({
               className="flex-1 px-4 py-2 border rounded-md bg-slate-50 text-slate-900"
             />
             <CopyButton text={fullUrl} />
+          </div>
+        </Card>
+
+        {/* QR CODE */}
+        <Card className="p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-center">QR Code</h2>
+          <p className="text-sm text-slate-600 text-center mb-6">
+            Clients can scan this to access your intake form instantly
+          </p>
+          <div className="flex justify-center">
+            <QRCode url={fullUrl} />
           </div>
         </Card>
 

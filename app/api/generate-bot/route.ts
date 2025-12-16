@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import OpenAI from 'openai';
-import { supabase } from '@/lib/supabase';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,7 +13,29 @@ export async function POST(request: Request) {
 
     console.log('📝 Received description:', description);
 
-    // Step 1: Use AI to extract fields from description
+    // Get authenticated user from cookies
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: () => {},
+        },
+      }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Step 1: Use AI to extract fields
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -39,14 +62,13 @@ Field type rules:
 - Use "email" for email addresses
 - Use "phone" for phone numbers  
 - Use "address" for locations/addresses
-- Use "number" for quantities (lawn size, budget)
-- Use "select" for predefined choices (add options array)
-- Use "date" for scheduling/dates
-- Use "file_upload" when photos/documents mentioned
+- Use "number" for quantities
+- Use "select" for predefined choices
+- Use "date" for scheduling
+- Use "file_upload" when photos mentioned
 - Use "text" for everything else
 
-Extract 5-8 fields maximum. Include only essential information.
-Always include: name, email or phone, and at least one field specific to their business.`,
+Extract 5-8 fields maximum.`,
         },
         {
           role: 'user',
@@ -57,21 +79,16 @@ Always include: name, email or phone, and at least one field specific to their b
     });
 
     const aiResponse = completion.choices[0].message.content;
-    if (!aiResponse) {
-      throw new Error('No AI response');
-    }
+    if (!aiResponse) throw new Error('No AI response');
 
     console.log('🤖 AI Response:', aiResponse);
 
-    // Parse AI response
     const schema = JSON.parse(aiResponse);
-
-    // Step 2: Generate unique slug
     const slug = generateSlug(schema.businessName);
 
     console.log('🔗 Generated slug:', slug);
 
-    // Step 3: Save to database
+    // Save to database with user_id
     const { data: bot, error } = await supabase
       .from('bots')
       .insert({
@@ -79,7 +96,7 @@ Always include: name, email or phone, and at least one field specific to their b
         name: schema.businessName,
         description,
         schema: schema.fields,
-        user_id: null, // We'll add auth later
+        user_id: user.id,
       })
       .select()
       .single();
@@ -99,7 +116,7 @@ Always include: name, email or phone, and at least one field specific to their b
     });
 
   } catch (error) {
-    console.error('❌ Error generating bot:', error);
+    console.error('❌ Error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to generate bot',
@@ -115,9 +132,8 @@ function generateSlug(businessName: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-    .substring(0, 30); // Limit length
+    .substring(0, 30);
 
-  // Add random suffix to ensure uniqueness
   const suffix = Math.random().toString(36).substring(2, 6);
   return `${base}-${suffix}`;
 }

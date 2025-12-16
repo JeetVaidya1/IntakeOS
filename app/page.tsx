@@ -1,17 +1,40 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BotGenerator } from './components/BotGenerator';
+import { useAuth } from './providers/AuthProvider';
 
 export default function Home() {
+  const { user, signOut } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
       <header className="border-b bg-white">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-indigo-600">Intake OS</div>
-          <Link href="/dashboard">
-            <Button variant="ghost">Sign In</Button>
-          </Link>
+          
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                <span className="text-sm text-slate-600">
+                  {user.email}
+                </span>
+                <Button 
+                  variant="outline" 
+                  onClick={signOut}
+                  size="sm"
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link href="/auth/login">
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
