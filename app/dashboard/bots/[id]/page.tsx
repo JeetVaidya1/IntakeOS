@@ -61,23 +61,28 @@ export default async function BotDetailPage({
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
       <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                ← Back to Dashboard
-              </Button>
-            </Link>
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold">{bot.name}</h1>
-              <p className="text-sm text-slate-500">{bot.slug}</p>
-            </div>
-            <Badge variant={bot.is_active ? "default" : "secondary"}>
-              {bot.is_active ? "Active" : "Inactive"}
-            </Badge>
-          </div>
-        </div>
-      </header>
+  <div className="container mx-auto px-4 py-4">
+    <div className="flex items-center gap-4">
+      <Link href="/dashboard">
+        <Button variant="ghost" size="sm">
+          ← Dashboard
+        </Button>
+      </Link>
+      <div className="flex-1">
+        <h1 className="text-xl font-semibold">{bot.name}</h1>
+        <p className="text-sm text-slate-500">{bot.slug}</p>
+      </div>
+      <Badge variant={bot.is_active ? "default" : "secondary"}>
+        {bot.is_active ? "Active" : "Inactive"}
+      </Badge>
+      <Link href="/">
+        <Button variant="outline" size="sm">
+          + New Bot
+        </Button>
+      </Link>
+    </div>
+  </div>
+</header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Quick Actions */}
