@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../providers/AuthProvider';
+import { User } from '@supabase/supabase-js'; 
 import Link from 'next/link';
 
-export function BotGenerator() {
+// 👇 THIS CHANGE FIXES THE ERROR
+export function BotGenerator({ user }: { user: User }) {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
 
   const handleGenerate = async () => {
+    // 1. Use the prop we just passed in
     if (!user) {
       router.push('/auth/signup');
       return;
@@ -36,7 +37,8 @@ export function BotGenerator() {
       const data = await response.json();
 
       if (data.botId) {
-        router.push(`/preview/${data.botId}`);
+        // Redirect to the new bot detail page
+        router.push(`/dashboard/bots/${data.botId}`);
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
       }
@@ -48,16 +50,7 @@ export function BotGenerator() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-8 animate-pulse">
-        <div className="h-4 bg-slate-200 rounded w-1/3 mb-4"></div>
-        <div className="h-32 bg-slate-200 rounded mb-4"></div>
-        <div className="h-12 bg-slate-200 rounded"></div>
-      </div>
-    );
-  }
-
+  // 2. If user is missing, show the "Sign Up" CTA
   if (!user) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -79,6 +72,7 @@ export function BotGenerator() {
     );
   }
 
+  // 3. If user exists, show the form
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       <label className="block text-sm font-medium text-slate-700 mb-2">

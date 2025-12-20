@@ -19,7 +19,8 @@ export function DashboardContent({
       <div className="mb-12">
         <h1 className="text-3xl font-bold mb-2">Create New Bot</h1>
         <p className="text-slate-600 mb-6">Describe what information you need and AI will build your intake form</p>
-        <BotGenerator />
+        {/* ✅ FIX 1: Pass the user prop here so it doesn't sign you out */}
+        <BotGenerator user={user} />
       </div>
 
       {/* Existing Bots */}
@@ -66,7 +67,8 @@ export function DashboardContent({
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600">Created:</span>
-                        <span className="text-slate-500 text-xs">
+                        {/* ✅ FIX 2: suppressHydrationWarning fixes the date crash */}
+                        <span className="text-slate-500 text-xs" suppressHydrationWarning>
                           {new Date(bot.created_at).toLocaleDateString()}
                         </span>
                       </div>

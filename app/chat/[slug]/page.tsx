@@ -3,11 +3,15 @@ import { notFound } from 'next/navigation';
 import { ChatInterface } from './ChatInterface';
 
 export default async function ChatPage({ 
-  params 
+  params,
+  searchParams, 
 }: { 
-  params: Promise<{ slug: string }> 
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
+  const { mode } = await searchParams;
+  const isWidget = mode === 'widget';
 
   // Fetch bot by slug
   const supabase = createClient(
@@ -27,17 +31,19 @@ export default async function ChatPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-xl font-semibold text-slate-900">{bot.name}</h1>
-          <p className="text-sm text-slate-500">Complete your intake form</p>
-        </div>
-      </header>
+    <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-b from-slate-50 to-slate-100'}`}>
+      {/* Header - Only show if NOT a widget */}
+      {!isWidget && (
+        <header className="border-b bg-white">
+          <div className="container mx-auto px-4 py-4">
+            <h1 className="text-xl font-semibold text-slate-900">{bot.name}</h1>
+            <p className="text-sm text-slate-500">Complete your intake form</p>
+          </div>
+        </header>
+      )}
 
-      {/* Chat Interface */}
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      {/* Chat Interface - Remove padding if widget to use full iframe space */}
+      <main className={isWidget ? 'p-0 h-screen' : 'container mx-auto px-4 py-8 max-w-3xl'}>
         <ChatInterface bot={bot} />
       </main>
     </div>
