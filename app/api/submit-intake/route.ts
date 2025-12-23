@@ -42,28 +42,34 @@ export async function POST(request: Request) {
 
     console.log('✅ Submission saved:', submission.id);
 
-    // 2. Fetch the bot owner's email
-    // We need to join the 'bots' table to get the user_id, then get the email.
-    // Ideally, you would store the owner's email on the bot record or fetch it from auth.users.
-    // For this MVP, we'll fetch the bot details first to find the owner.
-    
-    // NOTE: In a real production app with Supabase Auth, you can't easily query 'auth.users' 
-    // from here without admin privileges. 
-    // FOR NOW: We will send the email to YOU (the admin) or a hardcoded address for testing.
-    // LATER: We will add an 'notification_email' column to the 'bots' table.
+    // 2. Fetch the bot owner's email from the bot record
+    const { data: bot, error: botError } = await supabase
+      .from('bots')
+      .select('notification_email, name')
+      .eq('id', botId)
+      .single();
 
-    const ownerEmail = 'vaidyajeet4@gmail.com'; // REPLACE THIS with your email for testing!
+    if (botError || !bot || !bot.notification_email) {
+      console.error('⚠️ Could not fetch bot notification email:', botError);
+      // Still return success since submission was saved
+      return NextResponse.json({
+        success: true,
+        submissionId: submission.id,
+      });
+    }
+
+    const ownerEmail = bot.notification_email;
 
     // 3. Send Email Notification
     try {
       await resend.emails.send({
         from: 'IntakeOS Notifications <onboarding@resend.dev>', // Use resend.dev for testing
-        to: ownerEmail, 
-        subject: `New Lead: Submission #${submission.id.slice(0, 8)}`,
+        to: ownerEmail,
+        subject: `New Lead from ${bot.name} - #${submission.id.slice(0, 8)}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #4F46E5;">New Lead Received! 🚀</h1>
-            <p>You have a new submission from your IntakeOS bot.</p>
+            <p>You have a new submission from <strong>${bot.name}</strong>.</p>
             
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               ${Object.entries(data).map(([key, value]) => `

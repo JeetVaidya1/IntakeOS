@@ -1,32 +1,24 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase with Service Role to allow deletions
+// Use service role key to allow operations
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function PUT(request: Request) {
+// Update submission status (e.g., mark as contacted)
+export async function PATCH(request: Request) {
   try {
-    const { id, name, notification_email } = await request.json();
+    const { id, status } = await request.json();
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID required' }, { status: 400 });
-    }
-
-    // Build update object dynamically
-    const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (notification_email !== undefined) updateData.notification_email = notification_email;
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    if (!id || !status) {
+      return NextResponse.json({ error: 'ID and status required' }, { status: 400 });
     }
 
     const { data, error } = await supabase
-      .from('bots')
-      .update(updateData)
+      .from('submissions')
+      .update({ status })
       .eq('id', id)
       .select()
       .single();
@@ -35,12 +27,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, bot: data });
+    return NextResponse.json({ success: true, submission: data });
   } catch (error) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
 
+// Delete submission
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
@@ -48,7 +41,7 @@ export async function DELETE(request: Request) {
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
   const { error } = await supabase
-    .from('bots')
+    .from('submissions')
     .delete()
     .eq('id', id);
 

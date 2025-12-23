@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { SubmissionActions } from './SubmissionActions';
 
 export default async function SubmissionDetailPage({ 
   params 
@@ -120,17 +121,13 @@ export default async function SubmissionDetailPage({
         </Card>
 
         {/* Actions */}
-        <div className="mt-8 flex gap-4">
-          <Button variant="outline" className="flex-1">
-            Mark as Contacted
-          </Button>
-          <Button variant="outline" className="flex-1">
-            Export Data
-          </Button>
-          <Button variant="outline" className="flex-1">
-            Delete
-          </Button>
-        </div>
+        <SubmissionActions
+          submissionId={submission.id}
+          botId={submission.bot.id}
+          currentStatus={submission.status}
+          submissionData={submission.data}
+          botSchema={submission.bot.schema}
+        />
       </main>
     </div>
   );

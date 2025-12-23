@@ -88,7 +88,7 @@ Extract 5-8 fields maximum.`,
 
     console.log('🔗 Generated slug:', slug);
 
-    // Save to database with user_id
+    // Save to database with user_id and notification_email
     const { data: bot, error } = await supabase
       .from('bots')
       .insert({
@@ -97,6 +97,7 @@ Extract 5-8 fields maximum.`,
         description,
         schema: schema.fields,
         user_id: user.id,
+        notification_email: user.email,
       })
       .select()
       .single();
