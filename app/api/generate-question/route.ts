@@ -9,64 +9,62 @@ export async function POST(request: Request) {
   try {
     const { businessName, field, previousAnswer, conversationHistory, isFirstQuestion } = await request.json();
 
-    const systemPrompt = `You are a friendly, professional intake assistant for "${businessName}".
+    // 1. Check if the user's last input was an image
+    const isImageResponse = previousAnswer?.startsWith('[IMAGE] ');
+    let userContent: any = conversationHistory;
 
-Your job is to ask for information in a natural, conversational way.
+    // 2. If it is an image, format the message for GPT-4 Vision
+    if (isImageResponse) {
+      const imageUrl = previousAnswer.replace('[IMAGE] ', '');
+      userContent = [
+        { 
+          type: "text", 
+          text: `The user just uploaded an image as their answer. 
+                 Previous conversation history: \n${conversationHistory}` 
+        },
+        { 
+          type: "image_url", 
+          image_url: { 
+            url: imageUrl,
+            detail: "low" // 'low' is faster/cheaper, 'high' is better for detailed inspections
+          } 
+        }
+      ];
+    }
 
-RULES:
-1. Keep questions SHORT (1-2 sentences max)
-2. Sound warm and human, not robotic
-3. Acknowledge the previous answer naturally
-4. Don't repeat information already collected
-5. Match the tone to the business type:
-   - Landscaping/trades: Casual, friendly ("Hey!", "Awesome!")
-   - Professional services: Warm but professional ("Great!", "Thank you")
-6. Use emojis sparingly (max 1 per message, and only for casual businesses)
-7. Don't ask follow-up questions - just ask for the next field
-
-FIELD TYPES:
-- text: Ask naturally for text input
-- email: Ask for email address
-- phone: Ask for phone number
-- address: Ask for location/address
-- number: Ask for quantity/measurement
-- date: Ask for date/timeframe
-- select: Present options clearly
-- file_upload: Ask for photos/documents (mention they can type "skip")`;
-
-    const userPrompt = `Previous conversation:
-${conversationHistory}
-
-The user just said: "${previousAnswer}"
-
-Now ask for this field:
-- Field name: ${field.label}
-- Field type: ${field.type}
-- Required: ${field.required ? 'yes' : 'no'}
-${field.options ? `- Options: ${field.options.join(', ')}` : ''}
-${field.placeholder ? `- Example: ${field.placeholder}` : ''}
-
-${isFirstQuestion ? 'This is the FIRST question after the greeting.' : 'Acknowledge their previous answer briefly, then ask the next question.'}
-
-Generate a natural, conversational question:`;
-
+    // 3. Generate the response
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o-mini', // gpt-4o-mini supports Vision natively
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        {
+          role: 'system',
+          content: `You are an AI intake assistant for ${businessName}. 
+Your goal is to ask the next question in the intake form.
+
+Current Field to collect: "${field.label}" (Type: ${field.type})
+Context: The user just answered the previous question.
+
+Instructions:
+1. Acknowledge the user's previous answer politely.
+2. If the previous answer was an image, COMMENT ON IT specifically. (e.g., "That leak looks severe" or "Those flowers are beautiful").
+3. Then, ask for the "${field.label}".
+4. Keep it short, professional, and conversational.
+5. Do NOT output JSON. Just output the text of the question.`,
+        },
+        {
+          role: 'user',
+          content: userContent,
+        },
       ],
       temperature: 0.7,
-      max_tokens: 150,
     });
 
-    const question = completion.choices[0].message.content?.trim() || 
-                    `What's your ${field.label.toLowerCase()}?`;
+    const question = completion.choices[0].message.content;
 
     return NextResponse.json({ question });
 
   } catch (error) {
-    console.error('Error generating question:', error);
+    console.error('Error:', error);
     return NextResponse.json(
       { error: 'Failed to generate question' },
       { status: 500 }

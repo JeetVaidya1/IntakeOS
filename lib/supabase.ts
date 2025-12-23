@@ -16,5 +16,38 @@ export const createSupabaseClient = () => {
   );
 };
 
-// For backwards compatibility (used in some places)
+// For backwards compatibility
 export const supabase = createSupabaseClient();
+
+// ✅ NEW: Helper to upload files to the 'intake-uploads' bucket
+export const uploadFile = async (file: File): Promise<string | null> => {
+  try {
+    const client = createSupabaseClient();
+    
+    // Create a unique file path: timestamp-random-filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await client
+      .storage
+      .from('intake-uploads')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      return null;
+    }
+
+    // Get the public URL
+    const { data } = client
+      .storage
+      .from('intake-uploads')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Upload exception:', error);
+    return null;
+  }
+};

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Send, Paperclip, User, Bot, Sparkles } from 'lucide-react';
+import { Send, Paperclip, User, Bot, Sparkles, Loader2 } from 'lucide-react';
+import { uploadFile } from '@/lib/supabase';
 
 type Message = {
   role: 'bot' | 'user';
@@ -25,6 +26,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!` 
     },
   ]);
+  const [isUploading, setIsUploading] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
@@ -155,11 +157,50 @@ export function ChatInterface({ bot }: { bot: BotType }) {
               return (
                 <div className="space-y-3">
                   <div className="relative p-8 border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-2xl text-center hover:bg-indigo-50 transition-colors cursor-pointer group">
-                    <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={(e) => e.target.files?.[0] && handleSend(`[File: ${e.target.files[0].name}]`)} />
-                    <Paperclip className="mx-auto h-8 w-8 text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-sm font-medium text-indigo-900">Tap to Upload {currentField.label}</p>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setIsUploading(true);
+                        const publicUrl = await uploadFile(file);
+                        setIsUploading(false);
+
+                        if (publicUrl) {
+                          // Send URL with special tag [IMAGE]
+                          handleSend(`[IMAGE] ${publicUrl}`); 
+                        } else {
+                          alert('Failed to upload image. Please try again.');
+                        }
+                      }} 
+                    />
+                    
+                    {isUploading ? (
+                      <div className="flex flex-col items-center text-indigo-500">
+                        <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                        <p className="text-sm font-medium">Uploading...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Paperclip className="mx-auto h-8 w-8 text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <p className="text-sm font-medium text-indigo-900">
+                          Tap to Upload {currentField.label}
+                        </p>
+                        <p className="text-xs text-indigo-400 mt-1">JPG, PNG, PDF up to 5MB</p>
+                      </>
+                    )}
                   </div>
-                  <Button variant="ghost" className="w-full text-slate-400" onClick={() => handleSend("Skipped")}>Skip</Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full text-slate-400" 
+                    onClick={() => handleSend("Skipped")}
+                    disabled={isUploading}
+                  >
+                    Skip
+                  </Button>
                 </div>
               );
             default: // Text, Phone, Email
@@ -199,7 +240,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
           </span>
         </div>
         
-        {/* FIX IS HERE: Removed indicatorClassName, used [&>div] selector instead */}
+        {/* Progress Bar */}
         <Progress 
             value={progress} 
             className="h-0.5 bg-transparent [&>div]:bg-indigo-500" 
@@ -223,7 +264,20 @@ export function ChatInterface({ bot }: { bot: BotType }) {
                 ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-tr-sm shadow-indigo-500/20'
                 : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm shadow-sm'
             }`}>
-              {message.content}
+              {/* ✅ LOGIC: Render image if content starts with [IMAGE] */}
+              {message.content.startsWith('[IMAGE] ') ? (
+                <div>
+                  <img 
+                    src={message.content.replace('[IMAGE] ', '')} 
+                    alt="Uploaded" 
+                    className="max-w-full rounded-lg border border-white/20"
+                    style={{ maxHeight: '200px' }} 
+                  />
+                  <span className="text-xs opacity-70 mt-1 block">Image uploaded</span>
+                </div>
+              ) : (
+                message.content
+              )}
             </div>
           </div>
         ))}
