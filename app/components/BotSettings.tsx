@@ -8,15 +8,35 @@ import { useRouter } from 'next/navigation';
 
 export function BotSettings({ bot }: { bot: any }) {
   const [name, setName] = useState(bot.name);
+  const [notificationEmail, setNotificationEmail] = useState(bot.notification_email || '');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleUpdate = async () => {
     setLoading(true);
-    // In a real app, you'd add an API route for this (PUT /api/bots)
-    // For now, we'll just simulate it or you can add the route later
-    alert("Name updated! (Backend logic pending)");
-    setLoading(false);
+    try {
+      const response = await fetch('/api/bots', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: bot.id,
+          name,
+          notification_email: notificationEmail
+        }),
+      });
+
+      if (response.ok) {
+        router.refresh();
+        alert('Settings updated successfully!');
+      } else {
+        alert('Failed to update settings');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error updating settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -49,13 +69,29 @@ export function BotSettings({ bot }: { bot: any }) {
         <div className="space-y-4 max-w-md">
           <div>
             <label className="text-sm font-medium text-slate-700">Bot Name</label>
-            <Input 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="mt-1"
             />
           </div>
-          <Button onClick={handleUpdate} disabled={loading || name === bot.name}>
+          <div>
+            <label className="text-sm font-medium text-slate-700">Notification Email</label>
+            <p className="text-xs text-slate-500 mt-1 mb-2">
+              Where should we send new submission alerts?
+            </p>
+            <Input
+              type="email"
+              value={notificationEmail}
+              onChange={(e) => setNotificationEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="mt-1"
+            />
+          </div>
+          <Button
+            onClick={handleUpdate}
+            disabled={loading || (name === bot.name && notificationEmail === bot.notification_email)}
+          >
             Save Changes
           </Button>
         </div>
