@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Send, Paperclip, User, Bot, Sparkles, Loader2 } from 'lucide-react';
+import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { uploadFile } from '@/lib/supabase';
+import { formatPhoneNumber, validateEmail, validatePhone, parseBudget } from '@/lib/validation';
 
 type Message = {
   role: 'bot' | 'user';
@@ -21,9 +22,9 @@ type BotType = {
 
 export function ChatInterface({ bot }: { bot: BotType }) {
   const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'bot', 
-      content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!` 
+    {
+      role: 'bot',
+      content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
     },
   ]);
   const [isUploading, setIsUploading] = useState(false);
@@ -31,6 +32,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
   const [loading, setLoading] = useState(false);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [collectedData, setCollectedData] = useState<Record<string, any>>({});
+  const [validationError, setValidationError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentField = bot.schema[currentFieldIndex];
@@ -74,16 +76,70 @@ export function ChatInterface({ bot }: { bot: BotType }) {
     }
   };
 
+  const handleInputChange = (value: string) => {
+    setValidationError(''); // Clear errors on new input
+
+    // Apply field-specific formatting
+    if (currentField.type === 'phone') {
+      setInput(formatPhoneNumber(value));
+    } else {
+      setInput(value);
+    }
+  };
+
+  const validateInput = (): boolean => {
+    if (!input.trim()) {
+      setValidationError('This field is required');
+      return false;
+    }
+
+    // Email validation
+    if (currentField.type === 'email') {
+      const result = validateEmail(input);
+      if (!result.valid) {
+        setValidationError(result.message || 'Invalid email');
+        return false;
+      }
+    }
+
+    // Phone validation
+    if (currentField.type === 'phone') {
+      const result = validatePhone(input);
+      if (!result.valid) {
+        setValidationError(result.message || 'Invalid phone number');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSend = async (overrideInput?: string) => {
     const valueToSend = overrideInput !== undefined ? overrideInput : input;
     if (!valueToSend?.trim()) return;
 
+    // Validate input for non-override sends (typed inputs)
+    if (overrideInput === undefined && !validateInput()) {
+      return; // Validation failed, don't submit
+    }
+
+    // Parse budget if it's a budget/number field
+    let processedValue = valueToSend;
+    if (currentField.type === 'number' &&
+        (currentField.label?.toLowerCase().includes('budget') ||
+         currentField.label?.toLowerCase().includes('price') ||
+         currentField.label?.toLowerCase().includes('cost'))) {
+      const parsed = parseBudget(valueToSend);
+      processedValue = parsed.value; // Store the formatted value
+    }
+
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: valueToSend }]);
+    setValidationError('');
+    setMessages(prev => [...prev, { role: 'user', content: processedValue }]);
     setLoading(true);
 
     try {
-      const newData = { ...collectedData, [currentField.id]: valueToSend };
+      const newData = { ...collectedData, [currentField.id]: processedValue };
       setCollectedData(newData);
 
       if (currentFieldIndex < bot.schema.length - 1) {
@@ -205,19 +261,32 @@ export function ChatInterface({ bot }: { bot: BotType }) {
               );
             default: // Text, Phone, Email
               return (
-                <div className="flex gap-2 bg-white p-1.5 rounded-full shadow-xl shadow-indigo-500/10 border border-slate-100 items-center">
-                  <Input
-                    type={currentField.type === 'phone' ? 'tel' : currentField.type === 'email' ? 'email' : 'text'}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder={`Type your answer...`}
-                    className="border-none shadow-none focus-visible:ring-0 px-4 bg-transparent text-base"
-                    autoFocus
-                  />
-                  <Button onClick={() => handleSend()} disabled={!input.trim()} size="icon" className="rounded-full bg-indigo-600 hover:bg-indigo-700 w-10 h-10 shrink-0">
-                    <Send className="h-4 w-4 text-white" />
-                  </Button>
+                <div className="w-full space-y-2">
+                  <div className={`flex gap-2 bg-white p-1.5 rounded-full shadow-xl shadow-indigo-500/10 border ${validationError ? 'border-red-300' : 'border-slate-100'} items-center`}>
+                    <Input
+                      type={currentField.type === 'phone' ? 'tel' : currentField.type === 'email' ? 'email' : 'text'}
+                      value={input}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !validationError && handleSend()}
+                      placeholder={`Type your answer...`}
+                      className="border-none shadow-none focus-visible:ring-0 px-4 bg-transparent text-base"
+                      autoFocus
+                    />
+                    <Button
+                      onClick={() => handleSend()}
+                      disabled={!input.trim() || !!validationError}
+                      size="icon"
+                      className="rounded-full bg-indigo-600 hover:bg-indigo-700 w-10 h-10 shrink-0 disabled:opacity-50"
+                    >
+                      <Send className="h-4 w-4 text-white" />
+                    </Button>
+                  </div>
+                  {validationError && (
+                    <div className="flex items-center gap-2 text-sm text-red-600 px-4 animate-in fade-in slide-in-from-top-1">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{validationError}</span>
+                    </div>
+                  )}
                 </div>
               );
           }
