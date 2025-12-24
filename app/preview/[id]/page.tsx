@@ -51,8 +51,22 @@ export default async function PreviewPage({
         {/* Success Message */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-4xl font-bold mb-2">Your Bot is Ready!</h1>
-          <p className="text-slate-600">Share this link with your clients to start collecting data</p>
+          <h1 className="text-4xl font-bold mb-2">Your Bot is Live!</h1>
+          <p className="text-slate-600 mb-4">Here's what to do next:</p>
+
+          {/* Primary Actions */}
+          <div className="flex gap-3 justify-center mb-6">
+            <Link href={`/chat/${bot.slug}`} target="_blank">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
+                Test Your Bot →
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button size="lg" variant="outline">
+                Go to Dashboard
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Share Link */}
@@ -135,29 +149,65 @@ export default async function PreviewPage({
           </div>
         </Card>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <Link href={`/chat/${bot.slug}`} className="flex-1">
-            <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
-              Test Your Bot →
-            </Button>
-          </Link>
-          <Link href="/" className="flex-1">
-            <Button variant="outline" className="w-full">
-              Create Another Bot
-            </Button>
-          </Link>
-        </div>
+        {/* Embed Code */}
+        <Card className="p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Embed on Your Website</h2>
+          <p className="text-sm text-slate-600 mb-4">
+            Copy this code and paste it into your website's HTML:
+          </p>
+          <div className="bg-slate-900 p-4 rounded-lg overflow-x-auto">
+            <code className="text-green-400 text-xs font-mono">
+              {`<script src="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/widget.js"
+        data-bot-slug="${bot.slug}"
+        data-color="#4F46E5"
+        async>
+</script>`}
+            </code>
+          </div>
+          <CopyButton
+            text={`<script src="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/widget.js" data-bot-slug="${bot.slug}" data-color="#4F46E5" async></script>`}
+            className="mt-3"
+          />
+        </Card>
 
         {/* Next Steps */}
-        <div className="mt-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">📌 Next Steps:</h3>
-          <ul className="space-y-1 text-sm text-blue-800">
-            <li>• Share the link with your clients</li>
-            <li>• Add it to your website or email signature</li>
-            <li>• Test the bot to see how it works</li>
-            <li>• View submissions in your dashboard (coming soon!)</li>
-          </ul>
+        <div className="mt-12 p-6 bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-lg">
+          <h3 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+            <span className="text-xl">🎯</span>
+            What's Next?
+          </h3>
+          <div className="space-y-3 text-sm text-indigo-900">
+            <div className="flex items-start gap-2">
+              <span className="font-semibold">1.</span>
+              <span><strong>Test it:</strong> Click "Test Your Bot" above to see how it works</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-semibold">2.</span>
+              <span><strong>Share it:</strong> Copy the link and send it to clients via SMS or email</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-semibold">3.</span>
+              <span><strong>Embed it:</strong> Add the script to your website for instant access</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-semibold">4.</span>
+              <span><strong>Get notified:</strong> Check your email when submissions arrive, or view them in your <Link href="/dashboard" className="text-indigo-600 underline">Dashboard</Link></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Actions */}
+        <div className="mt-8 flex gap-4 justify-center">
+          <Link href="/">
+            <Button variant="ghost" className="text-slate-600">
+              ← Create Another Bot
+            </Button>
+          </Link>
+          <Link href={`/dashboard/bots/${bot.id}`}>
+            <Button variant="ghost" className="text-slate-600">
+              Bot Settings →
+            </Button>
+          </Link>
         </div>
       </main>
     </div>

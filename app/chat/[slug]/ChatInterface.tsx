@@ -168,9 +168,28 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       });
       const result = await response.json();
       if (result.success) {
-        setMessages(prev => [...prev, { role: 'bot', content: `✅ All done! Reference #${result.submissionId.slice(0, 8)}.` }]);
+        const completionMessage = `✅ All done! I've sent everything to ${bot.name}.
+
+You should hear back within 24 hours.
+
+Reference: #${result.submissionId.slice(0, 8)}`;
+
+        setMessages(prev => [...prev, { role: 'bot', content: completionMessage }]);
+
+        // Add "Powered by" message after a short delay
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            role: 'bot',
+            content: '[POWERED_BY]' // Special marker for rendering
+          }]);
+        }, 1000);
       }
-    } catch (error) {}
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        content: '❌ Sorry, something went wrong. Please try again or contact support.'
+      }]);
+    }
   };
 
   // --- RENDER INPUT HELPERS ---
@@ -331,21 +350,43 @@ export function ChatInterface({ bot }: { bot: BotType }) {
             <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm text-[15px] leading-relaxed tracking-wide ${
               message.role === 'user'
                 ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-tr-sm shadow-indigo-500/20'
+                : message.content === '[POWERED_BY]'
+                ? 'bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200'
                 : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm shadow-sm'
             }`}>
-              {/* ✅ LOGIC: Render image if content starts with [IMAGE] */}
-              {message.content.startsWith('[IMAGE] ') ? (
+              {/* Render "Powered by" section */}
+              {message.content === '[POWERED_BY]' ? (
+                <div className="text-center py-2">
+                  <p className="text-xs text-slate-500 mb-2">
+                    This bot was built with
+                  </p>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    IntakeOS
+                  </a>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Build your own in 30 seconds →
+                  </p>
+                </div>
+              ) : message.content.startsWith('[IMAGE] ') ? (
+                /* Render image */
                 <div>
-                  <img 
-                    src={message.content.replace('[IMAGE] ', '')} 
-                    alt="Uploaded" 
+                  <img
+                    src={message.content.replace('[IMAGE] ', '')}
+                    alt="Uploaded"
                     className="max-w-full rounded-lg border border-white/20"
-                    style={{ maxHeight: '200px' }} 
+                    style={{ maxHeight: '200px' }}
                   />
                   <span className="text-xs opacity-70 mt-1 block">Image uploaded</span>
                 </div>
               ) : (
-                message.content
+                /* Regular text with line breaks */
+                <div className="whitespace-pre-wrap">{message.content}</div>
               )}
             </div>
           </div>
