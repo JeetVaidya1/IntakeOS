@@ -15,18 +15,18 @@ export default function LandingPage() {
 
       {/* Vibrant Background Shapes */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        {/* Large colorful circles */}
-        <div className="absolute top-20 left-10 w-64 h-64 bg-indigo-500 rounded-full opacity-20 animate-float"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500 rounded-full opacity-15 animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-32 left-1/4 w-80 h-80 bg-pink-500 rounded-full opacity-20 animate-float" style={{animationDelay: '4s'}}></div>
-        <div className="absolute top-1/3 right-1/3 w-72 h-72 bg-cyan-500 rounded-full opacity-15 animate-float" style={{animationDelay: '1s'}}></div>
+        {/* Large colorful circles with blur for atmospheric effect */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-indigo-500 rounded-full opacity-60 blur-3xl animate-float"></div>
+        <div className="absolute top-40 right-20 w-[500px] h-[500px] bg-purple-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-[450px] h-[450px] bg-pink-500 rounded-full opacity-55 blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] bg-cyan-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
 
-        {/* Geometric squares */}
-        <div className="absolute bottom-40 right-10 w-48 h-48 bg-orange-500 opacity-20 rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
-        <div className="absolute top-1/2 left-20 w-56 h-56 bg-teal-500 opacity-15 rotate-12 animate-float" style={{animationDelay: '5s'}}></div>
+        {/* Geometric squares with blur */}
+        <div className="absolute bottom-40 right-10 w-64 h-64 bg-orange-500 opacity-55 blur-3xl rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-1/2 left-20 w-72 h-72 bg-teal-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '5s'}}></div>
 
-        {/* Pattern overlay */}
-        <div className="absolute inset-0 bg-pattern-dots opacity-30"></div>
+        {/* Pattern overlay - reduced opacity */}
+        <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
       </div>
 
       {/* Navbar */}
@@ -57,14 +57,14 @@ export default function LandingPage() {
             New: Embed directly on your website
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-in fade-in slide-in-from-bottom-6 duration-700 px-4">
             <span className="text-slate-900">Stop losing leads to</span> <br />
             <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient inline-block">
               boring forms.
             </span>
           </h1>
 
-          <p className="text-xl text-slate-700 mb-10 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+          <p className="text-xl text-slate-700 mb-10 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 px-4">
             Turn passive intake forms into <span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">active AI agents</span>. Collect better data, book meetings instantly, and never miss a client again.
           </p>
 
@@ -168,11 +168,11 @@ export default function LandingPage() {
 
         {/* How It Works Section */}
         <section className="py-24 bg-gradient-to-br from-purple-50 to-pink-50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-pattern-grid opacity-40"></div>
-          {/* Solid colored shapes */}
-          <div className="absolute top-10 left-10 w-72 h-72 bg-indigo-400 rounded-full opacity-10 animate-float"></div>
-          <div className="absolute bottom-10 right-10 w-80 h-80 bg-pink-400 rounded-full opacity-15 animate-float" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 opacity-10 rotate-45 animate-float" style={{animationDelay: '4s'}}></div>
+          <div className="absolute inset-0 bg-pattern-grid opacity-20"></div>
+          {/* Blurred colored shapes for depth */}
+          <div className="absolute top-10 left-10 w-96 h-96 bg-indigo-400 rounded-full opacity-40 blur-3xl animate-float"></div>
+          <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-pink-400 rounded-full opacity-45 blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-purple-500 rounded-full opacity-40 blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
           <div className="container mx-auto px-4 max-w-6xl relative">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">How It Works</h2>
