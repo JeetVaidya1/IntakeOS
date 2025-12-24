@@ -203,16 +203,26 @@ Reference: #${result.submissionId.slice(0, 8)}`;
             case 'select':
               return (
                 <div className="flex flex-wrap gap-2 justify-end">
-                  {currentField.options?.map((option: string) => (
-                    <Button
-                      key={option}
-                      variant="outline"
-                      className="rounded-full px-6 py-4 border-indigo-200 bg-white/50 backdrop-blur hover:bg-indigo-500 hover:text-white hover:border-indigo-500 transition-all text-sm"
-                      onClick={() => handleSend(option)}
-                    >
-                      {option}
-                    </Button>
-                  ))}
+                  {currentField.options?.map((option: string, idx: number) => {
+                    const buttonColors = [
+                      'hover:bg-gradient-to-r hover:from-indigo-500 hover:to-purple-500 border-indigo-200',
+                      'hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 border-purple-200',
+                      'hover:bg-gradient-to-r hover:from-cyan-500 hover:to-blue-500 border-cyan-200',
+                      'hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 border-orange-200',
+                    ];
+                    const colorClass = buttonColors[idx % buttonColors.length];
+
+                    return (
+                      <Button
+                        key={option}
+                        variant="outline"
+                        className={`rounded-full px-6 py-4 ${colorClass} glass-vibrant hover:text-white hover:border-transparent hover:shadow-lg transition-all text-sm font-medium hover:scale-105`}
+                        onClick={() => handleSend(option)}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
                 </div>
               );
             case 'date':
@@ -281,29 +291,29 @@ Reference: #${result.submissionId.slice(0, 8)}`;
             default: // Text, Phone, Email
               return (
                 <div className="w-full space-y-2">
-                  <div className={`flex gap-2 bg-white p-1.5 rounded-full shadow-xl shadow-indigo-500/10 border ${validationError ? 'border-red-300' : 'border-slate-100'} items-center`}>
+                  <div className={`flex gap-2 glass-vibrant p-2 rounded-full shadow-xl border-2 ${validationError ? 'border-red-300 shadow-red-500/20' : 'border-purple-200 shadow-purple-500/20'} items-center`}>
                     <Input
                       type={currentField.type === 'phone' ? 'tel' : currentField.type === 'email' ? 'email' : 'text'}
                       value={input}
                       onChange={(e) => handleInputChange(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && !validationError && handleSend()}
                       placeholder={`Type your answer...`}
-                      className="border-none shadow-none focus-visible:ring-0 px-4 bg-transparent text-base"
+                      className="border-none shadow-none focus-visible:ring-0 px-4 bg-transparent text-base font-medium"
                       autoFocus
                     />
                     <Button
                       onClick={() => handleSend()}
                       disabled={!input.trim() || !!validationError}
                       size="icon"
-                      className="rounded-full bg-indigo-600 hover:bg-indigo-700 w-10 h-10 shrink-0 disabled:opacity-50"
+                      className="rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 w-12 h-12 shrink-0 disabled:opacity-50 shadow-lg shadow-indigo-500/30 animate-gradient"
                     >
-                      <Send className="h-4 w-4 text-white" />
+                      <Send className="h-5 w-5 text-white" />
                     </Button>
                   </div>
                   {validationError && (
-                    <div className="flex items-center gap-2 text-sm text-red-600 px-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center gap-2 text-sm text-red-600 px-4 animate-in fade-in slide-in-from-top-1 bg-red-50 border border-red-200 rounded-lg py-2">
                       <AlertCircle className="h-4 w-4" />
-                      <span>{validationError}</span>
+                      <span className="font-medium">{validationError}</span>
                     </div>
                   )}
                 </div>
@@ -315,23 +325,26 @@ Reference: #${result.submissionId.slice(0, 8)}`;
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-2xl mx-auto md:justify-center font-sans">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-2xl mx-auto md:justify-center font-sans relative">
+      {/* Subtle Background Gradient */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 opacity-40"></div>
+
       {/* Glass Header */}
-      <Card className="mb-6 border-none shadow-sm bg-white/60 backdrop-blur-md sticky top-0 z-10">
+      <Card className="mb-6 border-2 border-purple-200/50 shadow-lg shadow-purple-500/10 glass-vibrant sticky top-0 z-10">
         <div className="flex items-center justify-between p-3">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-semibold text-slate-700 tracking-wide">{bot.name}</span>
+            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse shadow-lg shadow-emerald-500/50" />
+            <span className="text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-wide">{bot.name}</span>
           </div>
-          <span className="text-xs font-medium text-slate-400 bg-white/50 px-2 py-1 rounded-full border border-slate-100">
+          <span className="text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent px-3 py-1.5 rounded-full border-2 border-purple-200 bg-white/80">
             {Math.round(progress)}%
           </span>
         </div>
-        
-        {/* Progress Bar */}
-        <Progress 
-            value={progress} 
-            className="h-0.5 bg-transparent [&>div]:bg-indigo-500" 
+
+        {/* Enhanced Progress Bar */}
+        <Progress
+            value={progress}
+            className="h-1 bg-gradient-to-r from-slate-100 to-slate-200 [&>div]:bg-gradient-to-r [&>div]:from-indigo-500 [&>div]:via-purple-500 [&>div]:to-pink-500 [&>div]:animate-gradient"
         />
       </Card>
 
@@ -340,19 +353,21 @@ Reference: #${result.submissionId.slice(0, 8)}`;
         {messages.map((message, index) => (
           <div key={index} className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
             {/* Avatar */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
-              message.role === 'user' ? 'bg-gradient-to-br from-indigo-500 to-violet-600' : 'bg-white border border-slate-100'
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg ${
+              message.role === 'user'
+                ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-gradient shadow-indigo-500/50'
+                : 'bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 shadow-purple-500/20'
             }`}>
-              {message.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-indigo-600" />}
+              {message.role === 'user' ? <User className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 bg-gradient-to-br from-indigo-600 to-purple-600 bg-clip-text text-transparent" strokeWidth={2.5} />}
             </div>
 
             {/* Bubble */}
-            <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm text-[15px] leading-relaxed tracking-wide ${
+            <div className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-lg text-[15px] leading-relaxed ${
               message.role === 'user'
-                ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-tr-sm shadow-indigo-500/20'
+                ? 'bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white rounded-tr-sm shadow-purple-500/30 animate-gradient'
                 : message.content === '[POWERED_BY]'
-                ? 'bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200'
-                : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm shadow-sm'
+                ? 'glass-vibrant border-2 border-purple-200 shadow-purple-500/10'
+                : 'glass-vibrant border-2 border-indigo-200/50 text-slate-700 rounded-tl-sm shadow-indigo-500/10'
             }`}>
               {/* Render "Powered by" section */}
               {message.content === '[POWERED_BY]' ? (
@@ -394,11 +409,13 @@ Reference: #${result.submissionId.slice(0, 8)}`;
 
         {loading && (
           <div className="flex gap-3 animate-in fade-in duration-300 pl-1">
-             <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center"><Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" /></div>
-             <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-none px-4 py-4 shadow-sm flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white to-purple-50 border-2 border-purple-200 flex items-center justify-center shadow-lg shadow-purple-500/20">
+               <Sparkles className="w-5 h-5 bg-gradient-to-br from-indigo-500 to-purple-500 bg-clip-text text-transparent animate-pulse" strokeWidth={2.5} />
+             </div>
+             <div className="glass-vibrant border-2 border-indigo-200/50 rounded-2xl rounded-tl-none px-5 py-4 shadow-lg shadow-indigo-500/10 flex items-center gap-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
              </div>
           </div>
         )}
