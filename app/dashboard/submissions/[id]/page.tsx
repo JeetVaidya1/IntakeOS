@@ -54,23 +54,30 @@ export default async function SubmissionDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-cyan-50/30 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-20 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 left-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute inset-0 bg-pattern-dots"></div>
+      </div>
+
       {/* Header */}
-      <header className="border-b bg-white">
+      <header className="border-b border-purple-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href={`/dashboard/bots/${submission.bot.id}`}>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hover:bg-purple-50">
                 ← Back to Bot
               </Button>
             </Link>
             <div className="flex-1">
-              <h1 className="text-xl font-semibold">Submission Details</h1>
-              <p className="text-sm text-slate-500">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Submission Details</h1>
+              <p className="text-sm text-slate-600 font-medium">
                 {new Date(submission.created_at).toLocaleString()}
               </p>
             </div>
-            <Badge variant={submission.status === 'new' ? 'default' : 'secondary'}>
+            <Badge variant={submission.status === 'new' ? 'default' : 'secondary'} className={submission.status === 'new' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 shadow-lg' : ''}>
               {submission.status}
             </Badge>
           </div>
