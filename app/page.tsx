@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2, Zap, Shield, BarChart3, Bot, Sparkles, Messag
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="flex flex-col min-h-screen relative overflow-hidden bg-white">
       {/* Snowfall Effect */}
       <div className="snowfall-container">
         {Array.from({ length: 20 }).map((_, i) => (
@@ -13,13 +13,20 @@ export default function LandingPage() {
         ))}
       </div>
 
-      {/* Animated Background Elements */}
+      {/* Vibrant Background Shapes */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-r from-indigo-400/30 to-purple-400/30 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-gradient-to-r from-purple-400/25 to-pink-400/25 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-[550px] h-[550px] bg-gradient-to-r from-cyan-400/30 to-blue-400/30 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
-        <div className="absolute top-1/2 right-1/3 w-[400px] h-[400px] bg-gradient-to-r from-pink-400/20 to-rose-400/20 rounded-full blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-40"></div>
+        {/* Large colorful circles */}
+        <div className="absolute top-20 left-10 w-64 h-64 bg-indigo-500 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500 rounded-full opacity-15 animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-80 h-80 bg-pink-500 rounded-full opacity-20 animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/3 right-1/3 w-72 h-72 bg-cyan-500 rounded-full opacity-15 animate-float" style={{animationDelay: '1s'}}></div>
+
+        {/* Geometric squares */}
+        <div className="absolute bottom-40 right-10 w-48 h-48 bg-orange-500 opacity-20 rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-1/2 left-20 w-56 h-56 bg-teal-500 opacity-15 rotate-12 animate-float" style={{animationDelay: '5s'}}></div>
+
+        {/* Pattern overlay */}
+        <div className="absolute inset-0 bg-pattern-dots opacity-30"></div>
       </div>
 
       {/* Navbar */}
@@ -160,10 +167,12 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="py-24 bg-gradient-to-br from-indigo-100/50 via-purple-100/50 to-pink-100/50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-pattern-grid opacity-30"></div>
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-indigo-300/20 to-purple-300/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-pink-300/20 to-rose-300/20 rounded-full blur-3xl"></div>
+        <section className="py-24 bg-gradient-to-br from-purple-50 to-pink-50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-pattern-grid opacity-40"></div>
+          {/* Solid colored shapes */}
+          <div className="absolute top-10 left-10 w-72 h-72 bg-indigo-400 rounded-full opacity-10 animate-float"></div>
+          <div className="absolute bottom-10 right-10 w-80 h-80 bg-pink-400 rounded-full opacity-15 animate-float" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500 opacity-10 rotate-45 animate-float" style={{animationDelay: '4s'}}></div>
           <div className="container mx-auto px-4 max-w-6xl relative">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">How It Works</h2>
