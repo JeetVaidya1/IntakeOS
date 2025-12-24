@@ -31,13 +31,13 @@ export default async function ChatPage({
   }
 
   return (
-    <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-b from-slate-50 to-slate-100'}`}>
+    <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50'}`}>
       {/* Header - Only show if NOT a widget */}
       {!isWidget && (
-        <header className="border-b bg-white">
+        <header className="border-b border-purple-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
           <div className="container mx-auto px-4 py-4">
-            <h1 className="text-xl font-semibold text-slate-900">{bot.name}</h1>
-            <p className="text-sm text-slate-500">Complete your intake form</p>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{bot.name}</h1>
+            <p className="text-sm text-slate-600 font-medium">Complete your intake form</p>
           </div>
         </header>
       )}

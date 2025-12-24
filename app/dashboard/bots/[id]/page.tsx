@@ -53,22 +53,29 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
   const embedCode = `<script src="${baseUrl}/widget.js" data-bot-slug="${bot.slug}" data-color="#4F46E5" async></script>`;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-cyan-50/30 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-20 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 left-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute inset-0 bg-pattern-dots"></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-purple-200/50 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="text-slate-500 hover:text-slate-800 transition-colors">
+            <Link href="/dashboard" className="text-slate-600 hover:text-indigo-600 transition-colors font-medium">
               ← Back
             </Link>
-            <div className="h-6 w-px bg-slate-200" />
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-lg">{bot.name}</span>
-              <Badge variant="secondary" className="font-mono text-xs">{bot.slug}</Badge>
+            <div className="h-6 w-px bg-purple-200" />
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{bot.name}</span>
+              <Badge variant="secondary" className="font-mono text-xs bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200">{bot.slug}</Badge>
             </div>
           </div>
           <a href={chatUrl} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+            <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30">
               Open Chat ↗
             </Button>
           </a>
