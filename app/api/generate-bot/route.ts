@@ -60,7 +60,7 @@ Output valid JSON only with this structure:
 
 Field type rules:
 - Use "email" for email addresses
-- Use "phone" for phone numbers  
+- Use "phone" for phone numbers
 - Use "address" for locations/addresses
 - Use "number" for quantities
 - Use "select" for predefined choices
@@ -76,6 +76,7 @@ Extract 5-8 fields maximum.`,
         },
       ],
       temperature: 0.3,
+      response_format: { type: "json_object" }, // Enforce valid JSON output
     });
 
     const aiResponse = completion.choices[0].message.content;
