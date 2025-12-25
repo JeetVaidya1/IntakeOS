@@ -21,31 +21,111 @@ type BotType = {
 };
 
 export function ChatInterface({ bot }: { bot: BotType }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'bot',
-      content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
-    },
-  ]);
+  const storageKey = `intakeOS_chat_${bot.id}`;
+
+  // Initialize state from localStorage if available
+  const getInitialMessages = (): Message[] => {
+    if (typeof window === 'undefined') return [
+      {
+        role: 'bot',
+        content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
+      }
+    ];
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.messages || [
+          {
+            role: 'bot',
+            content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
+          }
+        ];
+      }
+    } catch (error) {
+      console.error('Failed to load chat state:', error);
+    }
+
+    return [
+      {
+        role: 'bot',
+        content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
+      }
+    ];
+  };
+
+  const getInitialFieldIndex = (): number => {
+    if (typeof window === 'undefined') return 0;
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.currentFieldIndex || 0;
+      }
+    } catch (error) {
+      console.error('Failed to load field index:', error);
+    }
+
+    return 0;
+  };
+
+  const getInitialCollectedData = (): Record<string, any> => {
+    if (typeof window === 'undefined') return {};
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.collectedData || {};
+      }
+    } catch (error) {
+      console.error('Failed to load collected data:', error);
+    }
+
+    return {};
+  };
+
+  const [messages, setMessages] = useState<Message[]>(getInitialMessages);
   const [isUploading, setIsUploading] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
-  const [collectedData, setCollectedData] = useState<Record<string, any>>({});
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(getInitialFieldIndex);
+  const [collectedData, setCollectedData] = useState<Record<string, any>>(getInitialCollectedData);
   const [validationError, setValidationError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentField = bot.schema[currentFieldIndex];
   const progress = (currentFieldIndex / bot.schema.length) * 100;
 
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({
+        messages,
+        currentFieldIndex,
+        collectedData,
+      }));
+    } catch (error) {
+      console.error('Failed to save chat state:', error);
+    }
+  }, [messages, currentFieldIndex, collectedData, storageKey]);
+
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Initial Question
+  // Initial Question - only ask if this is a fresh conversation
   useEffect(() => {
     if (currentFieldIndex === 0 && messages.length === 1) {
+      // Check if this is a restored session
+      const hasRestoredData = Object.keys(collectedData).length > 0;
+      if (hasRestoredData) return; // Skip initial question if we restored from localStorage
+
       setTimeout(async () => {
         const firstQuestion = await generateAIQuestion(bot.schema[0], '');
         setMessages(prev => [...prev, { role: 'bot', content: firstQuestion }]);
@@ -168,6 +248,13 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       });
       const result = await response.json();
       if (result.success) {
+        // Clear localStorage on successful submission
+        try {
+          localStorage.removeItem(storageKey);
+        } catch (error) {
+          console.error('Failed to clear chat state:', error);
+        }
+
         const completionMessage = `✅ All done! I've sent everything to ${bot.name}.
 
 You should hear back within 24 hours.
