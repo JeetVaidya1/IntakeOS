@@ -338,22 +338,83 @@ Reference: #${result.submissionId.slice(0, 8)}`;
                         if (!file) return;
 
                         setIsUploading(true);
-                        const publicUrl = await uploadFile(file);
-                        setIsUploading(false);
 
-                        if (publicUrl) {
-                          // Send URL with special tag [IMAGE]
-                          handleSend(`[IMAGE] ${publicUrl}`); 
-                        } else {
+                        // Step 1: Upload file to storage
+                        const publicUrl = await uploadFile(file);
+
+                        if (!publicUrl) {
+                          setIsUploading(false);
                           alert('Failed to upload image. Please try again.');
+                          return;
+                        }
+
+                        // Step 2: Show user's uploaded image
+                        setMessages(prev => [...prev, { role: 'user', content: `[IMAGE] ${publicUrl}` }]);
+
+                        // Step 3: Analyze image with GPT-4 Vision
+                        setLoading(true);
+                        try {
+                          const conversationHistory = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+                          const analysisResponse = await fetch('/api/analyze-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              imageUrl: publicUrl,
+                              businessName: bot.name,
+                              fieldLabel: currentField.label,
+                              conversationHistory,
+                            }),
+                          });
+
+                          const analysisResult = await analysisResponse.json();
+
+                          if (analysisResult.success && analysisResult.analysis) {
+                            // Step 4: Show AI's visual analysis
+                            setMessages(prev => [...prev, {
+                              role: 'bot',
+                              content: analysisResult.analysis
+                            }]);
+                          } else {
+                            // Fallback if analysis fails
+                            setMessages(prev => [...prev, {
+                              role: 'bot',
+                              content: `Got it! I've received your ${currentField.label}. Let me continue with the next question.`
+                            }]);
+                          }
+                        } catch (error) {
+                          console.error('Image analysis error:', error);
+                          setMessages(prev => [...prev, {
+                            role: 'bot',
+                            content: `Thanks for uploading that! Let me continue with the next question.`
+                          }]);
+                        } finally {
+                          setIsUploading(false);
+                          setLoading(false);
+                        }
+
+                        // Step 5: Store the image URL and move to next field
+                        const newData = { ...collectedData, [currentField.id]: `[IMAGE] ${publicUrl}` };
+                        setCollectedData(newData);
+
+                        if (currentFieldIndex < bot.schema.length - 1) {
+                          const nextField = bot.schema[currentFieldIndex + 1];
+                          const nextQuestion = await generateAIQuestion(nextField, `[IMAGE] ${publicUrl}`);
+
+                          setCurrentFieldIndex(prev => prev + 1);
+                          setMessages(prev => [...prev, { role: 'bot', content: nextQuestion }]);
+                        } else {
+                          setMessages(prev => [...prev, { role: 'bot', content: "Perfect! wrapping up..." }]);
+                          await handleSubmit(newData);
                         }
                       }} 
                     />
                     
-                    {isUploading ? (
+                    {isUploading || loading ? (
                       <div className="flex flex-col items-center text-indigo-500">
                         <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                        <p className="text-sm font-medium">Uploading...</p>
+                        <p className="text-sm font-medium">
+                          {isUploading ? 'Uploading...' : 'Analyzing image...'}
+                        </p>
                       </div>
                     ) : (
                       <>
