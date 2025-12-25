@@ -94,10 +94,32 @@ export default async function SubmissionDetailPage({
               const field = submission.bot.schema.find((f: any) => f.id === key);
               const label = field?.label || key;
 
+              // Check if value is an image
+              const isImage = typeof value === 'string' && value.startsWith('[IMAGE] ');
+              const imageUrl = isImage ? value.replace('[IMAGE] ', '') : null;
+
               return (
                 <div key={key} className="border-b pb-4">
                   <div className="text-sm text-slate-500 mb-1">{label}</div>
-                  <div className="font-medium">{String(value)}</div>
+                  {isImage && imageUrl ? (
+                    <div className="mt-2">
+                      <img
+                        src={imageUrl}
+                        alt={label}
+                        className="max-w-full max-h-96 rounded-lg border-2 border-purple-200 shadow-lg hover:shadow-xl transition-shadow"
+                      />
+                      <a
+                        href={imageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-2 text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+                      >
+                        Open full size →
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="font-medium">{String(value)}</div>
+                  )}
                 </div>
               );
             })}
@@ -108,22 +130,39 @@ export default async function SubmissionDetailPage({
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-6">Full Conversation</h2>
           <div className="space-y-4">
-            {submission.conversation.map((message: any, index: number) => (
-              <div
-                key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+            {submission.conversation.map((message: any, index: number) => {
+              // Check if message contains an image
+              const isImage = message.content.startsWith('[IMAGE] ');
+              const imageUrl = isImage ? message.content.replace('[IMAGE] ', '') : null;
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === 'user'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 text-slate-900'
-                  }`}
+                  key={index}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <div
+                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      message.role === 'user'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-900'
+                    }`}
+                  >
+                    {isImage && imageUrl ? (
+                      <div>
+                        <img
+                          src={imageUrl}
+                          alt="Uploaded image"
+                          className="max-w-full max-h-64 rounded-lg border border-white/20 mb-1"
+                        />
+                        <p className="text-xs opacity-70">Image uploaded</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
