@@ -286,11 +286,15 @@ export function DashboardContent({
 
                     return (
                       <div key={bot.id}>
-                        <Link href={`/dashboard/bots/${bot.id}`}>
-                          <Card className={`p-6 cursor-pointer bg-slate-900/40 backdrop-blur-lg border ${colors.border} ${colors.hoverBorder} hover:shadow-2xl ${colors.shadow} transition-all duration-300 group relative overflow-hidden flex flex-col`}>
-                            {/* Animated Gradient Top Line */}
-                            <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${colors.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-gradient`} />
+                        <Card className={`p-6 bg-slate-900/40 backdrop-blur-lg border ${colors.border} ${colors.hoverBorder} hover:shadow-2xl ${colors.shadow} transition-all duration-300 group relative overflow-hidden flex flex-col`}>
+                          {/* Animated Gradient Top Line */}
+                          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${colors.gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-gradient`} />
 
+                          {/* Main clickable area */}
+                          <div
+                            onClick={() => router.push(`/dashboard/bots/${bot.id}`)}
+                            className="cursor-pointer"
+                          >
                             <div className="flex items-start justify-between mb-4 mt-2">
                               <div className="flex-1 min-w-0 pr-4">
                                 <h3 className={`font-bold text-xl mb-2 truncate text-white group-hover:scale-105 transition-transform origin-left`}>
@@ -328,9 +332,10 @@ export function DashboardContent({
                                 </span>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Quick Actions Footer */}
-                            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-2">
+                          {/* Quick Actions Footer */}
+                          <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-2">
                               <Link
                                 href={`/dashboard/bots/${bot.id}`}
                                 onClick={(e) => e.stopPropagation()}
@@ -355,8 +360,7 @@ export function DashboardContent({
                                 <span>{copiedSlug === bot.slug ? 'Copied!' : 'Copy'}</span>
                               </button>
                             </div>
-                          </Card>
-                        </Link>
+                        </Card>
                       </div>
                     );
                   })}
