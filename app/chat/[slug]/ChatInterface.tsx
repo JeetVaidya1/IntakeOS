@@ -39,6 +39,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
   const [collectedData, setCollectedData] = useState<Record<string, any>>({});
   const [validationError, setValidationError] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentField = bot.schema[currentFieldIndex];
@@ -52,6 +53,14 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
+
+        // Don't restore if the form was completed
+        if (parsed.isCompleted) {
+          localStorage.removeItem(storageKey);
+          setIsHydrated(true);
+          return;
+        }
+
         if (parsed.messages) setMessages(parsed.messages);
         if (parsed.currentFieldIndex !== undefined) setCurrentFieldIndex(parsed.currentFieldIndex);
         if (parsed.collectedData) setCollectedData(parsed.collectedData);
@@ -63,20 +72,22 @@ export function ChatInterface({ bot }: { bot: BotType }) {
     setIsHydrated(true);
   }, [storageKey]);
 
-  // Save state to localStorage whenever it changes
+  // Save state to localStorage whenever it changes (but not after completion)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (isCompleted) return; // Don't save after form is completed
 
     try {
       localStorage.setItem(storageKey, JSON.stringify({
         messages,
         currentFieldIndex,
         collectedData,
+        isCompleted: false,
       }));
     } catch (error) {
       console.error('Failed to save chat state:', error);
     }
-  }, [messages, currentFieldIndex, collectedData, storageKey]);
+  }, [messages, currentFieldIndex, collectedData, storageKey, isCompleted]);
 
   // Auto-scroll
   useEffect(() => {
@@ -215,6 +226,9 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       });
       const result = await response.json();
       if (result.success) {
+        // Mark as completed to prevent saving completion state to localStorage
+        setIsCompleted(true);
+
         // Clear localStorage on successful submission
         try {
           localStorage.removeItem(storageKey);
