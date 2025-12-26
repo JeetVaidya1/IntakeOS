@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotSettings } from '@/app/components/BotSettings';
+import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar } from 'lucide-react';
 
 // Helper to intelligently pick a display title for a submission
 function getSubmissionTitle(data: any) {
@@ -53,12 +54,21 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
   const embedCode = `<script src="${baseUrl}/widget.js" data-bot-slug="${bot.slug}" data-color="#4F46E5" async></script>`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-cyan-50/30 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Vibrant Background Shapes */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 left-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
-        <div className="absolute inset-0 bg-pattern-dots"></div>
+        {/* Large colorful circles with blur for atmospheric effect */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-indigo-500 rounded-full opacity-60 blur-3xl animate-float"></div>
+        <div className="absolute top-40 right-20 w-[500px] h-[500px] bg-purple-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-[450px] h-[450px] bg-pink-500 rounded-full opacity-55 blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] bg-cyan-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
+
+        {/* Geometric squares with blur */}
+        <div className="absolute bottom-40 right-10 w-64 h-64 bg-orange-500 opacity-55 blur-3xl rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-1/2 left-20 w-72 h-72 bg-teal-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '5s'}}></div>
+
+        {/* Pattern overlay - reduced opacity */}
+        <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
       </div>
 
       {/* Header */}
@@ -92,79 +102,140 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
 
           {/* TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-5 flex flex-col justify-between hover:border-indigo-200 transition-colors">
-                <span className="text-sm text-slate-500 font-medium">Total Leads</span>
-                <span className="text-3xl font-bold text-indigo-900 mt-2">{submissions?.length || 0}</span>
-              </Card>
-              <Card className="p-5 flex flex-col justify-between hover:border-indigo-200 transition-colors">
-                <span className="text-sm text-slate-500 font-medium">Completion Rate</span>
-                <span className="text-3xl font-bold text-slate-700 mt-2">—%</span>
-              </Card>
-              <Card className="p-5 flex flex-col justify-between hover:border-indigo-200 transition-colors">
-                 <span className="text-sm text-slate-500 font-medium">Status</span>
-                 <div className="mt-2 flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-lg font-semibold text-slate-700">Active</span>
-                 </div>
-              </Card>
-            </div>
-
-            {/* Install Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="p-6">
-                <h3 className="font-semibold mb-2">Option A: Direct Link</h3>
-                <p className="text-sm text-slate-500 mb-4">Great for SMS, Email, or Social Media bios.</p>
-                <div className="flex gap-2">
-                  <code className="flex-1 bg-slate-100 p-2 rounded text-xs overflow-x-auto whitespace-nowrap flex items-center">
-                    {chatUrl}
-                  </code>
-                  <Button variant="outline" size="sm">Copy</Button>
+            {/* KPI Cards - Vibrant & Colorful */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 hover:border-indigo-300 transition-all shadow-lg hover:shadow-xl hover:scale-105 duration-300 group">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-indigo-600 mb-1">Total Leads</p>
+                    <p className="text-4xl font-bold text-indigo-900 mb-2">{submissions?.length || 0}</p>
+                    <p className="text-xs text-slate-500">All-time submissions</p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </Card>
 
-              <Card className="p-6 border-indigo-100 bg-indigo-50/30">
-                <h3 className="font-semibold mb-2 text-indigo-900">Option B: Website Embed</h3>
-                <p className="text-sm text-indigo-700/70 mb-4">Paste this into your website&apos;s footer.</p>
-                <div className="bg-slate-900 rounded-lg p-3 relative group">
+              <Card className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 hover:border-emerald-300 transition-all shadow-lg hover:shadow-xl hover:scale-105 duration-300 group">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-emerald-600 mb-1">Completion Rate</p>
+                    <p className="text-4xl font-bold text-emerald-900 mb-2">—%</p>
+                    <p className="text-xs text-slate-500">Coming soon</p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                    <TrendingUp className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 hover:border-cyan-300 transition-all shadow-lg hover:shadow-xl hover:scale-105 duration-300 group">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-cyan-600 mb-1">Status</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse shadow-lg shadow-emerald-500/50" />
+                      <span className="text-2xl font-bold text-cyan-900">Active</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">Accepting submissions</p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                    <Check className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Install Section - More Visual */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="p-6 border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-xl transition-all group">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                    <ExternalLink className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-purple-900">Option A: Direct Link</h3>
+                </div>
+                <p className="text-sm text-purple-700 mb-4">Great for SMS, Email, or Social Media bios.</p>
+                <div className="flex gap-2">
+                  <code className="flex-1 bg-white/80 border border-purple-200 p-3 rounded-lg text-xs overflow-x-auto whitespace-nowrap flex items-center font-mono text-purple-900">
+                    {chatUrl}
+                  </code>
+                  <Button variant="outline" size="sm" className="border-purple-300 text-purple-700 hover:bg-purple-100">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+
+              <Card className="p-6 border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-cyan-50 hover:shadow-xl transition-all group">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-cyan-500 rounded-lg">
+                    <Code className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-indigo-900">Option B: Website Embed</h3>
+                </div>
+                <p className="text-sm text-indigo-700 mb-4">Paste this into your website&apos;s footer.</p>
+                <div className="bg-slate-900 rounded-lg p-4 relative group">
                   <code className="text-xs text-slate-300 font-mono block break-all">
                     {embedCode}
                   </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-white hover:bg-slate-800"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </div>
               </Card>
             </div>
           </TabsContent>
 
-          {/* TAB 2: SUBMISSIONS */}
+          {/* TAB 2: SUBMISSIONS - More Visual */}
           <TabsContent value="submissions" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <Card>
-              {!submissions || submissions.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="text-4xl mb-3">📭</div>
-                  <h3 className="text-lg font-medium">No leads yet</h3>
-                  <p className="text-slate-500 text-sm mt-1">Share your link to get started!</p>
+            {!submissions || submissions.length === 0 ? (
+              <Card className="border-2 border-dashed border-purple-200 bg-gradient-to-br from-purple-50/50 to-pink-50/50">
+                <div className="p-16 text-center">
+                  <div className="inline-block p-6 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-4">
+                    <div className="text-6xl">📭</div>
+                  </div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">No leads yet</h3>
+                  <p className="text-slate-600 text-sm">Share your link to start collecting submissions!</p>
                 </div>
-              ) : (
-                <div className="divide-y">
-                  {submissions.map((sub: any) => (
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {submissions.map((sub: any, index: number) => {
+                  const colors = [
+                    { from: 'from-indigo-50', to: 'to-purple-50', border: 'border-indigo-200', hover: 'hover:border-indigo-300', text: 'text-indigo-600' },
+                    { from: 'from-emerald-50', to: 'to-teal-50', border: 'border-emerald-200', hover: 'hover:border-emerald-300', text: 'text-emerald-600' },
+                    { from: 'from-cyan-50', to: 'to-blue-50', border: 'border-cyan-200', hover: 'hover:border-cyan-300', text: 'text-cyan-600' },
+                    { from: 'from-orange-50', to: 'to-amber-50', border: 'border-orange-200', hover: 'hover:border-orange-300', text: 'text-orange-600' },
+                  ];
+                  const colorSet = colors[index % colors.length];
+
+                  return (
                     <Link key={sub.id} href={`/dashboard/submissions/${sub.id}`}>
-                      <div className="p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between group transition-colors">
-                         <div>
-                            <div className="font-medium text-slate-900">{getSubmissionTitle(sub.data)}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">
-                               {new Date(sub.created_at).toLocaleString()}
+                      <Card className={`p-5 bg-gradient-to-br ${colorSet.from} ${colorSet.to} border-2 ${colorSet.border} ${colorSet.hover} hover:shadow-lg transition-all duration-300 cursor-pointer group`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg text-slate-900 group-hover:text-indigo-600 transition-colors">{getSubmissionTitle(sub.data)}</div>
+                            <div className={`text-xs ${colorSet.text} mt-1 flex items-center gap-2`}>
+                              <Calendar className="h-3 w-3" />
+                              {new Date(sub.created_at).toLocaleString()}
                             </div>
-                         </div>
-                         <div className="text-slate-400 group-hover:text-indigo-600 text-sm">
-                            View →
-                         </div>
-                      </div>
+                          </div>
+                          <div className={`text-slate-400 group-hover:${colorSet.text} transition-colors flex items-center gap-2`}>
+                            <span className="text-sm font-medium">View</span>
+                            <ExternalLink className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </Card>
                     </Link>
-                  ))}
-                </div>
-              )}
-            </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           {/* TAB 3: SETTINGS */}
