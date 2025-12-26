@@ -10,7 +10,7 @@ import { Sparkles, Building2, ChevronDown, ChevronUp, Settings } from 'lucide-re
 import { PromptExamples } from './PromptExamples';
 import { createBrowserClient } from '@supabase/ssr';
 
-export function BotGenerator({ user }: { user: User }) {
+export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () => void }) {
   const [description, setDescription] = useState('');
   const [businessProfile, setBusinessProfile] = useState<{ business_name: string; business_type: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,6 +62,7 @@ export function BotGenerator({ user }: { user: User }) {
       const data = await response.json();
 
       if (data.botId) {
+        onSuccess?.();
         router.push(`/dashboard/bots/${data.botId}`);
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
