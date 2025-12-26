@@ -430,16 +430,16 @@ SUCCESS CRITERIA:
   return (
     <div className="space-y-6">
       {/* Educational Header */}
-      <Card className="p-8 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-2 border-purple-300 shadow-xl">
+      <Card className="p-8 bg-white/5 backdrop-blur-lg border border-purple-500/30 shadow-xl">
         <div className="flex items-start gap-4 mb-6">
-          <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-lg">
+          <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg shadow-indigo-500/50">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-bold mb-2 text-white">
               The Secret to Amazing Bots: Detailed Prompts
             </h2>
-            <p className="text-slate-700 text-lg leading-relaxed">
+            <p className="text-slate-300 text-lg leading-relaxed">
               Your bot's conversation quality is directly determined by your prompt quality. The more specific and detailed you are, the smarter and more helpful your bot becomes.
             </p>
           </div>
@@ -448,50 +448,50 @@ SUCCESS CRITERIA:
         {/* Good vs Bad Examples */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Bad Prompt */}
-          <div className="p-6 bg-white/80 rounded-xl border-2 border-red-200">
+          <div className="p-6 bg-white/5 rounded-xl border border-red-500/30">
             <div className="flex items-center gap-2 mb-3">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-              <h3 className="font-bold text-red-900">❌ Vague Prompt (Poor Results)</h3>
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <h3 className="font-bold text-red-300">❌ Vague Prompt (Poor Results)</h3>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
-              <p className="text-sm text-red-800 font-mono">"Need names, date, location, budget"</p>
+            <div className="bg-red-500/10 p-4 rounded-lg mb-4 border border-red-500/20">
+              <p className="text-sm text-red-300 font-mono">"Need names, date, location, budget"</p>
             </div>
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-slate-300">
               <p className="flex items-start gap-2">
-                <span className="text-red-500 flex-shrink-0">•</span>
+                <span className="text-red-400 flex-shrink-0">•</span>
                 <span>Bot won't understand your industry</span>
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-red-500 flex-shrink-0">•</span>
+                <span className="text-red-400 flex-shrink-0">•</span>
                 <span>Generic, robotic questions</span>
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-red-500 flex-shrink-0">•</span>
+                <span className="text-red-400 flex-shrink-0">•</span>
                 <span>Misses important context</span>
               </p>
             </div>
           </div>
 
           {/* Good Prompt */}
-          <div className="p-6 bg-white/80 rounded-xl border-2 border-emerald-200">
+          <div className="p-6 bg-white/5 rounded-xl border border-emerald-500/30">
             <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <h3 className="font-bold text-emerald-900">✅ Detailed Prompt (Great Results)</h3>
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-bold text-emerald-300">✅ Detailed Prompt (Great Results)</h3>
             </div>
-            <div className="bg-emerald-50 p-4 rounded-lg mb-4 border border-emerald-200">
-              <p className="text-sm text-emerald-800 font-mono">"I'm a wedding photographer. I need couple's names, wedding date, venue, guest count, package interest (basic/premium/luxury), budget, Pinterest boards..."</p>
+            <div className="bg-emerald-500/10 p-4 rounded-lg mb-4 border border-emerald-500/20">
+              <p className="text-sm text-emerald-300 font-mono">"I'm a wedding photographer. I need couple's names, wedding date, venue, guest count, package interest (basic/premium/luxury), budget, Pinterest boards..."</p>
             </div>
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-slate-300">
               <p className="flex items-start gap-2">
-                <span className="text-emerald-500 flex-shrink-0">✓</span>
+                <span className="text-emerald-400 flex-shrink-0">✓</span>
                 <span>Shows domain expertise</span>
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-emerald-500 flex-shrink-0">✓</span>
+                <span className="text-emerald-400 flex-shrink-0">✓</span>
                 <span>Asks intelligent, contextual questions</span>
               </p>
               <p className="flex items-start gap-2">
-                <span className="text-emerald-500 flex-shrink-0">✓</span>
+                <span className="text-emerald-400 flex-shrink-0">✓</span>
                 <span>Connects information meaningfully</span>
               </p>
             </div>
@@ -500,13 +500,13 @@ SUCCESS CRITERIA:
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+      <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-xl w-fit backdrop-blur-lg">
         <button
           onClick={() => setActiveTab('examples')}
           className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
             activeTab === 'examples'
-              ? 'bg-white text-indigo-600 shadow-md'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-300 hover:text-white hover:bg-white/10'
           }`}
         >
           Industry Templates
@@ -515,8 +515,8 @@ SUCCESS CRITERIA:
           onClick={() => setActiveTab('conversations')}
           className={`px-6 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
             activeTab === 'conversations'
-              ? 'bg-white text-indigo-600 shadow-md'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-300 hover:text-white hover:bg-white/10'
           }`}
         >
           <MessageSquare className="w-4 h-4" />
@@ -528,15 +528,15 @@ SUCCESS CRITERIA:
       {activeTab === 'examples' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {industryTemplates.map((template, idx) => (
-            <Card key={idx} className={`p-6 bg-gradient-to-br ${template.bg} border-2 ${template.border} shadow-xl hover:shadow-2xl transition-all duration-300 group`}>
+            <Card key={idx} className={`p-6 bg-white/5 backdrop-blur-lg border border-white/10 hover:border-indigo-500/50 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)] transition-all duration-300 group shadow-xl`}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${template.gradient} flex items-center justify-center text-2xl shadow-lg`}>
                     {template.icon}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">{template.industry}</h3>
-                    <p className="text-sm text-slate-600">{template.description}</p>
+                    <h3 className="text-xl font-bold text-white">{template.industry}</h3>
+                    <p className="text-sm text-slate-400">{template.description}</p>
                   </div>
                 </div>
               </div>
@@ -544,12 +544,12 @@ SUCCESS CRITERIA:
               {/* Good Prompt Example */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300">
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Good Prompt
                   </Badge>
                 </div>
-                <div className="bg-white/80 p-4 rounded-lg border border-emerald-200 text-sm text-slate-700 font-mono leading-relaxed max-h-48 overflow-y-auto">
+                <div className="bg-black/20 border border-white/10 p-4 rounded-lg text-sm text-slate-300 font-mono leading-relaxed max-h-48 overflow-y-auto scrollbar-hide">
                   {template.goodPrompt}
                 </div>
               </div>
@@ -570,14 +570,14 @@ SUCCESS CRITERIA:
       {activeTab === 'conversations' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {industryTemplates.map((template, idx) => (
-            <Card key={idx} className={`p-6 bg-gradient-to-br ${template.bg} border-2 ${template.border} shadow-xl`}>
+            <Card key={idx} className="p-6 bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${template.gradient} flex items-center justify-center text-xl shadow-lg`}>
                   {template.icon}
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900">{template.industry}</h3>
-                  <p className="text-xs text-slate-600">Example conversation flow</p>
+                  <h3 className="font-bold text-white">{template.industry}</h3>
+                  <p className="text-xs text-slate-400">Example conversation flow</p>
                 </div>
               </div>
 
@@ -587,14 +587,14 @@ SUCCESS CRITERIA:
                     <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs ${
                       message.role === 'user'
                         ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white'
-                        : 'bg-white border-2 border-purple-200'
+                        : 'bg-white/10 border border-white/20'
                     }`}>
                       {message.role === 'user' ? '👤' : '🤖'}
                     </div>
                     <div className={`flex-1 p-3 rounded-lg text-sm ${
                       message.role === 'user'
                         ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white'
-                        : 'bg-white/80 text-slate-700 border border-slate-200'
+                        : 'bg-white/10 text-slate-200 border border-white/10'
                     }`}>
                       {message.text}
                     </div>
@@ -602,8 +602,8 @@ SUCCESS CRITERIA:
                 ))}
               </div>
 
-              <div className="mt-4 p-3 bg-white/60 rounded-lg border border-emerald-300">
-                <p className="text-xs text-emerald-800 font-medium flex items-center gap-2">
+              <div className="mt-4 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                <p className="text-xs text-emerald-300 font-medium flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   Notice how the bot shows domain knowledge and connects each answer
                 </p>
