@@ -6,6 +6,33 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SubmissionActions } from './SubmissionActions';
+import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
+
+// Helper function to get a human-readable label from either schema type
+function getFieldLabel(key: string, schema: any): string {
+  // Legacy schema (array of fields)
+  if (isLegacySchema(schema)) {
+    const field = schema.find((f: any) => f.id === key);
+    return field?.label || formatKey(key);
+  }
+
+  // Agentic schema (object with required_info)
+  if (isAgenticSchema(schema)) {
+    const info = schema.required_info[key];
+    return info?.description || formatKey(key);
+  }
+
+  // Fallback: format the key nicely
+  return formatKey(key);
+}
+
+// Format snake_case keys into Title Case
+function formatKey(key: string): string {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
 export default async function SubmissionDetailPage({ 
   params 
@@ -99,9 +126,8 @@ export default async function SubmissionDetailPage({
           <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">Collected Information</h2>
           <div className="space-y-4">
             {Object.entries(submission.data).map(([key, value]) => {
-              // Find the field label from bot schema
-              const field = submission.bot.schema.find((f: any) => f.id === key);
-              const label = field?.label || key;
+              // Get label using helper function (handles both legacy and agentic schemas)
+              const label = getFieldLabel(key, submission.bot.schema);
 
               // Check if value is an image
               const isImage = typeof value === 'string' && value.startsWith('[IMAGE] ');
