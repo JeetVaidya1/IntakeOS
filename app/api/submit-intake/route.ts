@@ -70,7 +70,7 @@ export async function POST(request: Request) {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #4F46E5;">New Lead Received! 🚀</h1>
             <p>You have a new submission from <strong>${bot.name}</strong>.</p>
-            
+
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               ${Object.entries(data).map(([key, value]) => `
                 <div style="margin-bottom: 10px;">
@@ -90,6 +90,43 @@ export async function POST(request: Request) {
     } catch (emailError) {
       console.error('⚠️ Failed to send email:', emailError);
       // We don't throw here because we don't want to fail the submission just because email failed
+    }
+
+    // 4. Trigger Webhook Integration (if configured)
+    try {
+      const { data: integration, error: integrationError } = await supabase
+        .from('integrations')
+        .select('webhook_url, is_active')
+        .eq('bot_id', botId)
+        .single();
+
+      if (!integrationError && integration && integration.is_active && integration.webhook_url) {
+        console.log('🔗 Triggering webhook:', integration.webhook_url);
+
+        const webhookPayload = {
+          event: 'submission.created',
+          bot_id: botId,
+          bot_name: bot.name,
+          submission_id: submission.id,
+          submitted_at: submission.created_at,
+          ...data // Spread the actual form fields for easy mapping in Zapier/Make
+        };
+
+        // Send webhook asynchronously - don't wait for response
+        fetch(integration.webhook_url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'IntakeOS-Webhook/1.0'
+          },
+          body: JSON.stringify(webhookPayload),
+        })
+          .then(() => console.log('✅ Webhook triggered successfully'))
+          .catch((webhookError) => console.error('⚠️ Webhook failed:', webhookError));
+      }
+    } catch (webhookError) {
+      console.error('⚠️ Failed to process webhook:', webhookError);
+      // We don't throw here - webhooks are optional and shouldn't break the submission
     }
 
     return NextResponse.json({
