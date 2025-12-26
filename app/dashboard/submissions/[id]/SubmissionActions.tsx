@@ -3,13 +3,36 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
+
+// Helper function to get field label from either schema type
+function getFieldLabel(key: string, schema: any): string {
+  if (isLegacySchema(schema)) {
+    const field = schema.find((f: any) => f.id === key);
+    return field?.label || formatKey(key);
+  }
+
+  if (isAgenticSchema(schema)) {
+    const info = schema.required_info[key];
+    return info?.description || formatKey(key);
+  }
+
+  return formatKey(key);
+}
+
+function formatKey(key: string): string {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
 type SubmissionActionsProps = {
   submissionId: string;
   botId: string;
   currentStatus: string;
   submissionData: Record<string, any>;
-  botSchema: any[];
+  botSchema: any; // Can be array (legacy) or object (agentic)
 };
 
 export function SubmissionActions({
@@ -48,8 +71,7 @@ export function SubmissionActions({
     // Create CSV content
     const headers = ['Field', 'Value'];
     const rows = Object.entries(submissionData).map(([key, value]) => {
-      const field = botSchema.find((f: any) => f.id === key);
-      const label = field?.label || key;
+      const label = getFieldLabel(key, botSchema);
       return [label, String(value)];
     });
 
