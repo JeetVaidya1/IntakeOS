@@ -1,9 +1,31 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
 
 // Initialize Resend with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Helper function to get field label from schema
+function getFieldLabel(key: string, schema: any): string {
+  if (isLegacySchema(schema)) {
+    const field = schema.find((f: any) => f.id === key);
+    return field?.label || formatKey(key);
+  }
+  if (isAgenticSchema(schema)) {
+    const info = schema.required_info[key];
+    return info?.description || formatKey(key);
+  }
+  return formatKey(key);
+}
+
+// Helper to format keys as fallback (snake_case -> Title Case)
+function formatKey(key: string): string {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
 // Use service role key to bypass RLS for public submissions
 const supabase = createClient(
@@ -42,10 +64,10 @@ export async function POST(request: Request) {
 
     console.log('✅ Submission saved:', submission.id);
 
-    // 2. Fetch the bot owner's email from the bot record
+    // 2. Fetch the bot owner's email and schema from the bot record
     const { data: bot, error: botError } = await supabase
       .from('bots')
-      .select('notification_email, name')
+      .select('notification_email, name, schema')
       .eq('id', botId)
       .single();
 
@@ -74,14 +96,14 @@ export async function POST(request: Request) {
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               ${Object.entries(data).map(([key, value]) => `
                 <div style="margin-bottom: 10px;">
-                  <strong style="text-transform: capitalize; color: #374151;">${key.replace(/_/g, ' ')}:</strong>
+                  <strong style="color: #374151;">${getFieldLabel(key, bot.schema)}:</strong>
                   <span style="color: #111827;">${value}</span>
                 </div>
               `).join('')}
             </div>
 
             <p style="color: #6b7280; font-size: 14px;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/submissions/${submission.id}">View full conversation in Dashboard</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/submissions/${submission.id}" style="color: #4F46E5; text-decoration: none;">View full conversation in Dashboard →</a>
             </p>
           </div>
         `
@@ -103,12 +125,24 @@ export async function POST(request: Request) {
       if (!integrationError && integration && integration.is_active && integration.webhook_url) {
         console.log('🔗 Triggering webhook:', integration.webhook_url);
 
+        // Create fields metadata with labels from schema
+        const fieldsMetadata: Record<string, { label: string; value: any }> = {};
+        Object.entries(data).forEach(([key, value]) => {
+          fieldsMetadata[key] = {
+            label: getFieldLabel(key, bot.schema),
+            value: value
+          };
+        });
+
         const webhookPayload = {
           event: 'submission.created',
           bot_id: botId,
           bot_name: bot.name,
           submission_id: submission.id,
           submitted_at: submission.created_at,
+          schema_version: isAgenticSchema(bot.schema) ? 'agentic_v1' : 'legacy',
+          conversation: conversation || null, // Include conversation history if available
+          fields_metadata: fieldsMetadata, // Field labels + values
           ...data // Spread the actual form fields for easy mapping in Zapier/Make
         };
 
