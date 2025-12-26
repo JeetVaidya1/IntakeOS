@@ -11,9 +11,9 @@ export async function POST(request: Request) {
 
     console.log('🖼️  Analyzing image:', imageUrl);
 
-    // Use GPT-4 Vision to analyze the image
+    // Use GPT-5 Vision to analyze the image
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini',
       messages: [
         {
           role: 'system',
