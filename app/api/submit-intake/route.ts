@@ -84,8 +84,13 @@ export async function POST(request: Request) {
 
     // 3. Send Email Notification
     try {
+      // Use custom domain if configured, otherwise fall back to test domain
+      // NOTE: onboarding@resend.dev can only send to verified emails in your Resend account
+      // To send to any email, add your own verified domain in Resend and set RESEND_FROM_EMAIL
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'IntakeOS Notifications <onboarding@resend.dev>';
+
       await resend.emails.send({
-        from: 'IntakeOS Notifications <onboarding@resend.dev>', // Use resend.dev for testing
+        from: fromEmail,
         to: ownerEmail,
         subject: `New Lead from ${bot.name} - #${submission.id.slice(0, 8)}`,
         html: `
