@@ -15,7 +15,7 @@ export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () =
   const [businessProfile, setBusinessProfile] = useState<{ business_name: string; business_type: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [showExamples, setShowExamples] = useState(true);
+  const [showExamples, setShowExamples] = useState(false);
   const router = useRouter();
 
   const supabase = createBrowserClient(
