@@ -3,31 +3,41 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { Sparkles, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Building2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { PromptExamples } from './PromptExamples';
+import { createBrowserClient } from '@supabase/ssr';
 
 export function BotGenerator({ user }: { user: User }) {
   const [description, setDescription] = useState('');
-  const [businessName, setBusinessName] = useState('');
+  const [businessProfile, setBusinessProfile] = useState<{ business_name: string; business_type: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [showExamples, setShowExamples] = useState(true);
   const router = useRouter();
 
-  // Load business name from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('intakeOS_businessName');
-    if (saved) setBusinessName(saved);
-  }, []);
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  // Save business name to localStorage when it changes
-  const handleBusinessNameChange = (value: string) => {
-    setBusinessName(value);
-    localStorage.setItem('intakeOS_businessName', value);
-  };
+  // Fetch business profile from database
+  useEffect(() => {
+    async function loadBusinessProfile() {
+      const { data: profile } = await supabase
+        .from('business_profiles')
+        .select('business_name, business_type')
+        .eq('user_id', user.id)
+        .single();
+
+      setBusinessProfile(profile);
+      setLoadingProfile(false);
+    }
+
+    loadBusinessProfile();
+  }, [user.id]);
 
   const handleGenerate = async () => {
     if (!user) {
@@ -43,15 +53,10 @@ export function BotGenerator({ user }: { user: User }) {
     setLoading(true);
 
     try {
-      // Combine business name with description if business name is provided
-      const fullDescription = businessName.trim()
-        ? `I'm ${businessName}. ${description}`
-        : description;
-
       const response = await fetch('/api/generate-bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: fullDescription }),
+        body: JSON.stringify({ description }),
       });
 
       const data = await response.json();
@@ -135,8 +140,34 @@ export function BotGenerator({ user }: { user: User }) {
         </div>
       )}
 
+      {/* Business Profile Setup Prompt */}
+      {!loadingProfile && !businessProfile && (
+        <div className="glass-vibrant backdrop-blur-xl border-2 border-orange-200 rounded-3xl shadow-2xl shadow-orange-500/20 p-8 bg-gradient-to-br from-orange-50/50 to-amber-50/50">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl shadow-lg">
+              <Building2 className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2">
+                Set Up Your Business Profile First
+              </h3>
+              <p className="text-slate-700 mb-4">
+                Before creating bots, please set up your business profile. This ensures all your bots are associated with your business name.
+              </p>
+              <Link href="/dashboard/settings">
+                <Button className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-lg shadow-orange-500/30">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Go to Settings
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Generator Form */}
-      <div id="bot-generator" className="glass-vibrant backdrop-blur-xl border-2 border-purple-200 rounded-3xl shadow-2xl shadow-purple-500/20 p-8 relative overflow-hidden group">
+      {!loadingProfile && businessProfile && (
+        <div id="bot-generator" className="glass-vibrant backdrop-blur-xl border-2 border-purple-200 rounded-3xl shadow-2xl shadow-purple-500/20 p-8 relative overflow-hidden group">
         {/* Multiple Glow Effects */}
         <div className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-all duration-500 animate-glow" />
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-gradient-to-r from-purple-500 to-pink-500 opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-all duration-500 animate-glow" style={{animationDelay: '1s'}} />
@@ -151,34 +182,36 @@ export function BotGenerator({ user }: { user: User }) {
             </h2>
           </div>
 
-          {/* Business Name Field (Optional) */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-indigo-600" />
-              Your Business Name (optional, saved for future bots)
-            </label>
-            <Input
-              type="text"
-              value={businessName}
-              onChange={(e) => handleBusinessNameChange(e.target.value)}
-              placeholder="e.g., Sarah's Wedding Photography, Smith Law Firm..."
-              className="text-base p-4 rounded-xl border-2 border-indigo-200 bg-white/80 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all shadow-md hover:shadow-lg"
-            />
-            <p className="text-xs text-slate-500 mt-2">
-              💡 Set this once and we'll automatically include it in your bot descriptions
-            </p>
+          {/* Business Profile Display */}
+          <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <p className="text-xs text-slate-500 font-medium">Creating bot for:</p>
+                  <p className="text-lg font-bold text-indigo-900">{businessProfile.business_name}</p>
+                  <p className="text-xs text-slate-600">{businessProfile.business_type}</p>
+                </div>
+              </div>
+              <Link href="/dashboard/settings">
+                <Button variant="ghost" size="sm" className="text-indigo-600 hover:bg-indigo-100">
+                  <Settings className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Description Field */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              What information do you need to collect?
+              What task/use case is this bot for?
             </label>
             <div className="relative">
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Example: I need the couple's names, wedding date, venue location, estimated guest count, package interest (basic, premium, or luxury), budget range, whether they have a Pinterest board..."
+                placeholder="Example: I need to collect wedding inquiries - couple's names, wedding date, venue location, estimated guest count, package interest (basic, premium, or luxury), budget range, whether they have a Pinterest board..."
                 className="min-h-[200px] text-base p-6 rounded-2xl border-2 border-indigo-200 bg-white/80 focus:bg-white focus:border-purple-400 focus:ring-4 focus:ring-purple-500/20 transition-all resize-none shadow-lg hover:shadow-xl hover:border-indigo-300"
               />
               {/* Character count or helper text */}
@@ -189,7 +222,7 @@ export function BotGenerator({ user }: { user: User }) {
             <p className="text-xs text-slate-600 mt-2 flex items-start gap-2">
               <span className="text-emerald-500 flex-shrink-0 mt-0.5">✓</span>
               <span>
-                <strong>Pro tip:</strong> The more detailed you are, the smarter your bot becomes. List all the specific fields, options, and context you want to collect.
+                <strong>Pro tip:</strong> Describe the specific information you need for this task. The bot name will be generated from this (e.g., "Wedding Inquiries", "Portrait Bookings").
               </span>
             </p>
           </div>
@@ -213,7 +246,8 @@ export function BotGenerator({ user }: { user: User }) {
             )}
           </Button>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

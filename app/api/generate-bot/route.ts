@@ -35,17 +35,35 @@ export async function POST(request: Request) {
       );
     }
 
+    // Fetch user's business profile
+    const { data: businessProfile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('business_name, business_type, industry')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !businessProfile) {
+      return NextResponse.json(
+        { error: 'Please set up your business profile in Settings first' },
+        { status: 400 }
+      );
+    }
+
+    console.log('🏢 Business Profile:', businessProfile);
+
     // Step 1: Use AI to extract fields
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: `You are an intake form analyzer. Extract structured fields from a business description.
+          content: `You are an intake form analyzer for ${businessProfile.business_name}, a ${businessProfile.business_type} business.
+
+Extract structured fields from the task description and generate a bot name.
 
 Output valid JSON only with this structure:
 {
-  "businessName": "extracted or generic name",
+  "botTaskName": "Short descriptive task name (e.g., 'Wedding Inquiries', 'Portrait Bookings', 'Service Requests')",
   "fields": [
     {
       "id": "unique_snake_case_id",
@@ -68,7 +86,8 @@ Field type rules:
 - Use "file_upload" when photos mentioned
 - Use "text" for everything else
 
-Extract 5-8 fields maximum.`,
+Extract 5-8 fields maximum.
+The botTaskName should be a concise name for THIS specific task/use case, not the business name.`,
         },
         {
           role: 'user',
@@ -85,16 +104,18 @@ Extract 5-8 fields maximum.`,
     console.log('🤖 AI Response:', aiResponse);
 
     const schema = JSON.parse(aiResponse);
-    const slug = generateSlug(schema.businessName);
+    const botTaskName = schema.botTaskName || 'Intake Form';
+    const slug = generateSlug(botTaskName);
 
     console.log('🔗 Generated slug:', slug);
+    console.log('📝 Bot Task Name:', botTaskName);
 
     // Save to database with user_id and notification_email
     const { data: bot, error } = await supabase
       .from('bots')
       .insert({
         slug,
-        name: schema.businessName,
+        name: botTaskName,
         description,
         schema: schema.fields,
         user_id: user.id,

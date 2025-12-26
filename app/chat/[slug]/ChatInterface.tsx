@@ -20,14 +20,14 @@ type BotType = {
   schema: any[];
 };
 
-export function ChatInterface({ bot }: { bot: BotType }) {
+export function ChatInterface({ bot, businessName }: { bot: BotType; businessName: string }) {
   const storageKey = `intakeOS_chat_${bot.id}`;
 
   // Always start with default values to avoid hydration mismatch
   const defaultMessages: Message[] = [
     {
       role: 'bot',
-      content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
+      content: `Hi there! 👋 I'm here to help you get a quote from ${businessName}. Let's get started!`
     }
   ];
 
@@ -120,7 +120,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          businessName: bot.name,
+          businessName: businessName,
           field,
           previousAnswer,
           conversationHistory,
@@ -341,7 +341,7 @@ Reference: #${result.submissionId.slice(0, 8)}`;
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               imageUrl: publicUrl,
-                              businessName: bot.name,
+                              businessName: businessName,
                               fieldLabel: currentField.label,
                               conversationHistory,
                             }),

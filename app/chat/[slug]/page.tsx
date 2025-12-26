@@ -30,21 +30,31 @@ export default async function ChatPage({
     notFound();
   }
 
+  // Fetch business profile for this bot's owner
+  const { data: businessProfile } = await supabase
+    .from('business_profiles')
+    .select('business_name, business_type')
+    .eq('user_id', bot.user_id)
+    .single();
+
+  // Use business name if available, fallback to bot name
+  const displayName = businessProfile?.business_name || bot.name;
+
   return (
     <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50'}`}>
       {/* Header - Only show if NOT a widget */}
       {!isWidget && (
         <header className="border-b border-purple-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
           <div className="container mx-auto px-4 py-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{bot.name}</h1>
-            <p className="text-sm text-slate-600 font-medium">Complete your intake form</p>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{displayName}</h1>
+            <p className="text-sm text-slate-600 font-medium">{bot.name} - Complete your intake form</p>
           </div>
         </header>
       )}
 
       {/* Chat Interface - Remove padding if widget to use full iframe space */}
       <main className={isWidget ? 'p-0 h-screen' : 'container mx-auto px-4 py-8 max-w-3xl'}>
-        <ChatInterface bot={bot} />
+        <ChatInterface bot={bot} businessName={displayName} />
       </main>
     </div>
   );

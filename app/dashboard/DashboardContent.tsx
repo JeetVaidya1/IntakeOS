@@ -67,6 +67,14 @@ export function DashboardContent({
             <span className="text-sm text-slate-500 hidden md:block">
               {user.email}
             </span>
+            <Link href="/dashboard/settings">
+              <Button
+                variant="ghost"
+                className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              >
+                Settings
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               onClick={handleSignOut}
