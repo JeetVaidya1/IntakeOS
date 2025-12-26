@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CopyButton } from './CopyButton';
 import { QRCode } from './QRcode';
+import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
 
 export default async function PreviewPage({ 
   params 
@@ -136,35 +137,80 @@ export default async function PreviewPage({
           </div>
         </Card>
 
-        {/* Fields Preview */}
+        {/* Fields Preview / Requirements */}
         <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">
-            Your bot will ask for ({bot.schema.length} fields):
-          </h2>
-          
-          <div className="space-y-3">
-            {bot.schema.map((field: any, index: number) => (
-              <div key={field.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-400 font-mono text-sm">{index + 1}.</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{field.label}</span>
-                    {field.required && (
-                      <Badge variant="secondary" className="text-xs">Required</Badge>
-                    )}
+          {isLegacySchema(bot.schema) ? (
+            <>
+              <h2 className="text-xl font-semibold mb-4">
+                Your bot will ask for ({bot.schema.length} fields):
+              </h2>
+
+              <div className="space-y-3">
+                {bot.schema.map((field: any, index: number) => (
+                  <div key={field.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                    <span className="text-slate-400 font-mono text-sm">{index + 1}.</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{field.label}</span>
+                        {field.required && (
+                          <Badge variant="secondary" className="text-xs">Required</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">{field.type}</Badge>
+                        {field.placeholder && (
+                          <span className="text-xs text-slate-500">
+                            e.g., {field.placeholder}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">{field.type}</Badge>
-                    {field.placeholder && (
-                      <span className="text-xs text-slate-500">
-                        e.g., {field.placeholder}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : isAgenticSchema(bot.schema) ? (
+            <>
+              <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                🧠 Agentic Conversational Bot
+              </h2>
+
+              <div className="mb-4 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg">
+                <h3 className="font-semibold text-indigo-900 mb-2">Conversation Goal:</h3>
+                <p className="text-sm text-slate-700">{bot.schema.goal}</p>
+              </div>
+
+              <h3 className="font-semibold mb-3">Information Requirements:</h3>
+              <div className="space-y-3">
+                {Object.entries(bot.schema.required_info).map(([key, info]: [string, any], index: number) => (
+                  <div key={key} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                    <span className="text-slate-400 font-mono text-sm">{index + 1}.</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{info.description}</span>
+                        {info.critical && (
+                          <Badge className="text-xs bg-gradient-to-r from-indigo-600 to-purple-600">Critical</Badge>
+                        )}
+                      </div>
+                      {info.example && (
+                        <p className="text-xs text-slate-500">
+                          Example: {info.example}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-900">
+                  ✨ This bot uses conversational AI - it will naturally gather this information through dialogue instead of rigid form fields.
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-slate-600">Schema format unknown</p>
+          )}
         </Card>
 
         {/* Embed Code */}

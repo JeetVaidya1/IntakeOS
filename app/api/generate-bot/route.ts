@@ -51,51 +51,120 @@ export async function POST(request: Request) {
 
     console.log('🏢 Business Profile:', businessProfile);
 
-    // Step 1: Use AI to extract fields
+    // Step 1: Generate Agentic Bot Schema using AI
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: `You are an intake form analyzer for ${businessProfile.business_name}, a ${businessProfile.business_type} business.
+          content: `You are a conversational bot architect for ${businessProfile.business_name}, a ${businessProfile.business_type} business.
 
-Extract structured fields from the task description and generate a bot name.
+Your job is to design an AGENTIC conversational bot that naturally gathers information through dialogue.
 
-Output valid JSON only with this structure:
+Given the user's task description, create a conversational bot schema.
+
+Output valid JSON with this EXACT structure:
 {
-  "botTaskName": "Short descriptive task name (e.g., 'Wedding Inquiries', 'Portrait Bookings', 'Service Requests')",
-  "fields": [
-    {
-      "id": "unique_snake_case_id",
-      "type": "text|email|phone|address|number|select|date|file_upload",
-      "label": "User-friendly label",
-      "required": true|false,
-      "placeholder": "example input",
-      "options": ["option1", "option2"]
+  "botTaskName": "Short task name (e.g., 'Wedding Inquiries', 'Service Requests')",
+  "goal": "A clear statement of what information this bot needs to gather and why",
+  "system_prompt": "Detailed instructions for how the AI should behave during conversations - include personality, tone, industry knowledge, and conversation style",
+  "required_info": {
+    "info_key_1": {
+      "description": "What this information is",
+      "critical": true,
+      "example": "Example value",
+      "type": "text|email|phone|date|number|url"
+    },
+    "info_key_2": {
+      "description": "What this information is",
+      "critical": false,
+      "example": "Example value",
+      "type": "text"
     }
-  ]
+  }
 }
 
-Field type rules:
-- Use "email" for email addresses
-- Use "phone" for phone numbers
-- Use "address" for locations/addresses
-- Use "number" for quantities
-- Use "select" for predefined choices
-- Use "date" for scheduling
-- Use "file_upload" when photos mentioned
-- Use "text" for everything else
+Guidelines for creating required_info:
+- Use snake_case keys (e.g., "couple_names", "wedding_date", "contact_email")
+- Mark truly essential info as critical: true
+- Provide realistic examples
+- Group related information (e.g., "contact_info" could include email AND phone)
+- Include 5-10 information categories maximum
+- Think about CONVERSATION FLOW - what makes sense to discuss naturally?
 
-Extract 5-8 fields maximum.
-The botTaskName should be a concise name for THIS specific task/use case, not the business name.`,
+Guidelines for system_prompt:
+- Define the bot's personality (warm? professional? consultative?)
+- Include industry-specific knowledge the bot should demonstrate
+- Explain how to handle images (if applicable)
+- Specify conversation style (casual? formal? enthusiastic?)
+- Include example phrases or approach
+
+Example for Wedding Photography:
+{
+  "botTaskName": "Wedding Inquiries",
+  "goal": "Understand the couple's wedding vision, gather event logistics, determine photography package interest, and collect contact information - all while being warm and excited about their special day",
+  "system_prompt": "You are a friendly wedding photography consultant for ${businessProfile.business_name}. You LOVE weddings and should show genuine excitement about each couple's special day. Have natural conversations - don't interrogate. When they mention their venue, acknowledge it with knowledge (e.g., 'Riverside Manor is beautiful in October!'). For uploaded images, discuss them thoroughly (venue layout, lighting concerns, etc.) before moving on. Your goal is to help them feel confident we understand their vision. Be warm, consultative, and professional.",
+  "required_info": {
+    "couple_names": {
+      "description": "Names of the couple getting married",
+      "critical": true,
+      "example": "Sarah and Mike",
+      "type": "text"
+    },
+    "wedding_date": {
+      "description": "Date of the wedding",
+      "critical": true,
+      "example": "October 15, 2025",
+      "type": "date"
+    },
+    "venue_details": {
+      "description": "Venue name, location, and whether indoor/outdoor",
+      "critical": true,
+      "example": "Riverside Manor, outdoor ceremony with indoor reception",
+      "type": "text"
+    },
+    "guest_count": {
+      "description": "Estimated number of guests",
+      "critical": false,
+      "example": "150 guests",
+      "type": "number"
+    },
+    "package_interest": {
+      "description": "Which photography package they're interested in",
+      "critical": true,
+      "example": "Premium 10-hour package",
+      "type": "text"
+    },
+    "budget_range": {
+      "description": "Photography budget range",
+      "critical": true,
+      "example": "$3,000-4,000",
+      "type": "text"
+    },
+    "contact_email": {
+      "description": "Email address for follow-up",
+      "critical": true,
+      "example": "sarah@example.com",
+      "type": "email"
+    },
+    "contact_phone": {
+      "description": "Phone number",
+      "critical": true,
+      "example": "(555) 123-4567",
+      "type": "phone"
+    }
+  }
+}
+
+Now generate the schema for this task.`,
         },
         {
           role: 'user',
           content: description,
         },
       ],
-      temperature: 0.3,
-      response_format: { type: "json_object" }, // Enforce valid JSON output
+      temperature: 0.4,
+      response_format: { type: "json_object" },
     });
 
     const aiResponse = completion.choices[0].message.content;
@@ -103,21 +172,30 @@ The botTaskName should be a concise name for THIS specific task/use case, not th
 
     console.log('🤖 AI Response:', aiResponse);
 
-    const schema = JSON.parse(aiResponse);
-    const botTaskName = schema.botTaskName || 'Intake Form';
+    const parsedResponse = JSON.parse(aiResponse);
+    const botTaskName = parsedResponse.botTaskName || 'Intake Bot';
     const slug = generateSlug(botTaskName);
+
+    // Build the Agentic Schema
+    const agenticSchema = {
+      goal: parsedResponse.goal,
+      system_prompt: parsedResponse.system_prompt,
+      required_info: parsedResponse.required_info,
+      schema_version: 'agentic_v1'
+    };
 
     console.log('🔗 Generated slug:', slug);
     console.log('📝 Bot Task Name:', botTaskName);
+    console.log('🧠 Agentic Schema:', JSON.stringify(agenticSchema, null, 2));
 
-    // Save to database with user_id and notification_email
+    // Save to database with AGENTIC schema
     const { data: bot, error } = await supabase
       .from('bots')
       .insert({
         slug,
         name: botTaskName,
         description,
-        schema: schema.fields,
+        schema: agenticSchema, // NEW: Storing agentic schema instead of field array
         user_id: user.id,
         notification_email: user.email,
       })
@@ -129,13 +207,14 @@ The botTaskName should be a concise name for THIS specific task/use case, not th
       throw error;
     }
 
-    console.log('✅ Bot created:', bot);
+    console.log('✅ Agentic Bot created:', bot);
 
     return NextResponse.json({
       success: true,
       botId: bot.id,
       slug: bot.slug,
-      schema: schema.fields,
+      schema: agenticSchema,
+      isAgentic: true,
     });
 
   } catch (error) {
