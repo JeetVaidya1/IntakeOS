@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
-import { ChatInterface } from './ChatInterface';
+import { ChatInterfaceWrapper } from './ChatInterfaceWrapper';
 
 export default async function ChatPage({ 
   params,
@@ -54,7 +54,7 @@ export default async function ChatPage({
 
       {/* Chat Interface - Remove padding if widget to use full iframe space */}
       <main className={isWidget ? 'p-0 h-screen' : 'container mx-auto px-4 py-8 max-w-3xl'}>
-        <ChatInterface bot={bot} businessName={displayName} />
+        <ChatInterfaceWrapper bot={bot} businessName={displayName} />
       </main>
     </div>
   );
