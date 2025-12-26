@@ -23,81 +23,45 @@ type BotType = {
 export function ChatInterface({ bot }: { bot: BotType }) {
   const storageKey = `intakeOS_chat_${bot.id}`;
 
-  // Initialize state from localStorage if available
-  const getInitialMessages = (): Message[] => {
-    if (typeof window === 'undefined') return [
-      {
-        role: 'bot',
-        content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
-      }
-    ];
+  // Always start with default values to avoid hydration mismatch
+  const defaultMessages: Message[] = [
+    {
+      role: 'bot',
+      content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
+    }
+  ];
+
+  const [messages, setMessages] = useState<Message[]>(defaultMessages);
+  const [isUploading, setIsUploading] = useState(false);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
+  const [collectedData, setCollectedData] = useState<Record<string, any>>({});
+  const [validationError, setValidationError] = useState<string>('');
+  const [isHydrated, setIsHydrated] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const currentField = bot.schema[currentFieldIndex];
+  const progress = (currentFieldIndex / bot.schema.length) * 100;
+
+  // Load from localStorage after hydration
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.messages || [
-          {
-            role: 'bot',
-            content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
-          }
-        ];
+        if (parsed.messages) setMessages(parsed.messages);
+        if (parsed.currentFieldIndex !== undefined) setCurrentFieldIndex(parsed.currentFieldIndex);
+        if (parsed.collectedData) setCollectedData(parsed.collectedData);
       }
     } catch (error) {
       console.error('Failed to load chat state:', error);
     }
 
-    return [
-      {
-        role: 'bot',
-        content: `Hi there! 👋 I'm here to help you get a quote from ${bot.name}. Let's get started!`
-      }
-    ];
-  };
-
-  const getInitialFieldIndex = (): number => {
-    if (typeof window === 'undefined') return 0;
-
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.currentFieldIndex || 0;
-      }
-    } catch (error) {
-      console.error('Failed to load field index:', error);
-    }
-
-    return 0;
-  };
-
-  const getInitialCollectedData = (): Record<string, any> => {
-    if (typeof window === 'undefined') return {};
-
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.collectedData || {};
-      }
-    } catch (error) {
-      console.error('Failed to load collected data:', error);
-    }
-
-    return {};
-  };
-
-  const [messages, setMessages] = useState<Message[]>(getInitialMessages);
-  const [isUploading, setIsUploading] = useState(false);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [currentFieldIndex, setCurrentFieldIndex] = useState(getInitialFieldIndex);
-  const [collectedData, setCollectedData] = useState<Record<string, any>>(getInitialCollectedData);
-  const [validationError, setValidationError] = useState<string>('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const currentField = bot.schema[currentFieldIndex];
-  const progress = (currentFieldIndex / bot.schema.length) * 100;
+    setIsHydrated(true);
+  }, [storageKey]);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -121,6 +85,9 @@ export function ChatInterface({ bot }: { bot: BotType }) {
 
   // Initial Question - only ask if this is a fresh conversation
   useEffect(() => {
+    // Wait for hydration to complete before asking initial question
+    if (!isHydrated) return;
+
     if (currentFieldIndex === 0 && messages.length === 1) {
       // Check if this is a restored session
       const hasRestoredData = Object.keys(collectedData).length > 0;
@@ -132,7 +99,7 @@ export function ChatInterface({ bot }: { bot: BotType }) {
       }, 800);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isHydrated]);
 
   // --- LOGIC HELPERS ---
   const generateAIQuestion = async (field: any, previousAnswer: string) => {
