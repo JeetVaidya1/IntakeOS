@@ -54,12 +54,21 @@ export default async function SubmissionDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-cyan-50/30 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Vibrant Background Shapes */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 right-1/4 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 left-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
-        <div className="absolute inset-0 bg-pattern-dots"></div>
+        {/* Large colorful circles with blur for atmospheric effect */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-indigo-500 rounded-full opacity-60 blur-3xl animate-float"></div>
+        <div className="absolute top-40 right-20 w-[500px] h-[500px] bg-purple-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-[450px] h-[450px] bg-pink-500 rounded-full opacity-55 blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] bg-cyan-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
+
+        {/* Geometric squares with blur */}
+        <div className="absolute bottom-40 right-10 w-64 h-64 bg-orange-500 opacity-55 blur-3xl rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-1/2 left-20 w-72 h-72 bg-teal-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '5s'}}></div>
+
+        {/* Pattern overlay - reduced opacity */}
+        <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
       </div>
 
       {/* Header */}
@@ -86,8 +95,8 @@ export default async function SubmissionDetailPage({
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Collected Data */}
-        <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-6">Collected Information</h2>
+        <Card className="p-6 mb-8 border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-pink-50/50 shadow-xl hover:shadow-2xl transition-shadow">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">Collected Information</h2>
           <div className="space-y-4">
             {Object.entries(submission.data).map(([key, value]) => {
               // Find the field label from bot schema
@@ -127,8 +136,8 @@ export default async function SubmissionDetailPage({
         </Card>
 
         {/* Full Conversation */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-6">Full Conversation</h2>
+        <Card className="p-6 border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-cyan-50/50 shadow-xl hover:shadow-2xl transition-shadow">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent mb-6">Full Conversation</h2>
           <div className="space-y-4">
             {submission.conversation.map((message: any, index: number) => {
               // Check if message contains an image
