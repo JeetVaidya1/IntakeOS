@@ -1,7 +1,7 @@
 -- Create integrations table for webhook configurations
 CREATE TABLE IF NOT EXISTS integrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  bot_id UUID NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
+  bot_id UUID NOT NULL UNIQUE REFERENCES bots(id) ON DELETE CASCADE,
   webhook_url TEXT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
