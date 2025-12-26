@@ -5,7 +5,7 @@ import { DashboardContent } from './DashboardContent';
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
-  
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,5 +44,20 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  return <DashboardContent user={user} bots={bots} />;
+  // Fetch 10 most recent submissions across all bots for this user
+  const { data: recentSubmissions } = await supabase
+    .from('submissions')
+    .select(`
+      id,
+      created_at,
+      bot_id,
+      bots (
+        name
+      )
+    `)
+    .in('bot_id', bots?.map(b => b.id) || [])
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  return <DashboardContent user={user} bots={bots} recentSubmissions={recentSubmissions || []} />;
 }
