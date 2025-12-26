@@ -17,6 +17,7 @@ type BotType = {
   id: string;
   name: string;
   schema: AgenticBotSchema;
+  user_id: string;
 };
 
 export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; businessName: string }) {
@@ -119,6 +120,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
           currentState: conversationState,
           botSchema: bot.schema,
           businessName,
+          botUserId: bot.user_id,
         }),
       });
 
@@ -161,6 +163,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
           currentState: conversationState,
           botSchema: bot.schema,
           businessName,
+          botUserId: bot.user_id,
         }),
       });
 
@@ -217,6 +220,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
           currentState: conversationState,
           botSchema: bot.schema,
           businessName,
+          botUserId: bot.user_id,
         }),
       });
 

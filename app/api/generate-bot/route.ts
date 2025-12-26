@@ -35,10 +35,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch user's business profile
-    const { data: businessProfile, error: profileError } = await supabase
+    // Fetch user's business profile with all enhanced fields
+    const { data: businessProfile, error: profileError} = await supabase
       .from('business_profiles')
-      .select('business_name, business_type, industry')
+      .select('*')
       .eq('user_id', user.id)
       .single();
 
@@ -59,9 +59,17 @@ export async function POST(request: Request) {
           role: 'system',
           content: `You are a conversational bot architect for ${businessProfile.business_name}, a ${businessProfile.business_type} business.
 
-Your job is to design an AGENTIC conversational bot that naturally gathers information through dialogue.
+BUSINESS CONTEXT:
+${businessProfile.business_description ? `About: ${businessProfile.business_description}` : ''}
+${businessProfile.products_services ? `Offerings: ${businessProfile.products_services}` : ''}
+${businessProfile.location ? `Location: ${businessProfile.location}` : ''}
+${businessProfile.target_audience ? `Target Audience: ${businessProfile.target_audience}` : ''}
+${businessProfile.unique_selling_points ? `What Makes Them Special: ${businessProfile.unique_selling_points}` : ''}
+${businessProfile.industry ? `Industry: ${businessProfile.industry}` : ''}
 
-Given the user's task description, create a conversational bot schema.
+Your job is to design an AGENTIC conversational bot that naturally gathers information through dialogue while showcasing this business's unique value and personality.
+
+Given the user's task description, create a conversational bot schema that feels authentic to this business.
 
 Output valid JSON with this EXACT structure:
 {
