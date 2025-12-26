@@ -9,6 +9,7 @@ import { BotGenerator } from '../components/BotGenerator';
 import { User } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
 import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
+import { Building2 } from 'lucide-react';
 
 // Helper to get field count from either schema type
 function getFieldCount(schema: any): number {
@@ -75,16 +76,17 @@ export function DashboardContent({
             <span className="text-xl font-bold gradient-text-vibrant">IntakeOS</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-sm text-slate-500 hidden md:block">
               {user.email}
             </span>
             <Link href="/dashboard/settings">
               <Button
-                variant="ghost"
-                className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                variant="outline"
+                className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 text-indigo-700 hover:from-indigo-100 hover:to-purple-100 hover:border-indigo-300 transition-all font-medium shadow-sm hover:shadow-md"
               >
-                Settings
+                <Building2 className="h-4 w-4 mr-2" />
+                Business Profile
               </Button>
             </Link>
             <Button

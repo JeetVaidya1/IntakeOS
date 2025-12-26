@@ -1,10 +1,23 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
 import type { AgenticBotSchema, ConversationState, AgentResponse } from '@/types/agentic';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 export async function POST(request: Request) {
   try {
@@ -12,17 +25,41 @@ export async function POST(request: Request) {
       messages,
       currentState,
       botSchema,
-      businessName
+      businessName,
+      botUserId
     }: {
       messages: Array<{ role: string; content: string }>;
       currentState: ConversationState;
       botSchema: AgenticBotSchema;
       businessName: string;
+      botUserId?: string;
     } = await request.json();
 
     console.log('🧠 Agent Brain invoked');
     console.log('📊 Current State:', currentState);
     console.log('💬 Message count:', messages.length);
+
+    // Fetch business profile for enhanced context
+    let businessContext = '';
+    if (botUserId) {
+      const { data: businessProfile } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', botUserId)
+        .single();
+
+      if (businessProfile) {
+        businessContext = `
+BUSINESS CONTEXT (use this to inform your responses):
+${businessProfile.business_description ? `About: ${businessProfile.business_description}` : ''}
+${businessProfile.products_services ? `Offerings: ${businessProfile.products_services}` : ''}
+${businessProfile.location ? `Location: ${businessProfile.location}` : ''}
+${businessProfile.target_audience ? `Target Audience: ${businessProfile.target_audience}` : ''}
+${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: ${businessProfile.unique_selling_points}` : ''}
+`;
+        console.log('🏢 Loaded business context');
+      }
+    }
 
     // Build the conversation history for context
     const conversationHistory = messages
@@ -42,6 +79,7 @@ export async function POST(request: Request) {
     const agentSystemPrompt = `You are an intelligent conversational agent for ${businessName}.
 
 ${botSchema.system_prompt}
+${businessContext}
 
 CONVERSATION GOAL:
 ${botSchema.goal}
