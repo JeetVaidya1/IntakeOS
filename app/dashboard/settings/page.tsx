@@ -116,30 +116,27 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Vibrant Background Shapes */}
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Deep Mesh Background Elements */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-indigo-500 rounded-full opacity-60 blur-3xl animate-float"></div>
-        <div className="absolute top-40 right-20 w-[500px] h-[500px] bg-purple-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-32 left-1/4 w-[450px] h-[450px] bg-pink-500 rounded-full opacity-55 blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
-        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] bg-cyan-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-40 right-10 w-64 h-64 bg-orange-500 opacity-55 blur-3xl rotate-45 animate-float" style={{animationDelay: '3s'}}></div>
-        <div className="absolute top-1/2 left-20 w-72 h-72 bg-teal-500 rounded-full opacity-50 blur-3xl animate-float" style={{animationDelay: '5s'}}></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
+        <div className="absolute top-10 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-10 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-float" style={{animationDelay: '3s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl animate-float" style={{animationDelay: '1.5s'}}></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
       </div>
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-purple-200/50 sticky top-0 z-10 shadow-sm">
+      <header className="bg-slate-950/70 backdrop-blur-xl border-b border-white/10 sticky top-0 z-10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-slate-600 hover:text-indigo-600 transition-colors font-medium"
+              className="text-slate-300 hover:text-white transition-colors font-medium"
             >
               ← Back to Dashboard
             </button>
-            <div className="h-6 w-px bg-purple-200" />
-            <h1 className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="h-6 w-px bg-white/10" />
+            <h1 className="font-bold text-xl text-white">
               Business Profile
             </h1>
           </div>
@@ -147,17 +144,17 @@ export default function SettingsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="p-8 border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 shadow-xl hover:shadow-2xl transition-shadow">
+        <Card className="p-8 border border-white/10 bg-white/5 backdrop-blur-lg shadow-xl">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg shadow-indigo-500/50">
               <Building2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-white">
                 Your Business Profile
               </h2>
-              <p className="text-sm text-slate-600 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-purple-500" />
+              <p className="text-sm text-slate-300 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-purple-400" />
                 This context powers all your AI bots
               </p>
             </div>
@@ -165,37 +162,37 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             {/* Basic Information Section */}
-            <div className="bg-white/60 rounded-xl p-6 border border-indigo-100">
-              <h3 className="font-semibold text-lg text-indigo-900 mb-4">Basic Information</h3>
+            <div className="bg-white/5 rounded-xl p-6 border border-white/10 backdrop-blur-lg">
+              <h3 className="font-semibold text-lg text-white mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="businessName" className="text-slate-700 font-medium">
-                    Business Name <span className="text-red-500">*</span>
+                  <Label htmlFor="businessName" className="text-slate-200 font-medium">
+                    Business Name <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     id="businessName"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="e.g., Sarah's Photography"
-                    className="mt-1.5 border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="businessType" className="text-slate-700 font-medium">
-                    Business Type <span className="text-red-500">*</span>
+                  <Label htmlFor="businessType" className="text-slate-200 font-medium">
+                    Business Type <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     id="businessType"
                     value={businessType}
                     onChange={(e) => setBusinessType(e.target.value)}
                     placeholder="e.g., Photography Studio"
-                    className="mt-1.5 border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="industry" className="text-slate-700 font-medium">
+                  <Label htmlFor="industry" className="text-slate-200 font-medium">
                     Industry
                   </Label>
                   <Input
@@ -203,12 +200,12 @@ export default function SettingsPage() {
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     placeholder="e.g., Wedding Photography"
-                    className="mt-1.5 border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="location" className="text-slate-700 font-medium">
+                  <Label htmlFor="location" className="text-slate-200 font-medium">
                     Location
                   </Label>
                   <Input
@@ -216,12 +213,12 @@ export default function SettingsPage() {
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="e.g., Austin, TX"
-                    className="mt-1.5 border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="website" className="text-slate-700 font-medium">
+                  <Label htmlFor="website" className="text-slate-200 font-medium">
                     Website
                   </Label>
                   <Input
@@ -230,25 +227,25 @@ export default function SettingsPage() {
                     onChange={(e) => setWebsite(e.target.value)}
                     placeholder="e.g., https://sarahsphotography.com"
                     type="url"
-                    className="mt-1.5 border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
               </div>
             </div>
 
             {/* Enhanced Context Section */}
-            <div className="bg-gradient-to-br from-purple-50/60 to-pink-50/60 rounded-xl p-6 border border-purple-100">
-              <h3 className="font-semibold text-lg text-purple-900 mb-2 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-purple-500" />
+            <div className="bg-white/5 rounded-xl p-6 border border-purple-500/30 backdrop-blur-lg">
+              <h3 className="font-semibold text-lg text-white mb-2 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-400" />
                 AI Context (Makes your bots smarter!)
               </h3>
-              <p className="text-sm text-slate-600 mb-4">
+              <p className="text-sm text-slate-300 mb-4">
                 The more detail you provide, the better your bots will understand your business and have natural conversations.
               </p>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="businessDescription" className="text-slate-700 font-medium">
+                  <Label htmlFor="businessDescription" className="text-slate-200 font-medium">
                     Business Description
                   </Label>
                   <Textarea
@@ -257,15 +254,15 @@ export default function SettingsPage() {
                     onChange={(e) => setBusinessDescription(e.target.value)}
                     placeholder="Describe what your business does, your story, and your approach..."
                     rows={3}
-                    className="mt-1.5 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-purple-500/20"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     e.g., "We specialize in candid wedding photography that captures authentic moments..."
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="productsServices" className="text-slate-700 font-medium">
+                  <Label htmlFor="productsServices" className="text-slate-200 font-medium">
                     Products/Services Offered
                   </Label>
                   <Textarea
@@ -274,15 +271,15 @@ export default function SettingsPage() {
                     onChange={(e) => setProductsServices(e.target.value)}
                     placeholder="What do you sell or offer?"
                     rows={3}
-                    className="mt-1.5 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-purple-500/20"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     e.g., "Wedding photography packages, engagement shoots, photo albums, prints..."
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="targetAudience" className="text-slate-700 font-medium">
+                  <Label htmlFor="targetAudience" className="text-slate-200 font-medium">
                     Target Audience
                   </Label>
                   <Input
@@ -290,15 +287,15 @@ export default function SettingsPage() {
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                     placeholder="Who do you serve?"
-                    className="mt-1.5 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-purple-500/20"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     e.g., "Couples getting married in Texas"
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="uniqueSellingPoints" className="text-slate-700 font-medium">
+                  <Label htmlFor="uniqueSellingPoints" className="text-slate-200 font-medium">
                     What Makes You Special
                   </Label>
                   <Textarea
@@ -307,9 +304,9 @@ export default function SettingsPage() {
                     onChange={(e) => setUniqueSellingPoints(e.target.value)}
                     placeholder="What sets you apart from competitors?"
                     rows={2}
-                    className="mt-1.5 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="mt-1.5 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-purple-500/20"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-400 mt-1">
                     e.g., "15 years of experience, featured in Wedding Magazine, unlimited revisions..."
                   </p>
                 </div>
@@ -321,7 +318,7 @@ export default function SettingsPage() {
               <Button
                 onClick={handleSave}
                 disabled={saving || !businessName.trim() || !businessType.trim()}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 disabled:opacity-50 h-12 text-base"
+                className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 h-12 text-base"
               >
                 {saving ? (
                   <>

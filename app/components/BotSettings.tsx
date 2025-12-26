@@ -117,20 +117,20 @@ export function BotSettings({ bot }: { bot: any }) {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <h3 className="text-lg font-medium mb-4">General Settings</h3>
+      <Card className="p-6 bg-white/5 backdrop-blur-lg border border-white/10">
+        <h3 className="text-lg font-medium text-white mb-4">General Settings</h3>
         <div className="space-y-4 max-w-md">
           <div>
-            <label className="text-sm font-medium text-slate-700">Bot Name</label>
+            <label className="text-sm font-medium text-slate-200">Bot Name</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1"
+              className="mt-1 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Notification Email</label>
-            <p className="text-xs text-slate-500 mt-1 mb-2">
+            <label className="text-sm font-medium text-slate-200">Notification Email</label>
+            <p className="text-xs text-slate-400 mt-1 mb-2">
               Where should we send new submission alerts?
             </p>
             <Input
@@ -138,12 +138,13 @@ export function BotSettings({ bot }: { bot: any }) {
               value={notificationEmail}
               onChange={(e) => setNotificationEmail(e.target.value)}
               placeholder="your@email.com"
-              className="mt-1"
+              className="mt-1 bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
             />
           </div>
           <Button
             onClick={handleUpdate}
             disabled={loading || (name === bot.name && notificationEmail === bot.notification_email)}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/50"
           >
             Save Changes
           </Button>
@@ -151,20 +152,20 @@ export function BotSettings({ bot }: { bot: any }) {
       </Card>
 
       {/* Integrations Section */}
-      <Card className="p-6 border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50">
+      <Card className="p-6 border border-purple-500/30 bg-white/5 backdrop-blur-lg">
         <div className="flex items-center gap-2 mb-4">
-          <Webhook className="h-5 w-5 text-purple-600" />
-          <h3 className="text-lg font-medium text-purple-900">Webhooks & Integrations</h3>
+          <Webhook className="h-5 w-5 text-purple-400" />
+          <h3 className="text-lg font-medium text-white">Webhooks & Integrations</h3>
         </div>
 
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-slate-300 mb-4">
           Automatically send submission data to external tools when a new lead comes in.
         </p>
 
         <div className="space-y-4 max-w-md">
           <div>
-            <label className="text-sm font-medium text-slate-700">Webhook URL</label>
-            <p className="text-xs text-slate-500 mt-1 mb-2">
+            <label className="text-sm font-medium text-slate-200">Webhook URL</label>
+            <p className="text-xs text-slate-400 mt-1 mb-2">
               We'll POST submission data to this URL. Works with Zapier, Make.com, and custom endpoints.
             </p>
             <Input
@@ -172,13 +173,13 @@ export function BotSettings({ bot }: { bot: any }) {
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
               placeholder="https://hooks.zapier.com/hooks/catch/..."
-              className="mt-1 font-mono text-sm"
+              className="mt-1 font-mono text-sm bg-black/20 border-white/10 text-white placeholder:text-slate-400 focus:border-indigo-500/50 focus:ring-indigo-500/20"
             />
           </div>
 
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <p className="text-xs font-medium text-indigo-900 mb-2">Payload Example:</p>
-            <pre className="text-xs text-indigo-700 font-mono overflow-x-auto">
+          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg p-4 backdrop-blur-lg">
+            <p className="text-xs font-medium text-indigo-300 mb-2">Payload Example:</p>
+            <pre className="text-xs text-indigo-200 font-mono overflow-x-auto">
 {`{
   "event": "submission.created",
   "bot_id": "...",
@@ -191,22 +192,22 @@ export function BotSettings({ bot }: { bot: any }) {
             </pre>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1 bg-white px-2 py-1 rounded border">
+          <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+            <span className="inline-flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10">
               <ExternalLink className="h-3 w-3" />
-              <a href="https://zapier.com/apps/webhook/integrations" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">
+              <a href="https://zapier.com/apps/webhook/integrations" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400">
                 Zapier
               </a>
             </span>
-            <span className="inline-flex items-center gap-1 bg-white px-2 py-1 rounded border">
+            <span className="inline-flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10">
               <ExternalLink className="h-3 w-3" />
-              <a href="https://www.make.com/en/help/tools/webhooks" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">
+              <a href="https://www.make.com/en/help/tools/webhooks" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400">
                 Make.com
               </a>
             </span>
-            <span className="inline-flex items-center gap-1 bg-white px-2 py-1 rounded border">
+            <span className="inline-flex items-center gap-1 bg-white/5 px-2 py-1 rounded border border-white/10">
               <ExternalLink className="h-3 w-3" />
-              <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">
+              <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400">
                 Slack
               </a>
             </span>
@@ -215,7 +216,7 @@ export function BotSettings({ bot }: { bot: any }) {
           <Button
             onClick={handleSaveIntegration}
             disabled={integrationLoading}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+            className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 shadow-lg shadow-purple-500/50"
           >
             {integrationLoading ? (
               'Saving...'
@@ -231,15 +232,16 @@ export function BotSettings({ bot }: { bot: any }) {
         </div>
       </Card>
 
-      <Card className="p-6 border-red-100 bg-red-50/50">
-        <h3 className="text-lg font-medium text-red-900 mb-2">Danger Zone</h3>
-        <p className="text-sm text-red-600 mb-4">
+      <Card className="p-6 border border-red-500/20 bg-red-500/10 backdrop-blur-lg">
+        <h3 className="text-lg font-medium text-red-400 mb-2">Danger Zone</h3>
+        <p className="text-sm text-red-300 mb-4">
           Deleting this bot will remove all associated data and stop the embed from working.
         </p>
-        <Button 
-          variant="destructive" 
-          onClick={handleDelete} 
+        <Button
+          variant="destructive"
+          onClick={handleDelete}
           disabled={loading}
+          className="bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/50"
         >
           {loading ? 'Deleting...' : 'Delete Bot'}
         </Button>
