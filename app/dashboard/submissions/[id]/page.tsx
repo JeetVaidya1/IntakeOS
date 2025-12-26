@@ -165,39 +165,46 @@ export default async function SubmissionDetailPage({
         <Card className="p-6 border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-cyan-50/50 shadow-xl hover:shadow-2xl transition-shadow">
           <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent mb-6">Full Conversation</h2>
           <div className="space-y-4">
-            {submission.conversation.map((message: any, index: number) => {
-              // Check if message contains an image
-              const isImage = message.content.startsWith('[IMAGE] ');
-              const imageUrl = isImage ? message.content.replace('[IMAGE] ', '') : null;
+            {submission.conversation && submission.conversation.length > 0 ? (
+              submission.conversation.map((message: any, index: number) => {
+                // Check if message contains an image
+                const isImage = message.content.startsWith('[IMAGE] ');
+                const imageUrl = isImage ? message.content.replace('[IMAGE] ', '') : null;
 
-              return (
-                <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+                return (
                   <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                      message.role === 'user'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-900'
-                    }`}
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    {isImage && imageUrl ? (
-                      <div>
-                        <img
-                          src={imageUrl}
-                          alt="Uploaded image"
-                          className="max-w-full max-h-64 rounded-lg border border-white/20 mb-1"
-                        />
-                        <p className="text-xs opacity-70">Image uploaded</p>
-                      </div>
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    )}
+                    <div
+                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                        message.role === 'user'
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 text-slate-900'
+                      }`}
+                    >
+                      {isImage && imageUrl ? (
+                        <div>
+                          <img
+                            src={imageUrl}
+                            alt="Uploaded image"
+                            className="max-w-full max-h-64 rounded-lg border border-white/20 mb-1"
+                          />
+                          <p className="text-xs opacity-70">Image uploaded</p>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                <p className="text-sm">No conversation history available.</p>
+                <p className="text-xs mt-2">This may be a legacy submission created before conversational tracking was enabled.</p>
+              </div>
+            )}
           </div>
         </Card>
 

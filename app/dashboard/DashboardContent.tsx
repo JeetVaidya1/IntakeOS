@@ -8,6 +8,18 @@ import { Button } from '@/components/ui/button';
 import { BotGenerator } from '../components/BotGenerator';
 import { User } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
+import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
+
+// Helper to get field count from either schema type
+function getFieldCount(schema: any): number {
+  if (isLegacySchema(schema)) {
+    return schema.length;
+  }
+  if (isAgenticSchema(schema)) {
+    return Object.keys(schema.required_info).length;
+  }
+  return 0;
+}
 
 export function DashboardContent({ 
   user, 
@@ -35,7 +47,7 @@ export function DashboardContent({
   const totalSubmissions = bots?.reduce((sum, bot) => sum + (bot.submissions?.[0]?.count || 0), 0) || 0;
   const activeBots = bots?.filter(bot => bot.is_active).length || 0;
   const averageFields = totalBots > 0 && bots
-    ? Math.round(bots.reduce((sum: number, bot: any) => sum + bot.schema.length, 0) / totalBots)
+    ? Math.round(bots.reduce((sum: number, bot: any) => sum + getFieldCount(bot.schema), 0) / totalBots)
     : 0;
 
   return (
@@ -272,7 +284,7 @@ export function DashboardContent({
                         <div className="flex items-center justify-between text-sm p-2 bg-white/30 rounded-lg">
                           <span className="text-slate-600 font-medium">Fields</span>
                           <span className="font-bold text-slate-800">
-                            {bot.schema.length}
+                            {getFieldCount(bot.schema)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-sm p-2 bg-white/30 rounded-lg">
