@@ -302,6 +302,109 @@ YOUR TASK AS AN AGENTIC CONVERSATIONAL ASSISTANT:
    - Reduces anxiety about "did my resume upload?"
    - Professional confirmation builds trust
 
+10. **STRICT SCHEMA ENFORCEMENT - CRITICAL**:
+   ⚠️ **YOU CAN ONLY EXTRACT TO KEYS THAT EXIST IN THE SCHEMA**
+
+   **ALLOWED extraction keys (from REQUIRED INFORMATION TO GATHER above):**
+   ${allRequiredKeys.join(', ')}
+
+   **RULES:**
+   - Check if the key exists in REQUIRED INFORMATION before extracting
+   - NEVER invent new field names like "skills", "position_type", "key_languages"
+   - If user provides information that doesn't map to a schema field, acknowledge it in your reply but DON'T extract it
+   - If information belongs to an existing field, extract it using the EXACT schema key name
+
+   **Example - WRONG ❌:**
+   Schema has: { "full_name": {...}, "email": {...}, "resume": {...} }
+   User: "I'm proficient in Python, Java, and C++"
+   Your extraction: { "programming_languages": "Python, Java, C++" }  // ❌ This key doesn't exist!
+
+   **Example - CORRECT ✅:**
+   Schema has: { "full_name": {...}, "email": {...}, "resume": {...} }
+   User: "I'm proficient in Python, Java, and C++"
+   Your extraction: {}  // ✅ No matching schema field, so don't extract
+   Your reply: "That's an impressive skill set! I'll make a note of your programming expertise. Now, could you share your full name?"
+
+11. **CONFIRMATION DETECTION - CRITICAL**:
+   ⚠️ **WHEN USER CONFIRMS, MOVE TO COMPLETED IMMEDIATELY**
+
+   **Confirmation triggers (user says ANY of these in confirmation phase):**
+   - "yes" / "yep" / "yeah" / "correct" / "that's right" / "all correct"
+   - "looks good" / "perfect" / "sounds good"
+   - "yes that's everything" / "yes submit it"
+   - Any affirmative response when you asked "Does everything look correct?"
+
+   **What to do:**
+   1. Extract NOTHING (extracted_information should be {})
+   2. Set updated_phase to "completed"
+   3. Give a warm closing message thanking them
+   4. DO NOT repeat the confirmation list again
+
+   **Example - CORRECT ✅:**
+   [You're in confirmation phase, just showed the list]
+   User: "yes"
+   Your response: {
+     "extracted_information": {},
+     "updated_phase": "completed",
+     "reply": "Wonderful! I've got all your information. We'll review everything and get back to you within 24 hours. Thanks so much!"
+   }
+
+   **Example - WRONG ❌:**
+   User: "yes"
+   Your response: Shows the entire confirmation list AGAIN  // ❌ Don't repeat!
+
+12. **VALIDATION CORRECTION PROTOCOL - CRITICAL**:
+   ⚠️ **WHEN USER CORRECTS INVALID DATA, EXTRACT THE CORRECTED VALUE**
+
+   **Scenario:** You detected invalid format and asked for correction
+   **User responds:** Provides the corrected value
+   **What to do:** Extract the CORRECTED value, replacing the wrong one
+
+   **Example flow:**
+   Turn 1:
+   User: "My email is john at gmail dot com"
+   You detect: Invalid format (no @ symbol)
+   Your reply: "I need a valid email with the @ symbol, like john@gmail.com"
+   Your extraction: {}  // Don't extract the invalid value
+
+   Turn 2:
+   User: "oh sorry, it's john@gmail.com"
+   Your extraction: { "email": "john@gmail.com" }  // ✅ Extract the corrected value
+
+   Another example:
+   Turn 1:
+   User: "Email is donny@gmial.com"
+   Your extraction: { "email": "donny@gmial.com" }  // Extracted but you noticed typo
+   Your reply: "I noticed 'gmial.com' - did you mean 'gmail.com'?"
+
+   Turn 2:
+   User: "yes i meant gmail.com"
+   Your extraction: { "email": "donny@gmail.com" }  // ✅ Extract CORRECTED value (replaces old one)
+
+13. **DOCUMENT EXTRACTION FORMAT - CRITICAL**:
+   ⚠️ **WHEN EXTRACTING DOCUMENTS, USE THE EXACT MARKER FORMAT**
+
+   **RULE:** For any field of type "document", you MUST extract using this format:
+   `[DOCUMENT] url | filename`
+
+   **How to get the URL and filename:**
+   - Look in the conversation history for the user's upload message
+   - It will be formatted as: "[DOCUMENT] https://storage.url/path/file.pdf | Resume.pdf"
+   - Extract the ENTIRE marker string, don't just extract the filename
+
+   **Example - WRONG ❌:**
+   User uploaded: "[DOCUMENT] https://supabase.co/storage/v1/abc123.pdf | Resume_John.pdf"
+   Your extraction: { "resume": "Resume_John.pdf" }  // ❌ Missing URL and marker!
+
+   **Example - CORRECT ✅:**
+   User uploaded: "[DOCUMENT] https://supabase.co/storage/v1/abc123.pdf | Resume_John.pdf"
+   Your extraction: { "resume": "[DOCUMENT] https://supabase.co/storage/v1/abc123.pdf | Resume_John.pdf" }  // ✅ Full marker
+
+   **Why this matters:**
+   - The submission page needs the full marker to render documents as clickable download links
+   - Without the marker, it shows as plain text
+   - This is how we display files properly in the dashboard
+
 RESPONSE FORMAT (return VALID JSON):
 {
   "reply": "Your natural, conversational response to the user",
@@ -357,7 +460,7 @@ Now process the current conversation and respond.`;
 
     // Call OpenAI to make the agent decision
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o', // Upgraded from gpt-4o-mini for better instruction following
       messages: [
         {
           role: 'system',
@@ -379,6 +482,10 @@ Now process the current conversation and respond.`;
 
     const parsed = JSON.parse(agentDecision);
 
+    console.log('📤 Agent Reply:', parsed.reply?.substring(0, 100) + '...');
+    console.log('📥 Extracted Info:', parsed.extracted_information);
+    console.log('🔄 Phase Transition:', currentState.phase, '→', parsed.updated_phase);
+
     // Merge extracted information into gathered_information
     const updatedGatheredInfo = {
       ...currentState.gathered_information,
@@ -388,6 +495,9 @@ Now process the current conversation and respond.`;
     // Recalculate missing info after extraction
     const newGatheredKeys = Object.keys(updatedGatheredInfo);
     const newMissingInfo = allRequiredKeys.filter(key => !newGatheredKeys.includes(key));
+
+    console.log('📊 Gathered so far:', Object.keys(updatedGatheredInfo).join(', '));
+    console.log('⏳ Still missing:', newMissingInfo.join(', ') || 'Nothing!');
 
     // Build the updated state
     const updatedState: ConversationState = {
@@ -400,7 +510,7 @@ Now process the current conversation and respond.`;
       uploaded_documents: uploadedDocuments,
     };
 
-    console.log('✅ Updated State:', updatedState);
+    console.log('✅ Final Phase:', updatedState.phase);
 
     const response: AgentResponse = {
       reply: parsed.reply,
