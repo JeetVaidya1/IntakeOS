@@ -385,7 +385,7 @@ YOUR TASK AS AN AGENTIC CONVERSATIONAL ASSISTANT:
    ⚠️ **WHEN EXTRACTING DOCUMENTS, USE THE EXACT MARKER FORMAT**
 
    **RULE:** For any field of type "document", you MUST extract using this format:
-   `[DOCUMENT] url | filename`
+   "[DOCUMENT] url | filename"
 
    **How to get the URL and filename:**
    - Look in the conversation history for the user's upload message
