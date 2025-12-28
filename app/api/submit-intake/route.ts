@@ -41,9 +41,10 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { botId, data, conversation } = await request.json();
+    const { botId, data, conversation, uploadedFiles } = await request.json();
 
     console.log('📥 Receiving submission for bot:', botId);
+    console.log('📎 Uploaded files:', uploadedFiles?.length || 0);
 
     // 1. Save submission to database
     const { data: submission, error } = await supabase
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
         bot_id: botId,
         data: data,
         conversation: conversation,
+        uploaded_files: uploadedFiles || [],
         status: 'new',
       })
       .select()

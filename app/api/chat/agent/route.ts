@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import type { AgenticBotSchema, ConversationState, AgentResponse } from '@/types/agentic';
+import type { AgenticBotSchema, ConversationState, AgentResponse, UploadedDocument } from '@/types/agentic';
 import { parseDocumentFromUrl } from '@/lib/document-parser';
 
 const openai = new OpenAI({
@@ -67,8 +67,10 @@ ${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: $
       .map(m => `${m.role}: ${m.content}`)
       .join('\n');
 
-    // Check if the last message contains a document and parse it
-    let documentContext = '';
+    // Initialize uploaded documents from current state
+    let uploadedDocuments: UploadedDocument[] = currentState.uploaded_documents || [];
+
+    // Check if the last message contains a NEW document and parse it
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.content.startsWith('[DOCUMENT]')) {
       console.log('📄 Document detected, parsing...');
@@ -79,21 +81,50 @@ ${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: $
 
       try {
         const extractedText = await parseDocumentFromUrl(documentUrl);
-        documentContext = `
-CONTEXT FROM UPLOADED DOCUMENT (${documentName}):
-================================================================================
-${extractedText}
-================================================================================
 
-The user has uploaded this document. Analyze it carefully and extract any relevant information for the required fields. Reference specific details from the document in your responses to show you've read it.
-`;
+        // Store the parsed document in uploaded_documents array
+        const newDocument: UploadedDocument = {
+          filename: documentName,
+          url: documentUrl,
+          extracted_text: extractedText,
+          uploaded_at: new Date().toISOString(),
+          uploaded_turn: messages.length,
+        };
+
+        uploadedDocuments = [...uploadedDocuments, newDocument];
         console.log('✅ Document parsed successfully, text length:', extractedText.length);
       } catch (error) {
         console.error('❌ Document parsing error:', error);
-        documentContext = `
-NOTE: The user uploaded a document (${documentName}), but I had trouble reading it. Ask them to describe the key details instead.
-`;
+        // Don't add to uploaded_documents if parsing failed
       }
+    }
+
+    // Build document context from ALL uploaded documents (not just latest)
+    let documentContext = '';
+    if (uploadedDocuments.length > 0) {
+      documentContext = `
+UPLOADED DOCUMENTS CONTEXT:
+================================================================================
+
+`;
+      uploadedDocuments.forEach((doc, index) => {
+        documentContext += `DOCUMENT ${index + 1}: ${doc.filename}
+Uploaded: ${new Date(doc.uploaded_at).toLocaleString()}
+
+Content:
+${doc.extracted_text}
+
+================================================================================
+
+`;
+      });
+
+      documentContext += `
+You have access to ${uploadedDocuments.length} uploaded document${uploadedDocuments.length > 1 ? 's' : ''}.
+Analyze ALL of them carefully and extract any relevant information for the required fields.
+Reference specific details from the documents in your responses to show you've read them.
+If the user asks questions about any previously uploaded document, you can answer using the content above.
+`;
     }
 
     // Determine what information is still missing
@@ -290,6 +321,8 @@ Now process the current conversation and respond.`;
       phase: parsed.updated_phase || currentState.phase,
       current_topic: parsed.current_topic || null,
       last_user_message: messages[messages.length - 1]?.content || '',
+      uploaded_files: currentState.uploaded_files || [],
+      uploaded_documents: uploadedDocuments,
     };
 
     console.log('✅ Updated State:', updatedState);

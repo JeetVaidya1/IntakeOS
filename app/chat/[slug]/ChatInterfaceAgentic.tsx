@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { uploadFile } from '@/lib/supabase';
-import type { AgenticBotSchema, ConversationState } from '@/types/agentic';
+import type { AgenticBotSchema, ConversationState, UploadedFile } from '@/types/agentic';
 
 type Message = {
   role: 'bot' | 'user';
@@ -30,6 +30,8 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     phase: 'introduction',
     current_topic: undefined,
     last_user_message: undefined,
+    uploaded_files: [],
+    uploaded_documents: [],
   };
 
   const defaultMessages: Message[] = [
@@ -179,8 +181,12 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
 
       // Check if conversation is complete
       if (data.updated_state.phase === 'completed') {
-        // Submit the gathered information
-        await handleSubmit(data.updated_state.gathered_information, newMessages);
+        // Submit the gathered information with uploaded files
+        await handleSubmit(
+          data.updated_state.gathered_information,
+          newMessages,
+          data.updated_state.uploaded_files || []
+        );
       }
 
     } catch (error) {
@@ -214,6 +220,14 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
                          file.name.toLowerCase().endsWith('.doc') ||
                          file.name.toLowerCase().endsWith('.txt');
 
+      // Create file metadata
+      const fileMetadata: UploadedFile = {
+        url: publicUrl,
+        filename: file.name,
+        type: file.type,
+        uploaded_at: new Date().toISOString(),
+      };
+
       // Add appropriate message
       let fileMessage: string;
       if (isDocument) {
@@ -227,6 +241,12 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
       const newMessages = [...messages, { role: 'user' as const, content: fileMessage }];
       setMessages(newMessages);
 
+      // Update conversation state with file metadata
+      const updatedState = {
+        ...conversationState,
+        uploaded_files: [...(conversationState.uploaded_files || []), fileMetadata],
+      };
+
       // Call agent to analyze and respond
       setLoading(true);
 
@@ -235,7 +255,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: newMessages,
-          currentState: conversationState,
+          currentState: updatedState,
           botSchema: bot.schema,
           businessName,
           botUserId: bot.user_id,
@@ -264,7 +284,11 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     }
   };
 
-  const handleSubmit = async (gatheredInfo: Record<string, string>, conversation: Message[]) => {
+  const handleSubmit = async (
+    gatheredInfo: Record<string, string>,
+    conversation: Message[],
+    uploadedFiles: UploadedFile[]
+  ) => {
     try {
       const response = await fetch('/api/submit-intake', {
         method: 'POST',
@@ -273,6 +297,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
           botId: bot.id,
           data: gatheredInfo,
           conversationTranscript: conversation,
+          uploadedFiles: uploadedFiles,
         }),
       });
 

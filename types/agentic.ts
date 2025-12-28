@@ -31,6 +31,46 @@ export interface RequiredInfoItem {
 }
 
 /**
+ * Uploaded File Metadata - Structured information about files uploaded during conversation
+ */
+export interface UploadedFile {
+  // Public URL of the uploaded file
+  url: string;
+
+  // Original filename
+  filename: string;
+
+  // MIME type (e.g., "application/pdf", "image/jpeg")
+  type: string;
+
+  // Which field this file relates to (if any)
+  field_key?: string;
+
+  // When the file was uploaded
+  uploaded_at: string;
+}
+
+/**
+ * Uploaded Document with Extracted Text - For document context persistence
+ */
+export interface UploadedDocument {
+  // Original filename
+  filename: string;
+
+  // Public URL of the document
+  url: string;
+
+  // Extracted text content from the document
+  extracted_text: string;
+
+  // When the document was uploaded
+  uploaded_at: string;
+
+  // Which turn/message this was uploaded in
+  uploaded_turn: number;
+}
+
+/**
  * Conversation State - Tracks the dynamic flow of conversation
  */
 export interface ConversationState {
@@ -48,6 +88,12 @@ export interface ConversationState {
 
   // Last user message (for context)
   last_user_message?: string;
+
+  // Files uploaded during the conversation (metadata only)
+  uploaded_files?: UploadedFile[];
+
+  // Documents with extracted text (for persistent context)
+  uploaded_documents?: UploadedDocument[];
 }
 
 /**
