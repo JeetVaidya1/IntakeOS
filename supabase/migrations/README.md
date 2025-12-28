@@ -42,3 +42,21 @@ SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'bots' AND column_name = 'notification_email';
 ```
+
+### `add_file_storage_to_submissions.sql`
+**Purpose**: Adds file storage columns to the `submissions` table for document intelligence
+
+**When to run**: Before testing document uploads and file persistence features
+
+**What it does**:
+- Adds `uploaded_files` JSONB column to store file metadata (url, filename, type, uploaded_at)
+- Adds `uploaded_documents` JSONB column to store extracted document text for persistent context
+- Both columns default to empty arrays
+
+**How to verify**:
+```sql
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
+WHERE table_name = 'submissions'
+  AND column_name IN ('uploaded_files', 'uploaded_documents');
+```
