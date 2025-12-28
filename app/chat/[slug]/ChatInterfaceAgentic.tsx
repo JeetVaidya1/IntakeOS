@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { uploadFile } from '@/lib/supabase';
 import type { AgenticBotSchema, ConversationState } from '@/types/agentic';
 
@@ -194,19 +194,37 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || loading) return;
 
     setIsUploading(true);
 
     try {
-      // Upload image
+      // Upload file (image or document)
       const publicUrl = await uploadFile(file);
 
-      // Add image message
-      const imageMessage = `[IMAGE] ${publicUrl}`;
-      const newMessages = [...messages, { role: 'user' as const, content: imageMessage }];
+      // Determine if it's an image or document
+      const isImage = file.type.startsWith('image/');
+      const isDocument = file.type.includes('pdf') ||
+                         file.type.includes('msword') ||
+                         file.type.includes('wordprocessingml') ||
+                         file.name.toLowerCase().endsWith('.pdf') ||
+                         file.name.toLowerCase().endsWith('.docx') ||
+                         file.name.toLowerCase().endsWith('.doc') ||
+                         file.name.toLowerCase().endsWith('.txt');
+
+      // Add appropriate message
+      let fileMessage: string;
+      if (isDocument) {
+        fileMessage = `[DOCUMENT] ${publicUrl} | ${file.name}`;
+      } else if (isImage) {
+        fileMessage = `[IMAGE] ${publicUrl}`;
+      } else {
+        fileMessage = `[FILE] ${publicUrl} | ${file.name}`;
+      }
+
+      const newMessages = [...messages, { role: 'user' as const, content: fileMessage }];
       setMessages(newMessages);
 
       // Call agent to analyze and respond
@@ -232,10 +250,10 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
       }
 
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('File upload error:', error);
       setMessages(prev => [...prev, {
         role: 'bot',
-        content: "I had trouble processing that image. Could you try uploading it again?"
+        content: "I had trouble processing that file. Could you try uploading it again?"
       }]);
     } finally {
       setIsUploading(false);
@@ -350,6 +368,18 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
                     />
                     <p className="text-xs opacity-75">Image uploaded</p>
                   </div>
+                ) : message.content.startsWith('[DOCUMENT]') ? (
+                  <div className="flex items-center gap-3 p-3 bg-white/10 rounded-lg border border-white/20">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {message.content.split(' | ')[1] || 'Document uploaded'}
+                      </p>
+                      <p className="text-xs opacity-75">Document uploaded</p>
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 )}
@@ -379,13 +409,13 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
             <div className="relative">
               <input
                 type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
+                accept="image/*,.pdf,.doc,.docx,.txt"
+                onChange={handleFileUpload}
                 className="hidden"
-                id="image-upload-agentic"
+                id="file-upload-agentic"
                 disabled={loading || isUploading}
               />
-              <label htmlFor="image-upload-agentic">
+              <label htmlFor="file-upload-agentic">
                 <Button
                   variant="outline"
                   size="icon"

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import type { AgenticBotSchema, ConversationState, AgentResponse } from '@/types/agentic';
+import { parseDocumentFromUrl } from '@/lib/document-parser';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -66,6 +67,35 @@ ${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: $
       .map(m => `${m.role}: ${m.content}`)
       .join('\n');
 
+    // Check if the last message contains a document and parse it
+    let documentContext = '';
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.content.startsWith('[DOCUMENT]')) {
+      console.log('📄 Document detected, parsing...');
+
+      // Extract URL from message format: [DOCUMENT] url | filename
+      const documentUrl = lastMessage.content.split(' | ')[0].replace('[DOCUMENT] ', '').trim();
+      const documentName = lastMessage.content.split(' | ')[1] || 'document';
+
+      try {
+        const extractedText = await parseDocumentFromUrl(documentUrl);
+        documentContext = `
+CONTEXT FROM UPLOADED DOCUMENT (${documentName}):
+================================================================================
+${extractedText}
+================================================================================
+
+The user has uploaded this document. Analyze it carefully and extract any relevant information for the required fields. Reference specific details from the document in your responses to show you've read it.
+`;
+        console.log('✅ Document parsed successfully, text length:', extractedText.length);
+      } catch (error) {
+        console.error('❌ Document parsing error:', error);
+        documentContext = `
+NOTE: The user uploaded a document (${documentName}), but I had trouble reading it. Ask them to describe the key details instead.
+`;
+      }
+    }
+
     // Determine what information is still missing
     const allRequiredKeys = Object.keys(botSchema.required_info);
     const gatheredKeys = Object.keys(currentState.gathered_information);
@@ -80,6 +110,7 @@ ${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: $
 
 ${botSchema.system_prompt}
 ${businessContext}
+${documentContext}
 
 CONVERSATION GOAL:
 ${botSchema.goal}
@@ -132,6 +163,14 @@ YOUR TASK AS AN AGENTIC CONVERSATIONAL ASSISTANT:
    - Don't immediately move to the next topic - have a conversation about the image
    - Extract any information you can from the image discussion
    - Set current_topic to the image-related field so you stay focused
+
+6. **HANDLE DOCUMENTS INTELLIGENTLY**:
+   - If the last user message contains "[DOCUMENT]", they uploaded a document (PDF, DOCX, etc.)
+   - The document content has been extracted and provided in the CONTEXT section above
+   - Acknowledge what you've read from the document - reference specific details
+   - Extract all relevant information from the document text
+   - Ask clarifying questions if needed, but show you've understood the document
+   - Example: "Thanks for sharing your resume! I can see you have 5+ years of experience in software engineering, specializing in React and Node.js. Tell me more about your most recent role at TechCorp."
 
 RESPONSE FORMAT (return VALID JSON):
 {
