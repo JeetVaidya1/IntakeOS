@@ -34,12 +34,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     uploaded_documents: [],
   };
 
-  const defaultMessages: Message[] = [
-    {
-      role: 'bot',
-      content: `Hi there! 👋 I'm an assistant for ${businessName}. How can I help you today?`
-    }
-  ];
+  const defaultMessages: Message[] = [];
 
   const [messages, setMessages] = useState<Message[]>(defaultMessages);
   const [conversationState, setConversationState] = useState<ConversationState>(initialState);
@@ -103,7 +98,8 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
   // Initial message - start the conversation
   useEffect(() => {
     if (!isHydrated) return;
-    if (messages.length > 1) return; // Already started
+    if (messages.length > 0) return; // Already started
+    if (loading) return; // Avoid double-triggering
 
     // Kick off the conversation by calling the agent
     initiateConversation();
@@ -118,8 +114,8 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [{ role: 'bot', content: 'Starting conversation' }],
-          currentState: conversationState,
+          messages: [], // Empty - let agent send introduction
+          currentState: initialState,
           botSchema: bot.schema,
           businessName,
           botUserId: bot.user_id,
@@ -129,14 +125,14 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
       const data = await response.json();
 
       if (data.reply) {
-        setMessages(prev => [...prev, { role: 'bot', content: data.reply }]);
+        setMessages([{ role: 'bot', content: data.reply }]);
         setConversationState(data.updated_state);
       }
     } catch (error) {
       console.error('Failed to initiate conversation:', error);
-      setMessages(prev => [...prev, {
+      setMessages([{
         role: 'bot',
-        content: "Hmm, I'm having trouble connecting. Let me try again - what brings you here today?"
+        content: `Hi! I'm here to help you with ${businessName}. What brings you here today?`
       }]);
     } finally {
       setLoading(false);
@@ -332,28 +328,31 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto h-[600px] flex flex-col shadow-2xl border-2 border-purple-200 bg-gradient-to-br from-white to-purple-50/30">
-      {/* Header */}
-      <div className="p-4 border-b border-purple-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+    <Card className="w-full max-w-4xl mx-auto h-[700px] flex flex-col shadow-2xl border border-white/10 bg-slate-950/95 backdrop-blur-xl">
+      {/* Header - Dark Aurora Style */}
+      <div className="p-6 border-b border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50 backdrop-blur-lg">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-xl blur-lg"></div>
+              <div className="relative p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-900">{bot.name}</h3>
-              <p className="text-xs text-slate-600">Powered by AI</p>
+              <h3 className="font-bold text-xl text-white">{bot.name}</h3>
+              <p className="text-sm text-slate-400">Powered by AI</p>
             </div>
           </div>
 
-          {/* Progress indicator */}
+          {/* Progress indicator - Aurora style */}
           <div className="text-right">
-            <p className="text-xs text-slate-600 mb-1">
+            <p className="text-sm text-slate-400 mb-2">
               {gatheredCount} of {totalInfo} collected
             </p>
-            <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="w-40 h-2.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-500 shadow-lg shadow-indigo-500/50"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -361,27 +360,41 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages - Dark Aurora Style */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-slate-900/20 to-transparent">
+        {messages.length === 0 && !loading && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-3">
+              <div className="relative mx-auto w-16 h-16">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-2xl blur-xl"></div>
+                <div className="relative p-4 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl">
+                  <Sparkles className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm">Start a conversation...</p>
+            </div>
+          </div>
+        )}
+
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            className={`flex items-start gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
-            <div className={`p-2 rounded-lg ${message.role === 'bot' ? 'bg-indigo-100' : 'bg-purple-100'}`}>
+            <div className={`p-2.5 rounded-xl ${message.role === 'bot' ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30' : 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30'}`}>
               {message.role === 'bot' ? (
-                <Bot className="h-5 w-5 text-indigo-600" />
+                <Bot className="h-5 w-5 text-indigo-400" />
               ) : (
-                <User className="h-5 w-5 text-purple-600" />
+                <User className="h-5 w-5 text-purple-400" />
               )}
             </div>
 
             <div className={`flex-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
               <div
-                className={`inline-block p-3 rounded-2xl max-w-[80%] ${
+                className={`inline-block p-4 rounded-2xl max-w-[85%] ${
                   message.role === 'bot'
-                    ? 'bg-white border border-indigo-200 text-slate-900'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                    ? 'bg-white/5 backdrop-blur-lg border border-white/10 text-slate-200'
+                    : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-lg shadow-indigo-500/20'
                 }`}
               >
                 {message.content.startsWith('[IMAGE]') ? (
@@ -389,14 +402,14 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
                     <img
                       src={message.content.replace('[IMAGE] ', '')}
                       alt="Uploaded"
-                      className="max-w-full rounded-lg border-2 border-white/50"
+                      className="max-w-full rounded-lg border border-white/20 shadow-lg"
                     />
                     <p className="text-xs opacity-75">Image uploaded</p>
                   </div>
                 ) : message.content.startsWith('[DOCUMENT]') ? (
                   <div className="flex items-center gap-3 p-3 bg-white/10 rounded-lg border border-white/20">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <FileText className="h-5 w-5" />
+                    <div className="p-2 bg-indigo-500/30 rounded-lg">
+                      <FileText className="h-5 w-5 text-indigo-300" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -406,7 +419,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 )}
               </div>
             </div>
@@ -414,12 +427,12 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         ))}
 
         {loading && (
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-indigo-100">
-              <Bot className="h-5 w-5 text-indigo-600" />
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30">
+              <Bot className="h-5 w-5 text-indigo-400" />
             </div>
-            <div className="bg-white border border-indigo-200 p-3 rounded-2xl">
-              <Loader2 className="h-5 w-5 text-indigo-600 animate-spin" />
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 p-4 rounded-2xl">
+              <Loader2 className="h-5 w-5 text-indigo-400 animate-spin" />
             </div>
           </div>
         )}
@@ -427,10 +440,10 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input - hide if completed */}
+      {/* Input - Dark Aurora Style */}
       {conversationState.phase !== 'completed' && (
-        <div className="p-4 border-t border-purple-200 bg-white">
-          <div className="flex items-end gap-2">
+        <div className="p-6 border-t border-white/10 bg-gradient-to-r from-slate-900/50 to-slate-800/50 backdrop-blur-lg">
+          <div className="flex items-end gap-3">
             <div className="relative">
               <input
                 type="file"
@@ -444,15 +457,15 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-indigo-300 hover:bg-indigo-50"
+                  className="border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all"
                   disabled={loading || isUploading}
                   asChild
                 >
                   <div className="cursor-pointer">
                     {isUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+                      <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
                     ) : (
-                      <Paperclip className="h-5 w-5 text-indigo-600" />
+                      <Paperclip className="h-5 w-5 text-slate-300" />
                     )}
                   </div>
                 </Button>
@@ -465,13 +478,13 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               disabled={loading}
-              className="flex-1 border-indigo-300 focus:border-indigo-500"
+              className="flex-1 bg-white/5 border-white/20 text-white placeholder:text-slate-500 focus:border-indigo-500/50 backdrop-blur-lg"
             />
 
             <Button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:shadow-none"
             >
               <Send className="h-5 w-5" />
             </Button>
