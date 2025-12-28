@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { FileText, Download } from 'lucide-react';
 import { SubmissionActions } from './SubmissionActions';
 import { isAgenticSchema, isLegacySchema } from '@/types/agentic';
 
@@ -123,9 +124,19 @@ export default async function SubmissionDetailPage({
                   // Get label using helper function (handles both legacy and agentic schemas)
                   const label = getFieldLabel(key, submission.bot.schema);
 
-                  // Check if value is an image
+                  // Check if value is an image or document
                   const isImage = typeof value === 'string' && value.startsWith('[IMAGE] ');
+                  const isDocument = typeof value === 'string' && value.startsWith('[DOCUMENT] ');
+
                   const imageUrl = isImage ? value.replace('[IMAGE] ', '') : null;
+
+                  let documentUrl = null;
+                  let documentName = 'Document';
+                  if (isDocument) {
+                    const parts = value.split(' | ');
+                    documentUrl = parts[0].replace('[DOCUMENT] ', '').trim();
+                    documentName = parts[1] || 'Document';
+                  }
 
                   return (
                     <div key={key} className="border-b border-white/10 pb-4">
@@ -146,6 +157,22 @@ export default async function SubmissionDetailPage({
                             Open full size →
                           </a>
                         </div>
+                      ) : isDocument && documentUrl ? (
+                        <a
+                          href={documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 rounded-lg border border-white/10 hover:border-indigo-500/50 transition-all group mt-2"
+                        >
+                          <div className="p-2 bg-indigo-500/20 rounded-lg group-hover:bg-indigo-500/30 transition-colors">
+                            <FileText className="h-5 w-5 text-indigo-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{documentName}</p>
+                            <p className="text-xs text-slate-400">Click to download</p>
+                          </div>
+                          <Download className="h-4 w-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />
+                        </a>
                       ) : (
                         <div className="font-medium text-white">{String(value)}</div>
                       )}
@@ -163,9 +190,19 @@ export default async function SubmissionDetailPage({
               <div className="space-y-3">
                 {submission.conversation && submission.conversation.length > 0 ? (
                   submission.conversation.map((message: any, index: number) => {
-                    // Check if message contains an image
+                    // Check if message contains an image or document
                     const isImage = message.content.startsWith('[IMAGE] ');
+                    const isDocument = message.content.startsWith('[DOCUMENT] ');
+
                     const imageUrl = isImage ? message.content.replace('[IMAGE] ', '') : null;
+
+                    let documentUrl = null;
+                    let documentName = 'Document';
+                    if (isDocument) {
+                      const parts = message.content.split(' | ');
+                      documentUrl = parts[0].replace('[DOCUMENT] ', '').trim();
+                      documentName = parts[1] || 'Document';
+                    }
 
                     return (
                       <div
@@ -192,6 +229,22 @@ export default async function SubmissionDetailPage({
                               />
                               <p className="text-xs opacity-70">Image uploaded</p>
                             </div>
+                          ) : isDocument && documentUrl ? (
+                            <a
+                              href={documentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 hover:border-indigo-500/50 transition-all group"
+                            >
+                              <div className="p-2 bg-white/20 rounded-lg">
+                                <FileText className="h-5 w-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{documentName}</p>
+                                <p className="text-xs opacity-70">Document uploaded</p>
+                              </div>
+                              <Download className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                            </a>
                           ) : (
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                           )}
