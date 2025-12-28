@@ -35,7 +35,7 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
   const defaultMessages: Message[] = [
     {
       role: 'bot',
-      content: `Hi there! 👋 I'm here to help you with ${bot.name}. Let's have a conversation!`
+      content: `Hi there! 👋 I'm an assistant for ${businessName}. How can I help you today?`
     }
   ];
 
