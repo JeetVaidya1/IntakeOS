@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText } from 'lucide-react';
+import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText, RotateCcw } from 'lucide-react';
 import { uploadFile } from '@/lib/supabase';
 import type { AgenticBotSchema, ConversationState, UploadedFile } from '@/types/agentic';
 
@@ -327,6 +327,23 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     }
   };
 
+  const handleResetConversation = () => {
+    if (confirm('Are you sure you want to reset the conversation? All progress will be lost.')) {
+      // Clear localStorage
+      localStorage.removeItem(storageKey);
+
+      // Reset state
+      setMessages([]);
+      setConversationState(initialState);
+      setInput('');
+
+      // Re-initiate conversation
+      setTimeout(() => {
+        initiateConversation();
+      }, 100);
+    }
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto h-[700px] flex flex-col shadow-2xl border border-white/10 bg-slate-950 backdrop-blur-xl">
       {/* Header - Professional Dark Style */}
@@ -338,21 +355,39 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
               <Bot className="h-6 w-6 text-slate-300" />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white">{bot.name}</h3>
+              <h3 className="font-bold text-xl text-white">
+                {businessName || 'Loading...'}
+              </h3>
               <p className="text-sm text-slate-400">Powered by AI</p>
             </div>
           </div>
 
-          {/* Progress indicator - Solid Professional */}
-          <div className="text-right">
-            <p className="text-sm text-slate-400 mb-2">
-              {gatheredCount} of {totalInfo} collected
-            </p>
-            <div className="w-40 h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div
-                className="h-full bg-indigo-600 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+          {/* Progress indicator and Reset button */}
+          <div className="flex items-center gap-4">
+            {/* Reset Conversation Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetConversation}
+              disabled={loading || messages.length === 0}
+              className="border-white/10 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all"
+              title="Reset conversation"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+
+            {/* Progress indicator - Solid Professional */}
+            <div className="text-right">
+              <p className="text-sm text-slate-400 mb-2">
+                {gatheredCount} of {totalInfo} collected
+              </p>
+              <div className="w-40 h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <div
+                  className="h-full bg-indigo-600 transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
