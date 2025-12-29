@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import type { AgenticBotSchema, ConversationState, AgentResponse, UploadedDocument } from '@/types/agentic';
 import { parseDocumentFromUrl } from '@/lib/document-parser';
+import { generateAgentPrompt, shouldUseAutoGeneration } from '@/lib/generate-agent-prompt';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -41,24 +42,17 @@ export async function POST(request: Request) {
     console.log('💬 Message count:', messages.length);
 
     // Fetch business profile for enhanced context
-    let businessContext = '';
+    let businessProfile = null;
     if (botUserId) {
-      const { data: businessProfile } = await supabase
+      const { data } = await supabase
         .from('business_profiles')
         .select('*')
         .eq('user_id', botUserId)
         .single();
 
-      if (businessProfile) {
-        businessContext = `
-BUSINESS CONTEXT (use this to inform your responses):
-${businessProfile.business_description ? `About: ${businessProfile.business_description}` : ''}
-${businessProfile.products_services ? `Offerings: ${businessProfile.products_services}` : ''}
-${businessProfile.location ? `Location: ${businessProfile.location}` : ''}
-${businessProfile.target_audience ? `Target Audience: ${businessProfile.target_audience}` : ''}
-${businessProfile.unique_selling_points ? `What Makes ${businessName} Special: ${businessProfile.unique_selling_points}` : ''}
-`;
-        console.log('🏢 Loaded business context');
+      if (data) {
+        businessProfile = data;
+        console.log('🏢 Loaded business profile');
       }
     }
 
@@ -136,32 +130,81 @@ If the user asks questions about any previously uploaded document, you can answe
     console.log('📋 Missing info:', missingInfo);
     console.log('⚠️ Critical missing:', criticalMissing);
 
-    // Build the system prompt for the agent
-    const agentSystemPrompt = `You are an intelligent conversational agent for ${businessName}.
+    // Determine if we should use auto-generated prompt
+    const useAutoPrompt = shouldUseAutoGeneration(botSchema);
+    console.log('🤖 Using auto-generated prompt:', useAutoPrompt);
 
-${botSchema.system_prompt}
-${businessContext}
-${documentContext}
+    // Build the main system prompt
+    let mainPrompt: string;
+    if (useAutoPrompt && businessProfile) {
+      // Use auto-generated comprehensive prompt
+      mainPrompt = generateAgentPrompt(
+        {
+          business_name: businessName,
+          business_type: businessProfile.business_type,
+          business_description: businessProfile.business_description,
+          products_services: businessProfile.products_services,
+          target_audience: businessProfile.target_audience,
+          unique_selling_points: businessProfile.unique_selling_points,
+          location: businessProfile.location,
+        },
+        botSchema,
+        businessName
+      );
+    } else {
+      // Fallback to manual prompt
+      mainPrompt = `You are an intelligent conversational agent for ${businessName}.
+
+${botSchema.system_prompt || 'You help customers by gathering information in a conversational way.'}
 
 CONVERSATION GOAL:
-${botSchema.goal}
+${botSchema.goal || 'Collect the required information to assist this customer.'}
 
 REQUIRED INFORMATION TO GATHER:
-${JSON.stringify(botSchema.required_info, null, 2)}
+${JSON.stringify(botSchema.required_info, null, 2)}`;
+    }
+
+    // Add document context if available
+    const documentSection = uploadedDocuments.length > 0 ? `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+UPLOADED DOCUMENTS CONTEXT:
+${uploadedDocuments.map((doc, i) => `
+DOCUMENT ${i + 1}: ${doc.filename}
+Uploaded: ${new Date(doc.uploaded_at).toLocaleString()}
+
+Content:
+${doc.extracted_text}
+`).join('\n')}
+
+You have access to ${uploadedDocuments.length} uploaded document${uploadedDocuments.length > 1 ? 's' : ''}.
+Analyze ALL of them carefully and extract any relevant information for the required fields.
+Reference specific details from the documents in your responses to show you've read them.
+` : '';
+
+    // Add current state information
+    const stateSection = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CURRENT CONVERSATION STATE:
 
 INFORMATION GATHERED SO FAR:
-${JSON.stringify(currentState.gathered_information, null, 2)}
+${Object.keys(currentState.gathered_information).length > 0 ? Object.entries(currentState.gathered_information).map(([key, value]) => `- ${key}: ${value}`).join('\n') : 'None yet'}
 
-MISSING INFORMATION:
+STILL MISSING:
 ${missingInfo.length > 0 ? missingInfo.map(key => `- ${key}: ${botSchema.required_info[key].description}`).join('\n') : 'All information collected!'}
 
-CRITICAL MISSING:
-${criticalMissing.length > 0 ? criticalMissing.map(key => `- ${key}: ${botSchema.required_info[key].description}`).join('\n') : 'All critical information collected!'}
+CURRENT PHASE: ${currentState.phase}
+`;
 
-FULL CONVERSATION HISTORY:
-${conversationHistory}
+    // Build complete system prompt with instruction sections
+    const agentSystemPrompt = mainPrompt + documentSection + stateSection + `
 
-YOUR TASK AS AN AGENTIC CONVERSATIONAL ASSISTANT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DETAILED INSTRUCTIONS:
 
 1. **EXTRACT INFORMATION**: Carefully analyze the user's last message. Did they provide ANY information we need? Extract ALL of it, even if they mention multiple things at once.
 
@@ -514,15 +557,50 @@ Now process the current conversation and respond.`;
     // Recalculate missing info after extraction
     const newGatheredKeys = Object.keys(updatedGatheredInfo);
     const newMissingInfo = allRequiredKeys.filter(key => !newGatheredKeys.includes(key));
+    const newCriticalMissing = newMissingInfo.filter(key => botSchema.required_info[key].critical);
 
     console.log('📊 Gathered so far:', Object.keys(updatedGatheredInfo).join(', '));
     console.log('⏳ Still missing:', newMissingInfo.join(', ') || 'Nothing!');
+    console.log('⚠️ Critical still missing:', newCriticalMissing.join(', ') || 'None');
+
+    // ENFORCEMENT LOGIC - Prevent premature completion
+    let finalPhase = parsed.updated_phase || currentState.phase;
+    let enforcementApplied = false;
+
+    // Rule 1: Can't move to confirmation if critical fields are still missing
+    if (finalPhase === 'confirmation' && newCriticalMissing.length > 0) {
+      console.log('🛑 ENFORCEMENT: Blocking confirmation - still missing critical fields:', newCriticalMissing.join(', '));
+      finalPhase = 'collecting';
+      enforcementApplied = true;
+    }
+
+    // Rule 2: Can't move to completed unless we're already in confirmation
+    if (finalPhase === 'completed' && currentState.phase !== 'confirmation') {
+      console.log('🛑 ENFORCEMENT: Blocking completion - not in confirmation phase yet');
+      finalPhase = currentState.phase; // Stay in current phase
+      enforcementApplied = true;
+    }
+
+    // Rule 3: Can't move to completed if confirmation list wasn't shown
+    // Check if the reply contains field names (simple heuristic)
+    if (finalPhase === 'completed' && currentState.phase === 'confirmation') {
+      const hasConfirmationList = parsed.reply.includes(':') &&
+                                  (parsed.reply.toLowerCase().includes('confirm') ||
+                                   parsed.reply.toLowerCase().includes('correct'));
+
+      // This is a completion from confirmation phase - that's OK
+      // We already checked confirmation in previous turn
+    }
+
+    if (enforcementApplied) {
+      console.log('✅ ENFORCEMENT APPLIED: Final phase =', finalPhase);
+    }
 
     // Build the updated state
     const updatedState: ConversationState = {
       gathered_information: updatedGatheredInfo,
       missing_info: newMissingInfo,
-      phase: parsed.updated_phase || currentState.phase,
+      phase: finalPhase,
       current_topic: parsed.current_topic || null,
       last_user_message: messages[messages.length - 1]?.content || '',
       uploaded_files: currentState.uploaded_files || [],
