@@ -560,6 +560,53 @@ Now process the current conversation and respond.`;
     console.log('📥 Extracted Info:', parsed.extracted_information);
     console.log('🔄 Phase Transition:', currentState.phase, '→', parsed.updated_phase);
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // STRICT PHASE GUARDRAILS - ENFORCEMENT LAYER
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    // Get previous bot message to detect validation checks
+    const previousBotMessage = messages.length >= 2 ? messages[messages.length - 2]?.content : '';
+    const userMessage = messages[messages.length - 1]?.content.toLowerCase().trim();
+
+    // Detect if previous message was a validation check
+    const isValidationCheck = previousBotMessage && (
+      previousBotMessage.toLowerCase().includes('did you mean') ||
+      previousBotMessage.toLowerCase().includes('is that correct') ||
+      previousBotMessage.toLowerCase().includes('confirm') && !previousBotMessage.includes('Perfect! Let me confirm') ||
+      /gmail|email|phone|format/i.test(previousBotMessage) && /\?$/.test(previousBotMessage)
+    );
+
+    // Prevent "Yes-Man" completions during validation
+    if (userMessage === 'yes' || userMessage === 'yeah' || userMessage === 'yep') {
+      if (isValidationCheck && (parsed.updated_phase === 'confirmation' || parsed.updated_phase === 'completed')) {
+        console.log('🛑 GUARDRAIL: Preventing yes-man completion during validation check');
+        parsed.updated_phase = 'collecting'; // Force back to collecting
+      }
+    }
+
+    // Guardrail 1: Cannot move to 'completed' unless coming from 'confirmation' phase
+    if (parsed.updated_phase === 'completed' && currentState.phase !== 'confirmation') {
+      console.log('🛑 GUARDRAIL: Blocking completion - must be in confirmation phase first');
+      console.log(`   Current phase: ${currentState.phase}, Attempted phase: completed`);
+      parsed.updated_phase = currentState.phase === 'collecting' ? 'collecting' : 'confirmation';
+    }
+
+    // Guardrail 2: Cannot move to 'confirmation' without showing bulleted list
+    if (parsed.updated_phase === 'confirmation') {
+      const reply = parsed.reply || '';
+      const hasBulletPoints = (reply.match(/[-•]\s/g) || []).length >= 2; // At least 2 bullet points
+      const hasConfirmationLanguage = reply.toLowerCase().includes('confirm') ||
+                                      reply.toLowerCase().includes('does everything look') ||
+                                      reply.toLowerCase().includes('is everything correct');
+
+      if (!hasBulletPoints || !hasConfirmationLanguage) {
+        console.log('🛑 GUARDRAIL: Blocking confirmation - no bulleted list detected in reply');
+        console.log(`   Bullet points found: ${(reply.match(/[-•]\s/g) || []).length}`);
+        console.log(`   Has confirmation language: ${hasConfirmationLanguage}`);
+        parsed.updated_phase = 'collecting';
+      }
+    }
+
     // Merge extracted information into gathered_information
     const updatedGatheredInfo = {
       ...currentState.gathered_information,
@@ -621,8 +668,39 @@ Now process the current conversation and respond.`;
 
     console.log('✅ Final Phase:', updatedState.phase);
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // BUSINESS IDENTITY FIX - Replace internal names with business name
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    let finalReply = parsed.reply;
+
+    if (businessProfile?.business_name && finalReply) {
+      // Replace mentions of "Product Inquiries" or the goal with business name
+      const botGoal = botSchema.goal || '';
+      const internalNames = [
+        'Product Inquiries',
+        'Product Inquiry',
+        botGoal,
+        // Also catch if AI says "I'm an assistant for [goal]"
+        `assistant for ${botGoal}`,
+      ].filter(name => name && name.length > 0);
+
+      internalNames.forEach(internalName => {
+        if (internalName) {
+          // Case-insensitive replacement
+          const regex = new RegExp(internalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+          const matches = finalReply.match(regex);
+
+          if (matches) {
+            console.log(`🔧 IDENTITY FIX: Replacing "${internalName}" with "${businessProfile.business_name}"`);
+            finalReply = finalReply.replace(regex, businessProfile.business_name);
+          }
+        }
+      });
+    }
+
     const response: AgentResponse = {
-      reply: parsed.reply,
+      reply: finalReply,
       updated_state: updatedState,
       reasoning: parsed.reasoning,
     };
