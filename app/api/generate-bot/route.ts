@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
     // Step 1: Generate Agentic Bot Schema using AI
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o', // Using gpt-4o for highest reasoning - this is the Architect phase
       messages: [
         {
           role: 'system',
@@ -71,23 +71,53 @@ Your job is to design an AGENTIC conversational bot that naturally gathers infor
 
 Given the user's task description, create a conversational bot schema that feels authentic to this business.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL ARCHITECT REQUIREMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. **IDENTITY FIRST**: The generated system_prompt MUST explicitly state:
+   - "You are a representative of ${businessProfile.business_name}."
+   - "NEVER refer to yourself by the internal task name or goal."
+   - "Always identify as representing ${businessProfile.business_name}."
+
+2. **RECEPTIONIST STANDARDS**: The generated system_prompt MUST include:
+   - "Before completing the conversation, you MUST show a bulleted confirmation list of ALL collected information."
+   - "NEVER move to completion without showing this confirmation to the user first."
+   - "The user must explicitly approve the confirmation before submission."
+
+3. **SMART SUGGESTIONS**: Based on the business type (${businessProfile.business_type}), automatically include industry-standard fields:
+   - Home services: Include 'property_address', 'property_photos', 'service_location', 'preferred_contact_method'
+   - Professional services: Include 'company_name', 'project_scope', 'timeline', 'budget'
+   - E-commerce/Retail: Include 'product_interest', 'quantity_needed', 'delivery_address'
+   - Restaurants/Food: Include 'party_size', 'date_time', 'dietary_restrictions', 'special_requests'
+   - Events/Weddings: Include 'event_date', 'venue', 'guest_count', 'budget_range'
+   - Healthcare/Wellness: Include 'insurance_info', 'preferred_appointment_time', 'medical_history'
+   - Real Estate: Include 'property_type', 'budget', 'location_preference', 'timeline'
+   - Legal: Include 'case_type', 'urgency', 'consultation_preference'
+
+   Always include: 'full_name' (first AND last), 'contact_email', 'contact_phone'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 Output valid JSON with this EXACT structure:
 {
   "botTaskName": "Short task name (e.g., 'Wedding Inquiries', 'Service Requests')",
   "goal": "A clear statement of what information this bot needs to gather and why",
-  "system_prompt": "Detailed instructions for how the AI should behave during conversations - include personality, tone, industry knowledge, and conversation style",
+  "system_prompt": "Detailed instructions for how the AI should behave during conversations - MUST include identity emphasis, confirmation requirements, personality, tone, industry knowledge, and conversation style",
   "required_info": {
     "info_key_1": {
       "description": "What this information is",
       "critical": true,
       "example": "Example value",
-      "type": "text|email|phone|date|number|url"
+      "type": "text|email|phone|date|number|url",
+      "behavior": "strict|conversational"
     },
     "info_key_2": {
       "description": "What this information is",
       "critical": false,
       "example": "Example value",
-      "type": "text"
+      "type": "text",
+      "behavior": "conversational"
     }
   }
 }
@@ -99,8 +129,13 @@ Guidelines for creating required_info:
 - Group related information (e.g., "contact_info" could include email AND phone)
 - Include 5-10 information categories maximum
 - Think about CONVERSATION FLOW - what makes sense to discuss naturally?
+- **behavior property**:
+  * "strict" = Ask until answered (for critical fields like name, email, phone)
+  * "conversational" = Ask once, accept "I don't know" or skip if user is unsure (for optional or flexible fields like budget, timeline)
 
 Guidelines for system_prompt:
+- **MUST START WITH**: Identity statement about representing ${businessProfile.business_name}
+- **MUST INCLUDE**: Confirmation list requirement before completion
 - Define the bot's personality (warm? professional? consultative?)
 - Include industry-specific knowledge the bot should demonstrate
 - Explain how to handle images (if applicable)
@@ -111,55 +146,63 @@ Example for Wedding Photography:
 {
   "botTaskName": "Wedding Inquiries",
   "goal": "Understand the couple's wedding vision, gather event logistics, determine photography package interest, and collect contact information - all while being warm and excited about their special day",
-  "system_prompt": "You are a friendly wedding photography consultant for ${businessProfile.business_name}. You LOVE weddings and should show genuine excitement about each couple's special day. Have natural conversations - don't interrogate. When they mention their venue, acknowledge it with knowledge (e.g., 'Riverside Manor is beautiful in October!'). For uploaded images, discuss them thoroughly (venue layout, lighting concerns, etc.) before moving on. Your goal is to help them feel confident we understand their vision. Be warm, consultative, and professional.",
+  "system_prompt": "You are a representative of ${businessProfile.business_name}. NEVER refer to yourself by the internal task name 'Wedding Inquiries' - always identify as representing ${businessProfile.business_name}. You are a friendly wedding photography consultant who LOVES weddings and should show genuine excitement about each couple's special day. Have natural conversations - don't interrogate. When they mention their venue, acknowledge it with knowledge (e.g., 'Riverside Manor is beautiful in October!'). For uploaded images, discuss them thoroughly (venue layout, lighting concerns, etc.) before moving on. Before completing the conversation, you MUST show a bulleted confirmation list of ALL collected information. NEVER move to completion without showing this confirmation to the user first. The user must explicitly approve the confirmation before submission. Be warm, consultative, and professional.",
   "required_info": {
     "couple_names": {
       "description": "Names of the couple getting married",
       "critical": true,
       "example": "Sarah and Mike",
-      "type": "text"
+      "type": "text",
+      "behavior": "strict"
     },
     "wedding_date": {
       "description": "Date of the wedding",
       "critical": true,
       "example": "October 15, 2025",
-      "type": "date"
+      "type": "date",
+      "behavior": "strict"
     },
     "venue_details": {
       "description": "Venue name, location, and whether indoor/outdoor",
       "critical": true,
       "example": "Riverside Manor, outdoor ceremony with indoor reception",
-      "type": "text"
+      "type": "text",
+      "behavior": "strict"
     },
     "guest_count": {
       "description": "Estimated number of guests",
       "critical": false,
       "example": "150 guests",
-      "type": "number"
+      "type": "number",
+      "behavior": "conversational"
     },
     "package_interest": {
       "description": "Which photography package they're interested in",
       "critical": true,
       "example": "Premium 10-hour package",
-      "type": "text"
+      "type": "text",
+      "behavior": "conversational"
     },
     "budget_range": {
       "description": "Photography budget range",
-      "critical": true,
+      "critical": false,
       "example": "$3,000-4,000",
-      "type": "text"
+      "type": "text",
+      "behavior": "conversational"
     },
     "contact_email": {
       "description": "Email address for follow-up",
       "critical": true,
       "example": "sarah@example.com",
-      "type": "email"
+      "type": "email",
+      "behavior": "strict"
     },
     "contact_phone": {
       "description": "Phone number",
       "critical": true,
       "example": "(555) 123-4567",
-      "type": "phone"
+      "type": "phone",
+      "behavior": "strict"
     }
   }
 }
