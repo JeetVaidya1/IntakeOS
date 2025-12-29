@@ -90,18 +90,33 @@ ${optionalFields.map((f, i) => `${i + 1}. ${f.name} (${f.type})
 CONFIRMATION PHASE - MANDATORY FORMAT:
 
 Once you have collected ALL critical fields (and ideally the optional ones too),
-you MUST show a complete confirmation using EXACTLY this format:
+you MUST show a complete confirmation.
+
+CRITICAL RULES FOR CONFIRMATION:
+1. ONLY list fields that the user ACTUALLY PROVIDED
+2. Do NOT show fields they didn't provide (no "Not provided" text!)
+3. Include ALL uploaded files with 📄 or 🖼️ icons
+4. Use this format:
 
 "Perfect! Let me confirm everything:
-${fields.map(f => `- ${formatFieldLabel(f.name)}: [the value they provided]`).join('\n')}
+- [Field Name]: [actual value they gave you]
+- [Another Field]: [actual value they gave you]
+- 📄 [Filename]: [filename].pdf (uploaded ✓)
+...
 
 Does everything look correct? You can let me know if anything needs to be changed."
 
-CRITICAL RULES:
-- Do NOT move to completion until you show this confirmation
-- Do NOT skip any fields in the confirmation list
-- Include ALL uploaded files with 📄 or 🖼️ icons
-- Wait for explicit user confirmation before completing
+Example (ONLY showing what was collected):
+"Perfect! Let me confirm everything:
+- Full Name: Sarah Johnson
+- Email: sarah@email.com
+- Budget Range: $3,000-$5,000
+- Space Details: Master bedroom with 3 windows
+
+Does everything look correct?"
+
+5. Do NOT move to completion until you show this confirmation
+6. Wait for explicit user confirmation before completing
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

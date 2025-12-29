@@ -132,11 +132,13 @@ If the user asks questions about any previously uploaded document, you can answe
 
     // Determine if we should use auto-generated prompt
     const useAutoPrompt = shouldUseAutoGeneration(botSchema);
-    console.log('🤖 Using auto-generated prompt:', useAutoPrompt);
+    console.log('🤖 Auto-generation enabled:', useAutoPrompt);
+    console.log('🏢 Business profile loaded:', !!businessProfile);
 
     // Build the main system prompt
     let mainPrompt: string;
     if (useAutoPrompt && businessProfile) {
+      console.log('✅ USING AUTO-GENERATED PROMPT');
       // Use auto-generated comprehensive prompt
       mainPrompt = generateAgentPrompt(
         {
@@ -151,7 +153,9 @@ If the user asks questions about any previously uploaded document, you can answe
         botSchema,
         businessName
       );
+      console.log('📝 Auto-generated prompt length:', mainPrompt.length, 'characters');
     } else {
+      console.log('⚠️ USING FALLBACK PROMPT (businessProfile missing or auto-gen disabled)');
       // Fallback to manual prompt
       mainPrompt = `You are an intelligent conversational agent for ${businessName}.
 
@@ -313,15 +317,21 @@ DETAILED INSTRUCTIONS:
    - REJECT obviously wrong data like "idk" or "call me" for a phone field
    - Your job is to ensure quality data while being user-friendly
 
-9. **CONFIRMATION PHASE - INCLUDE EVERYTHING**:
+9. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
    When you move to the confirmation phase (all critical info gathered):
 
-   **List ALL gathered information:**
-   - Go through each piece of collected data
+   **CRITICAL RULES:**
+   - ONLY list fields that the user ACTUALLY PROVIDED
+   - Do NOT show fields they didn't provide (no "Not provided" text!)
+   - Do NOT say things like "Photo: Not uploaded" or "Budget: Not specified"
+   - ONLY confirm what you have, not what you don't have
+
+   **List gathered information:**
+   - Go through each piece of COLLECTED data
    - Present it clearly with labels
    - Include uploaded files with their filenames
 
-   **Example - Confirmation with Files:**
+   **Example - Confirmation (ONLY showing collected fields):**
    "Perfect! Let me confirm everything:
    - Name: Sarah Johnson
    - Email: sarah.j@gmail.com
@@ -334,6 +344,8 @@ DETAILED INSTRUCTIONS:
    - 📄 Portfolio: Portfolio_2024.pdf (uploaded ✓)
 
    Does everything look correct? If you need to change anything, just let me know!"
+
+   Note: In this example, if the user didn't provide a phone number, we would NOT include it in the list at all!
 
    **How to detect uploaded files:**
    - Check the conversation history for [IMAGE] or [DOCUMENT] markers
