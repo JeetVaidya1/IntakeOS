@@ -680,14 +680,7 @@ Now process the current conversation and respond.`;
       }
     }
 
-    // Guardrail 1: Cannot move to 'completed' unless coming from 'confirmation' phase
-    if (parsed.updated_phase === 'completed' && currentState.phase !== 'confirmation') {
-      console.log('🛑 GUARDRAIL: Blocking completion - must be in confirmation phase first');
-      console.log(`   Current phase: ${currentState.phase}, Attempted phase: completed`);
-      parsed.updated_phase = currentState.phase === 'collecting' ? 'collecting' : 'confirmation';
-    }
-
-    // Guardrail 2: Flexible Confirmation - Allow immediate transition if AI shows confirmation list
+    // Guardrail 1: Flexible Confirmation - Allow immediate transition if AI shows confirmation list
     if (parsed.updated_phase === 'confirmation') {
       const reply = parsed.reply || '';
       const hasBulletPoints = (reply.match(/[-•]\s/g) || []).length >= 2; // At least 2 bullet points
@@ -713,7 +706,7 @@ Now process the current conversation and respond.`;
       }
     }
 
-    // Guardrail 3: HARD CONFIRMATION GATE - Force confirmation list before completion
+    // Guardrail 2: HARD CONFIRMATION GATE - Force confirmation list before completion
     if (parsed.updated_phase === 'completed') {
       // Get the last bot message
       const botMessages = messages.filter(m => m.role === 'bot');
