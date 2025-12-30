@@ -671,11 +671,17 @@ Now process the current conversation and respond.`;
     const previousBotMessage = messages.length >= 2 ? messages[messages.length - 2]?.content : '';
     const userMessage = messages[messages.length - 1]?.content.toLowerCase().trim();
 
-    // Detect if previous message was a validation check
-    const isValidationCheck = previousBotMessage && (
+    // Detect if previous message was a confirmation SUMMARY (not a validation check)
+    const hasConfirmationList = (previousBotMessage.match(/[-•]\s/g) || []).length >= 2; // Has bullet points
+    const hasConfirmationLanguage = previousBotMessage.toLowerCase().includes('let me confirm') ||
+                                    previousBotMessage.toLowerCase().includes('confirm everything') ||
+                                    previousBotMessage.toLowerCase().includes('does everything look');
+
+    // Detect if previous message was a validation check (NOT a confirmation summary)
+    const isValidationCheck = previousBotMessage && !hasConfirmationList && (
       previousBotMessage.toLowerCase().includes('did you mean') ||
       previousBotMessage.toLowerCase().includes('is that correct') ||
-      previousBotMessage.toLowerCase().includes('confirm') && !previousBotMessage.includes('Perfect! Let me confirm') ||
+      (previousBotMessage.toLowerCase().includes('confirm') && !hasConfirmationLanguage) ||
       /gmail|email|phone|format/i.test(previousBotMessage) && /\?$/.test(previousBotMessage)
     );
 
