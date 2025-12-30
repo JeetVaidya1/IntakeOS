@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3 } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3, Calendar, MapPin, Calculator, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
@@ -704,6 +704,142 @@ export default function LandingPage() {
               </Card>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Roadmap Section */}
+      <section className="relative bg-slate-950 py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-sm font-medium mb-6">
+              <Rocket className="w-4 h-4" />
+              Product Roadmap
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              We're <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Just Getting Started.</span>
+            </h2>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+              IntakeOS is evolving fast. Here's what's coming next to make your business even more automated.
+            </p>
+          </motion.div>
+
+          {/* 3-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Card 1: Intelligent Scheduling */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <Card className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-all h-full">
+                {/* Coming Soon Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 font-semibold">
+                  Coming Soon
+                </div>
+
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/50 group-hover:scale-110 transition-transform">
+                  <Calendar className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-2xl font-bold text-white mb-4">Intelligent Scheduling</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-white">Google Calendar & Calendly Integration.</span> Your receptionist will soon be able to book consultations directly into your calendar based on your real-time availability.
+                </p>
+
+                {/* Timeline Connector (for desktop) */}
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-purple-500 to-transparent"></div>
+              </Card>
+            </motion.div>
+
+            {/* Card 2: Precision Geo-Fencing */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <Card className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-all h-full">
+                {/* Coming Soon Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-300 font-semibold">
+                  Coming Soon
+                </div>
+
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-2xl font-bold text-white mb-4">Precision Geo-Fencing</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-white">Google Maps Verification.</span> Automatically verify customer locations and block leads from outside your service area before they even submit.
+                </p>
+
+                {/* Timeline Connector (for desktop) */}
+                <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent"></div>
+              </Card>
+            </motion.div>
+
+            {/* Card 3: AI-Powered Estimates */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <Card className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-all h-full">
+                {/* Coming Soon Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-300 font-semibold">
+                  Coming Soon
+                </div>
+
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/50 group-hover:scale-110 transition-transform">
+                  <Calculator className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-2xl font-bold text-white mb-4">AI-Powered Estimates</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-white">Instant Quote Logic.</span> Using your uploaded price lists, the AI will provide rough 'ballpark' estimates to qualify leads even faster.
+                </p>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-16"
+          >
+            <p className="text-slate-400 mb-6">
+              Have a feature request? We're building this for you.
+            </p>
+            <Button variant="outline" size="lg" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-purple-500/50 rounded-full">
+              Share Your Feedback
+            </Button>
+          </motion.div>
         </div>
       </section>
 
