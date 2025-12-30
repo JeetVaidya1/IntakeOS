@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText, RotateCcw } from 'lucide-react';
+import { Send, Paperclip, User, Bot, Sparkles, Loader2, AlertCircle, CheckCircle, FileText, RotateCcw, Check } from 'lucide-react';
 import { uploadFile } from '@/lib/supabase';
 import type { AgenticBotSchema, ConversationState, UploadedFile } from '@/types/agentic';
 
@@ -60,6 +60,9 @@ export function ChatInterfaceAgentic({
   const totalInfo = Object.keys(bot.schema.required_info).length;
   const gatheredCount = Object.keys(conversationState.gathered_information).length;
   const progress = totalInfo > 0 ? (gatheredCount / totalInfo) * 100 : 0;
+
+  // Use effective business name for display
+  const effectiveBusinessName = businessName || bot.name || 'The business';
 
   // Load from localStorage after hydration
   useEffect(() => {
@@ -384,25 +387,38 @@ export function ChatInterfaceAgentic({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto h-[700px] flex flex-col shadow-2xl border border-white/10 bg-slate-950 backdrop-blur-xl">
-      {/* Header - Professional Dark Style */}
-      <div className="p-6 border-b border-white/10 bg-slate-900/80 backdrop-blur-md">
+    <div className="relative w-full max-w-4xl mx-auto">
+      {/* Background with grid pattern */}
+      <div className="absolute inset-0 bg-slate-950 bg-grid-pattern rounded-3xl" />
+
+      {/* Aurora orbs for depth */}
+      <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.15 }} />
+      <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.1 }} />
+      <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.12 }} />
+
+      <Card className="relative w-full h-[700px] flex flex-col shadow-indigo-glow border border-white/5 bg-slate-950/90 backdrop-blur-xl">
+        {/* Header - Professional Dark Style */}
+        <div className="p-6 border-b border-indigo-500/10 bg-slate-900/80 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* Simple Bot Icon */}
-            <div className="p-3 bg-slate-800 rounded-xl border border-white/10">
-              <Bot className="h-6 w-6 text-slate-300" />
+            {/* Sparkles Bot Icon with glow */}
+            <div className="relative p-3 bg-slate-800/50 rounded-xl border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
+              <Sparkles className="h-6 w-6 text-indigo-400" />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white flex items-center gap-2">
-                {businessName || 'Loading...'}
+              <h3 className="font-bold text-xl text-white flex items-center gap-3">
+                <span className="flex items-center gap-2">
+                  {businessName || 'Loading...'}
+                  {/* Pulsing green dot for "Active" status */}
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                </span>
                 {simulatorMode && (
                   <span className="px-2 py-1 text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg">
                     Test Drive
                   </span>
                 )}
               </h3>
-              <p className="text-sm text-slate-400">Powered by AI</p>
+              <p className="text-sm text-slate-400">Stellar Business Operating System</p>
             </div>
           </div>
 
@@ -414,23 +430,26 @@ export function ChatInterfaceAgentic({
               size="sm"
               onClick={handleResetConversation}
               disabled={loading || messages.length === 0}
-              className="border-white/10 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all"
+              className="border-indigo-500/10 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-all"
               title="Reset conversation"
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
             </Button>
 
-            {/* Progress indicator - Solid Professional */}
+            {/* Progress indicator - Premium with shimmer */}
             <div className="text-right">
-              <p className="text-sm text-slate-400 mb-2">
-                {gatheredCount} of {totalInfo} collected
+              <p className="text-sm text-slate-300 mb-2 font-medium">
+                Consultation Progress: {gatheredCount}/{totalInfo} Details Verified
               </p>
-              <div className="w-40 h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <div className="relative w-48 h-3 bg-white/5 rounded-full overflow-hidden border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
                 <div
-                  className="h-full bg-indigo-600 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 transition-all duration-500 relative overflow-hidden"
                   style={{ width: `${progress}%` }}
-                />
+                >
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 animate-shimmer" />
+                </div>
               </div>
             </div>
           </div>
@@ -438,13 +457,13 @@ export function ChatInterfaceAgentic({
       </div>
 
       {/* Messages - Professional Dark Style */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-950">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-950">
         {messages.length === 0 && !loading && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
-              {/* Simple Bot Icon */}
-              <div className="mx-auto w-16 h-16 p-4 bg-slate-800 rounded-2xl border border-white/10">
-                <Bot className="h-8 w-8 text-slate-400" />
+              {/* Sparkles Bot Icon */}
+              <div className="mx-auto w-16 h-16 p-4 bg-slate-800/50 rounded-2xl border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
+                <Sparkles className="h-8 w-8 text-indigo-400" />
               </div>
               <p className="text-slate-400 text-sm">Start a conversation...</p>
             </div>
@@ -456,42 +475,55 @@ export function ChatInterfaceAgentic({
             key={index}
             className={`flex items-start gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
-            {/* Simple Avatar Icons */}
-            <div className={`p-2.5 rounded-xl ${message.role === 'bot' ? 'bg-slate-800 border border-white/10' : 'bg-slate-700 border border-white/10'}`}>
+            {/* Premium Avatar Icons with glow */}
+            <div className={`p-2.5 rounded-xl ${
+              message.role === 'bot'
+                ? 'bg-slate-800/50 border border-indigo-500/20 shadow-lg shadow-indigo-500/10'
+                : 'bg-gradient-to-br from-indigo-600/20 to-violet-600/20 border border-indigo-500/30 shadow-lg shadow-indigo-500/10'
+            }`}>
               {message.role === 'bot' ? (
-                <Bot className="h-5 w-5 text-slate-300" />
+                <Sparkles className="h-5 w-5 text-indigo-400" />
               ) : (
-                <User className="h-5 w-5 text-slate-300" />
+                <User className="h-5 w-5 text-indigo-300" />
               )}
             </div>
 
             <div className={`flex-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
               <div
-                className={`inline-block p-4 rounded-2xl max-w-[85%] ${
+                className={`inline-block p-4 max-w-[85%] ${
                   message.role === 'bot'
-                    ? 'bg-white/5 backdrop-blur-lg border border-white/10 text-slate-200'
-                    : 'bg-indigo-600 text-white'
+                    ? 'rounded-2xl rounded-tl-none bg-slate-900/40 border border-white/5 backdrop-blur-xl text-slate-200 tracking-tight leading-relaxed text-[15px]'
+                    : 'rounded-2xl rounded-tr-none bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20'
                 }`}
               >
                 {message.content.startsWith('[IMAGE]') ? (
-                  <div className="space-y-2">
+                  <div className="relative space-y-2 p-4 bg-white/5 rounded-lg border border-white/10 shadow-xl">
+                    {/* Polaroid style image */}
                     <img
                       src={message.content.replace('[IMAGE] ', '')}
                       alt="Uploaded"
-                      className="max-w-full rounded-lg border border-white/20 shadow-lg"
+                      className="w-full rounded-md border-4 border-white/20 shadow-lg"
                     />
-                    <p className="text-xs opacity-75">Image uploaded</p>
+                    {/* Check badge */}
+                    <div className="absolute top-2 right-2 p-1.5 bg-emerald-500 rounded-full shadow-lg">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                    <p className="text-xs text-slate-400 text-center pt-2">Image processed by AI</p>
                   </div>
                 ) : message.content.startsWith('[DOCUMENT]') ? (
-                  <div className="flex items-center gap-3 p-3 bg-white/10 rounded-lg border border-white/20">
-                    <div className="p-2 bg-indigo-500/30 rounded-lg">
+                  <div className="relative flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 shadow-xl">
+                    <div className="p-2.5 bg-indigo-500/20 rounded-lg">
                       <FileText className="h-5 w-5 text-indigo-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-sm font-medium truncate text-white">
                         {message.content.split(' | ')[1] || 'Document uploaded'}
                       </p>
-                      <p className="text-xs opacity-75">Document uploaded</p>
+                      <p className="text-xs text-slate-400">Document processed by AI</p>
+                    </div>
+                    {/* Check badge */}
+                    <div className="p-1.5 bg-emerald-500 rounded-full shadow-lg">
+                      <Check className="h-3 w-3 text-white" />
                     </div>
                   </div>
                 ) : (
@@ -504,16 +536,15 @@ export function ChatInterfaceAgentic({
 
         {loading && (
           <div className="flex items-start gap-4">
-            {/* Simple Bot Avatar */}
-            <div className="p-2.5 rounded-xl bg-slate-800 border border-white/10">
-              <Bot className="h-5 w-5 text-slate-300" />
+            {/* Sparkles Bot Avatar with glow */}
+            <div className="p-2.5 rounded-xl bg-slate-800/50 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
+              <Sparkles className="h-5 w-5 text-indigo-400" />
             </div>
-            {/* Simple Typing Indicator */}
-            <div className="bg-white/5 backdrop-blur-lg border border-white/10 p-4 rounded-2xl">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            {/* Organic Typing Indicator with Sparkle pulse */}
+            <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-4 rounded-2xl rounded-tl-none">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
+                <span className="text-sm text-slate-400">Thinking...</span>
               </div>
             </div>
           </div>
@@ -614,9 +645,9 @@ export function ChatInterfaceAgentic({
         )}
       </div>
 
-      {/* Input - Professional Dark Style */}
+      {/* Input - Professional Toolbox Style */}
       {conversationState.phase !== 'completed' && (
-        <div className="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md relative">
+        <div className="relative p-6 border-t border-white/10 bg-slate-900/90 backdrop-blur-2xl">
           {/* Processing Overlay */}
           {isSubmitting && (
             <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-center rounded-b-xl">
@@ -628,7 +659,7 @@ export function ChatInterfaceAgentic({
             </div>
           )}
 
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-3 group">
             <div className="relative">
               <input
                 type="file"
@@ -642,13 +673,13 @@ export function ChatInterfaceAgentic({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-white/10 bg-slate-800 hover:bg-slate-700 transition-all"
+                  className="border-indigo-500/10 bg-slate-800/50 hover:bg-slate-700 hover:border-indigo-500/30 transition-all shadow-lg"
                   disabled={loading || isUploading}
                   asChild
                 >
                   <div className="cursor-pointer">
                     {isUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                      <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
                     ) : (
                       <Paperclip className="h-5 w-5 text-slate-300" />
                     )}
@@ -663,13 +694,13 @@ export function ChatInterfaceAgentic({
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
               disabled={loading}
-              className="flex-1 bg-slate-800 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+              className="flex-1 bg-slate-800/50 border-indigo-500/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all"
             />
 
             <Button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
+              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50"
             >
               <Send className="h-5 w-5" />
             </Button>
@@ -683,6 +714,40 @@ export function ChatInterfaceAgentic({
           </div>
         </div>
       )}
-    </Card>
+
+      {/* Celebratory Completion State */}
+      {conversationState.phase === 'completed' && (
+        <div className="p-8 border-t border-emerald-500/30 bg-gradient-to-br from-slate-900/90 via-emerald-900/20 to-slate-900/90 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Large CheckCircle Icon with scale-in animation */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-xl animate-pulse" />
+              <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full shadow-2xl shadow-emerald-500/50 animate-in zoom-in duration-500">
+                <CheckCircle className="h-16 w-16 text-white" />
+              </div>
+            </div>
+
+            {/* Success Message */}
+            <div className="space-y-3">
+              <h3 className="text-3xl font-bold text-white tracking-tight">
+                Consultation Successfully Prepared
+              </h3>
+              <p className="text-lg text-emerald-100 max-w-2xl mx-auto leading-relaxed">
+                {effectiveBusinessName} will reach out to you shortly with next steps.
+              </p>
+            </div>
+
+            {/* Additional Info Card */}
+            <div className="mt-4 p-5 bg-white/5 rounded-xl border border-emerald-500/20 backdrop-blur-sm max-w-md">
+              <div className="flex items-center justify-center gap-3 text-sm text-emerald-100">
+                <Sparkles className="h-5 w-5 text-emerald-400 animate-pulse" />
+                <span className="font-medium">Your information has been securely submitted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      </Card>
+    </div>
   );
 }
