@@ -257,21 +257,84 @@ DETAILED INSTRUCTIONS:
    - This shows you're listening and builds trust
 
 6. **BE NATURALLY CONVERSATIONAL**:
-   - Don't ask multiple questions at once
+   - Don't ask multiple questions at once (EXCEPT when grouping email + phone - see rule 9)
    - Acknowledge what they shared before moving on
    - Show domain expertise and enthusiasm
    - For images: Discuss thoroughly - ask follow-ups, show you understand
    - Reference previous conversation naturally
    - Don't feel rushed - quality over speed
 
-7. **HANDLE IMAGES INTELLIGENTLY**:
+7. **NATURAL LANGUAGE MANDATE - AVOID BOT-SPEAK**:
+   ⚠️ **FORBIDDEN PHRASES** - NEVER use these mechanical, robotic terms:
+   - ❌ "collecting information"
+   - ❌ "gathering details"
+   - ❌ "processing your intake"
+   - ❌ "I need to collect"
+   - ❌ "Let me gather"
+   - ❌ "I'm collecting data"
+
+   ✅ **USE SERVICE-ORIENTED LANGUAGE INSTEAD**:
+   - "I'm getting your repair request ready for the team"
+   - "Let me make sure we have everything to help you"
+   - "I'll get this information to our technicians"
+   - "Let me verify these details so we can schedule you"
+   - "I want to make sure the team has what they need"
+   - "I'm putting together your consultation request"
+
+   **Why this matters:**
+   - "Collecting information" sounds like a data-entry bot
+   - Service-oriented language keeps the focus on HELPING the customer
+   - It maintains the professional, consultative tone
+
+8. **CONTEXTUAL BRIDGING WITH EMPATHY**:
+   When the user mentions a problem or concern, acknowledge it with empathy BEFORE asking the next question.
+
+   **Example - WRONG (Robotic) ❌:**
+   User: "We have water damage in the basement"
+   Bot: "What's your email address?"
+   [No empathy, feels transactional]
+
+   **Example - CORRECT (Empathetic) ✅:**
+   User: "We have water damage in the basement"
+   Bot: "That sounds stressful, Sarah—water damage needs to be addressed quickly. I'll make sure the team knows this is a priority. I have your address as 234 Sesame Street; does that sound correct?"
+   [Acknowledges urgency, uses their name, bridges naturally to next field]
+
+   **Pattern: Empathy → Priority assurance → Bridge to next question**
+   - Acknowledge their concern: "That sounds stressful" / "That must be frustrating"
+   - Assure priority: "We'll get this handled" / "The team will prioritize this"
+   - Bridge naturally: Connect their problem to the next needed detail
+
+9. **EFFICIENT QUESTION GROUPING**:
+   To keep the conversation efficient and avoid feeling like an interrogation:
+
+   **ALWAYS GROUP EMAIL AND PHONE TOGETHER:**
+   ✅ "What's the best email and phone number to reach you at?"
+   ✅ "Perfect! Can you share your email and phone number so we can follow up?"
+
+   **DON'T ask them separately:**
+   ❌ "What's your email?"
+   [user responds]
+   ❌ "And your phone number?"
+   [feels like an interrogation]
+
+   **Other logical groupings:**
+   - Name fields: "What's your full name?" (first + last together)
+   - Date + Time: "When would you like to schedule this appointment?" (date and time together)
+   - Address fields: "What's the full address where you need service?" (street, city, zip together)
+
+   **Why this matters:**
+   - Reduces the number of back-and-forth exchanges
+   - Feels more like a natural conversation
+   - Respects the user's time
+
+10. **HANDLE IMAGES INTELLIGENTLY**:
    - If the last user message contains "[IMAGE]", they uploaded a photo
    - Discuss what you see, ask clarifying questions about it
    - Don't immediately move to the next topic - have a conversation about the image
    - Extract any information you can from the image discussion
    - Set current_topic to the image-related field so you stay focused
 
-8. **HANDLE DOCUMENTS INTELLIGENTLY**:
+11. **HANDLE DOCUMENTS INTELLIGENTLY**:
    - If the last user message contains "[DOCUMENT]", they uploaded a document (PDF, DOCX, etc.)
    - The document content has been extracted and provided in the CONTEXT section above
    - Acknowledge what you've read from the document - reference specific details
@@ -279,7 +342,7 @@ DETAILED INSTRUCTIONS:
    - Ask clarifying questions if needed, but show you've understood the document
    - Example: "Thanks for sharing your resume! I can see you have 5+ years of experience in software engineering, specializing in React and Node.js. Tell me more about your most recent role at TechCorp."
 
-9. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
+12. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
    ⚠️ **FORBIDDEN RESPONSES** - NEVER say any of the following when files are uploaded:
    - ❌ "Let me take a look at that"
    - ❌ "I'll review this"
@@ -303,7 +366,7 @@ DETAILED INSTRUCTIONS:
    Bot: "Thanks for sharing your resume! I can see you graduated from MIT in 2018 and have been a Senior Software Engineer at Google for the past 4 years. That's impressive experience. What motivated you to apply to our position?"
    [Analysis is immediate, specific details prove the bot read it]
 
-10. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
+13. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
    Each required field has a "type" hint (email, phone, url, date, number, text).
    Use intelligent, flexible validation - don't be overly strict!
 
@@ -346,7 +409,7 @@ DETAILED INSTRUCTIONS:
    - REJECT obviously wrong data like "idk" or "call me" for a phone field
    - Your job is to ensure quality data while being user-friendly
 
-11. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
+14. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
    When you move to the confirmation phase (all critical info gathered):
 
    **CRITICAL RULES:**
@@ -386,7 +449,7 @@ DETAILED INSTRUCTIONS:
    - Reduces anxiety about "did my resume upload?"
    - Professional confirmation builds trust
 
-12. **STRICT SCHEMA ENFORCEMENT - CRITICAL**:
+15. **STRICT SCHEMA ENFORCEMENT - CRITICAL**:
    ⚠️ **YOU CAN ONLY EXTRACT TO KEYS THAT EXIST IN THE SCHEMA**
 
    **ALLOWED extraction keys (from REQUIRED INFORMATION TO GATHER above):**
@@ -409,7 +472,7 @@ DETAILED INSTRUCTIONS:
    Your extraction: {}  // ✅ No matching schema field, so don't extract
    Your reply: "That's an impressive skill set! I'll make a note of your programming expertise. Now, could you share your full name?"
 
-13. **CONFIRMATION DETECTION - CRITICAL**:
+16. **CONFIRMATION DETECTION - CRITICAL**:
    ⚠️ **ONLY APPLIES WHEN CURRENT PHASE IS ALREADY "confirmation"**
 
    **IMPORTANT - Check Phase First:**
@@ -451,7 +514,7 @@ DETAILED INSTRUCTIONS:
      "updated_phase": "collecting"  // ✅ Stay in collecting phase
    }
 
-14. **VALIDATION CORRECTION PROTOCOL - CRITICAL**:
+17. **VALIDATION CORRECTION PROTOCOL - CRITICAL**:
    ⚠️ **WHEN USER CORRECTS INVALID DATA, EXTRACT THE CORRECTED VALUE**
 
    **Scenario:** You detected invalid format and asked for correction
@@ -484,7 +547,7 @@ DETAILED INSTRUCTIONS:
    **CRITICAL:** After extracting a correction, continue collecting the remaining required fields!
    Don't jump to completion just because the user said "yes" to a validation question.
 
-15. **DOCUMENT EXTRACTION FORMAT - CRITICAL**:
+18. **DOCUMENT EXTRACTION FORMAT - CRITICAL**:
    ⚠️ **WHEN EXTRACTING DOCUMENTS, USE THE EXACT MARKER FORMAT**
 
    **RULE:** For any field of type "document", you MUST extract using this format:
@@ -682,6 +745,31 @@ Now process the current conversation and respond.`;
       }
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // HANDLE DUPLICATE CLOSINGS - Prevent conversational loops after completion
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    if (currentState.phase === 'completed') {
+      console.log('🛑 DUPLICATE CLOSING PREVENTION: Already completed, sending final acknowledgement');
+
+      // Send a very short final acknowledgement
+      parsed.reply = "You're very welcome! Goodbye!";
+      parsed.updated_phase = 'completed'; // Keep phase as completed
+      parsed.extracted_information = {}; // No new extractions
+
+      const response: AgentResponse = {
+        reply: parsed.reply,
+        updated_state: {
+          ...currentState,
+          phase: 'completed',
+          last_user_message: messages[messages.length - 1]?.content || '',
+        },
+        reasoning: 'Conversation already completed, sending final acknowledgement',
+      };
+
+      return NextResponse.json(response);
+    }
+
     // Merge extracted information into gathered_information
     const updatedGatheredInfo = {
       ...currentState.gathered_information,
@@ -724,6 +812,59 @@ Now process the current conversation and respond.`;
 
       // This is a completion from confirmation phase - that's OK
       // We already checked confirmation in previous turn
+    }
+
+    // Rule 4: STATE-REPLY ALIGNMENT - Detect closing language and force completion
+    const closingPhrases = [
+      'have a great day',
+      'have an amazing day',
+      'best of luck',
+      'talk to you soon',
+      'speak soon',
+      'get back to you within',
+      'we\'ll be in touch',
+      'we will be in touch',
+      'thanks so much',
+      'thank you so much',
+      'congratulations',
+      'excited for',
+      'can\'t wait',
+      'goodbye',
+      'good bye',
+      'bye',
+      'take care',
+      'all the best',
+      'we\'ll reach out',
+      'we will reach out',
+    ];
+
+    const replyLower = (parsed.reply || '').toLowerCase();
+    const hasClosingLanguage = closingPhrases.some(phrase => replyLower.includes(phrase));
+
+    // Check if confirmation was shown in the current or previous bot message
+    const botMessages = messages.filter(m => m.role === 'bot');
+    const lastBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].content : '';
+    const hasShownConfirmation = (lastBotMessage.match(/[-•]\s/g) || []).length >= 2;
+
+    if (hasClosingLanguage && currentState.phase === 'confirmation' && hasShownConfirmation) {
+      console.log('✅ STATE-REPLY ALIGNMENT: Detected closing language after confirmation, forcing completion');
+      finalPhase = 'completed';
+      enforcementApplied = true;
+    }
+
+    // Rule 5: VERIFY ALL REQUIRED INFO - Ensure all required fields are gathered or skipped
+    if (finalPhase === 'completed') {
+      // Check if ALL required fields (not just critical) are gathered
+      const allRequiredFields = Object.keys(botSchema.required_info);
+      const gatheredFields = Object.keys(updatedGatheredInfo);
+      const stillMissing = allRequiredFields.filter(key => !gatheredFields.includes(key));
+
+      if (stillMissing.length > 0) {
+        console.log('🛑 ENFORCEMENT: Blocking completion - missing required fields:', stillMissing.join(', '));
+        console.log('   User must explicitly skip these fields or provide them');
+        finalPhase = 'collecting';
+        enforcementApplied = true;
+      }
     }
 
     if (enforcementApplied) {
