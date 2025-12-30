@@ -682,6 +682,31 @@ Now process the current conversation and respond.`;
       }
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // HANDLE DUPLICATE CLOSINGS - Prevent conversational loops after completion
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    if (currentState.phase === 'completed') {
+      console.log('🛑 DUPLICATE CLOSING PREVENTION: Already completed, sending final acknowledgement');
+
+      // Send a very short final acknowledgement
+      parsed.reply = "You're very welcome! Goodbye!";
+      parsed.updated_phase = 'completed'; // Keep phase as completed
+      parsed.extracted_information = {}; // No new extractions
+
+      const response: AgentResponse = {
+        reply: parsed.reply,
+        updated_state: {
+          ...currentState,
+          phase: 'completed',
+          last_user_message: messages[messages.length - 1]?.content || '',
+        },
+        reasoning: 'Conversation already completed, sending final acknowledgement',
+      };
+
+      return NextResponse.json(response);
+    }
+
     // Merge extracted information into gathered_information
     const updatedGatheredInfo = {
       ...currentState.gathered_information,
@@ -724,6 +749,59 @@ Now process the current conversation and respond.`;
 
       // This is a completion from confirmation phase - that's OK
       // We already checked confirmation in previous turn
+    }
+
+    // Rule 4: STATE-REPLY ALIGNMENT - Detect closing language and force completion
+    const closingPhrases = [
+      'have a great day',
+      'have an amazing day',
+      'best of luck',
+      'talk to you soon',
+      'speak soon',
+      'get back to you within',
+      'we\'ll be in touch',
+      'we will be in touch',
+      'thanks so much',
+      'thank you so much',
+      'congratulations',
+      'excited for',
+      'can\'t wait',
+      'goodbye',
+      'good bye',
+      'bye',
+      'take care',
+      'all the best',
+      'we\'ll reach out',
+      'we will reach out',
+    ];
+
+    const replyLower = (parsed.reply || '').toLowerCase();
+    const hasClosingLanguage = closingPhrases.some(phrase => replyLower.includes(phrase));
+
+    // Check if confirmation was shown in the current or previous bot message
+    const botMessages = messages.filter(m => m.role === 'bot');
+    const lastBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].content : '';
+    const hasShownConfirmation = (lastBotMessage.match(/[-•]\s/g) || []).length >= 2;
+
+    if (hasClosingLanguage && currentState.phase === 'confirmation' && hasShownConfirmation) {
+      console.log('✅ STATE-REPLY ALIGNMENT: Detected closing language after confirmation, forcing completion');
+      finalPhase = 'completed';
+      enforcementApplied = true;
+    }
+
+    // Rule 5: VERIFY ALL REQUIRED INFO - Ensure all required fields are gathered or skipped
+    if (finalPhase === 'completed') {
+      // Check if ALL required fields (not just critical) are gathered
+      const allRequiredFields = Object.keys(botSchema.required_info);
+      const gatheredFields = Object.keys(updatedGatheredInfo);
+      const stillMissing = allRequiredFields.filter(key => !gatheredFields.includes(key));
+
+      if (stillMissing.length > 0) {
+        console.log('🛑 ENFORCEMENT: Blocking completion - missing required fields:', stillMissing.join(', '));
+        console.log('   User must explicitly skip these fields or provide them');
+        finalPhase = 'collecting';
+        enforcementApplied = true;
+      }
     }
 
     if (enforcementApplied) {
