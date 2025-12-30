@@ -59,5 +59,34 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  return <DashboardContent user={user} bots={bots} recentSubmissions={recentSubmissions || []} />;
+  // Fetch 7-day submission trend
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const { data: allSubmissions } = await supabase
+    .from('submissions')
+    .select('created_at')
+    .in('bot_id', bots?.map(b => b.id) || [])
+    .gte('created_at', sevenDaysAgo.toISOString());
+
+  // Group submissions by day
+  const submissionTrend = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    const count = allSubmissions?.filter((sub: any) => {
+      const subDate = new Date(sub.created_at).toISOString().split('T')[0];
+      return subDate === dateStr;
+    }).length || 0;
+
+    submissionTrend.push({
+      date: dateStr,
+      submissions: count,
+      label: date.toLocaleDateString('en-US', { weekday: 'short' })
+    });
+  }
+
+  return <DashboardContent user={user} bots={bots} recentSubmissions={recentSubmissions || []} submissionTrend={submissionTrend} />;
 }
