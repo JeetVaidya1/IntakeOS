@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { description } = await request.json();
+    const { description, previewOnly } = await request.json();
 
     console.log('📝 Received description:', description);
 
@@ -238,6 +238,17 @@ Now generate the schema for this task.`,
     console.log('🔗 Generated slug:', slug);
     console.log('📝 Bot Task Name:', botTaskName);
     console.log('🧠 Agentic Schema:', JSON.stringify(agenticSchema, null, 2));
+
+    // If preview only, return the schema without saving
+    if (previewOnly) {
+      console.log('👁️ Preview mode - returning schema without saving');
+      return NextResponse.json({
+        success: true,
+        botTaskName,
+        schema: agenticSchema,
+        isAgentic: true,
+      });
+    }
 
     // Save to database with AGENTIC schema
     const { data: bot, error } = await supabase
