@@ -52,6 +52,8 @@ export function ChatInterfaceAgentic({
   const [isHydrated, setIsHydrated] = useState(false);
   const [showSimulationResult, setShowSimulationResult] = useState(false);
   const [simulationData, setSimulationData] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionComplete, setSubmissionComplete] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Calculate progress based on gathered vs missing info
@@ -104,6 +106,14 @@ export function ChatInterfaceAgentic({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  // Phase transition: When conversation completes, immediately lock UI
+  useEffect(() => {
+    if (conversationState.phase === 'completed' && !isSubmitting && !submissionComplete) {
+      setIsSubmitting(true);
+      setLoading(true);
+    }
+  }, [conversationState.phase, isSubmitting, submissionComplete]);
 
   // Initial message - start the conversation
   useEffect(() => {
@@ -305,11 +315,10 @@ export function ChatInterfaceAgentic({
       });
       setShowSimulationResult(true);
 
-      // Show simulation complete message
-      setMessages(prev => [...prev, {
-        role: 'bot',
-        content: "✅ Test Drive Complete! Check out the simulation results below to see what data was collected."
-      }]);
+      // Mark submission as complete
+      setSubmissionComplete(true);
+      setIsSubmitting(false);
+      setLoading(false);
       return;
     }
 
@@ -332,11 +341,8 @@ export function ChatInterfaceAgentic({
         // Clear storage
         localStorage.removeItem(storageKey);
 
-        // Show success message
-        setMessages(prev => [...prev, {
-          role: 'bot',
-          content: "✅ Perfect! Your information has been submitted successfully. We'll be in touch soon!"
-        }]);
+        // Mark submission as complete
+        setSubmissionComplete(true);
       } else {
         throw new Error(result.error || 'Submission failed');
       }
@@ -346,6 +352,10 @@ export function ChatInterfaceAgentic({
         role: 'bot',
         content: "I had trouble submitting your information. Please try again or contact us directly."
       }]);
+      // Reset states on error so user can try again
+      setIsSubmitting(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -516,7 +526,7 @@ export function ChatInterfaceAgentic({
           <div className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-2 border-cyan-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg shadow-lg">
-                <Check className="h-5 w-5 text-white" />
+                <CheckCircle className="h-5 w-5 text-white" />
               </div>
               <h3 className="text-lg font-bold text-white">Simulation Complete!</h3>
             </div>
@@ -568,11 +578,56 @@ export function ChatInterfaceAgentic({
             </div>
           </div>
         )}
+
+        {/* Submission Success Card */}
+        {submissionComplete && (
+          <div className="w-full p-8 bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-2xl">
+            <div className="flex flex-col items-center text-center space-y-4">
+              {/* Success Icon */}
+              <div className="p-4 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full shadow-lg animate-in zoom-in duration-300">
+                <CheckCircle className="h-12 w-12 text-white" />
+              </div>
+
+              {/* Success Message */}
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-white">
+                  {simulatorMode ? '✅ Test Drive Complete!' : '✅ Perfect! Your Information Has Been Submitted'}
+                </h3>
+                <p className="text-base text-emerald-100 max-w-md mx-auto">
+                  {simulatorMode
+                    ? 'Check out the simulation results above to see what data was collected.'
+                    : "We've received everything we need. We'll be in touch soon!"}
+                </p>
+              </div>
+
+              {/* Additional Info */}
+              {!simulatorMode && (
+                <div className="mt-4 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-sm text-white">
+                    <Sparkles className="h-4 w-4 text-emerald-300" />
+                    <span>Your request has been securely submitted</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input - Professional Dark Style */}
       {conversationState.phase !== 'completed' && (
-        <div className="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md">
+        <div className="p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-md relative">
+          {/* Processing Overlay */}
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-center rounded-b-xl">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+                <p className="text-sm font-medium text-white">Processing your request...</p>
+                <p className="text-xs text-slate-400">Please wait while we submit your information</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-end gap-3">
             <div className="relative">
               <input
