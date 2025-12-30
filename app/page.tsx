@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3, Calendar, MapPin, Calculator, Rocket, Star, DollarSign, Infinity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -304,45 +305,63 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Mock Chart Area */}
+                {/* Chart Area */}
                 <div className="p-6">
-                  <div className="h-48 relative">
-                    {/* CSS-based Chart */}
-                    <div className="absolute inset-0 flex items-end justify-between gap-2 px-4">
-                      {[
-                        { day: 'Mon', height: '40%', value: 8 },
-                        { day: 'Tue', height: '55%', value: 12 },
-                        { day: 'Wed', height: '45%', value: 10 },
-                        { day: 'Thu', height: '70%', value: 16 },
-                        { day: 'Fri', height: '85%', value: 19 },
-                        { day: 'Sat', height: '60%', value: 13 },
-                        { day: 'Sun', height: '50%', value: 11 },
-                      ].map((bar, idx) => (
-                        <motion.div
-                          key={bar.day}
-                          initial={{ height: 0 }}
-                          whileInView={{ height: bar.height }}
-                          viewport={{ once: true }}
-                          transition={{ delay: idx * 0.1, duration: 0.5 }}
-                          className="flex-1 relative group"
-                        >
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-indigo-500 to-cyan-500 rounded-t-lg opacity-60 group-hover:opacity-100 transition-opacity">
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="bg-slate-950 border border-white/20 rounded px-2 py-1 text-xs text-white whitespace-nowrap">
-                                {bar.value} leads
-                              </div>
-                            </div>
-                          </div>
-                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-slate-400">
-                            {bar.day}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={[
+                          { label: 'Mon', submissions: 8 },
+                          { label: 'Tue', submissions: 12 },
+                          { label: 'Wed', submissions: 10 },
+                          { label: 'Thu', submissions: 16 },
+                          { label: 'Fri', submissions: 19 },
+                          { label: 'Sat', submissions: 13 },
+                          { label: 'Sun', submissions: 11 },
+                        ]}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorSubmissions" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                        <XAxis
+                          dataKey="label"
+                          stroke="#94a3b8"
+                          style={{ fontSize: '12px' }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          stroke="#94a3b8"
+                          style={{ fontSize: '12px' }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: '1px solid #334155',
+                            borderRadius: '8px',
+                            color: '#f1f5f9'
+                          }}
+                          labelStyle={{ color: '#94a3b8' }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="submissions"
+                          stroke="#6366f1"
+                          strokeWidth={2}
+                          fill="url(#colorSubmissions)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
 
                   {/* Chart Footer */}
-                  <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
                       <span className="text-sm text-slate-300">Daily Submissions</span>
