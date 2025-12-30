@@ -978,7 +978,12 @@ export default function LandingPage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Solutions</h4>
               <ul className="space-y-2">
-                {['Home Services', 'Healthcare', 'Legal', 'Contractors'].map((item) => (
+                <li>
+                  <Link href="/solutions/home-services" className="text-slate-400 hover:text-white text-sm transition-colors">
+                    Home Services
+                  </Link>
+                </li>
+                {['Healthcare', 'Legal', 'Real Estate'].map((item) => (
                   <li key={item}>
                     <Link href="#" className="text-slate-400 hover:text-white text-sm transition-colors">
                       {item}
