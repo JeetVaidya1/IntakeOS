@@ -95,7 +95,7 @@ export default function LandingPage() {
         {/* Scroll Indicator */}
         <motion.div
           animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          transition={{ repeat: Infinity as number, duration: 2 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-400"
         >
           <ChevronDown className="w-6 h-6" />
