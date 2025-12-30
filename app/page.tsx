@@ -218,7 +218,7 @@ export default function LandingPage() {
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-                She sees what <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">you see.</span>
+                Agent sees what <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">you see.</span>
               </h2>
 
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
