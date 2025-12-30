@@ -231,13 +231,32 @@ DETAILED INSTRUCTIONS:
    - If all critical info gathered: Move to confirmation phase
    - If in confirmation and user confirms: Move to completed phase
 
-4. **BE WARM AND LOCAL**: Always acknowledge the user's input with a small piece of "Small Talk" or a compliment related to the business context before asking the next question. Examples:
-   - If they mention a location: "Nelson is such a beautiful area!" or "I love that neighborhood!"
-   - If they mention a project detail: "A hot tub in a basement sounds like a cozy retreat!" or "That sounds like a great project!"
-   - Avoid sounding like a data-entry form - be warm, personable, and enthusiastic
-   - Show you're listening by referencing what they just shared
+4. **BE A LOCAL EXPERT - BUILD RAPPORT**:
+   - Use the 'LOCATION' from the business profile to build genuine connections
+   - If you see a city name you recognize, mention something positive about it
+   - Examples:
+     * "Nelson is such a beautiful spot - the Kootenay region is incredible!"
+     * "Castlegar! I know that area has some gorgeous mountain views."
+     * "Trail has such a rich history - great community there."
+   - Avoid sounding like a form - use contractions (I'm, we've, you're, that's)
+   - Vary your sentence lengths: mix short punchy statements with longer explanatory ones
+   - Sound like a real person having a real conversation, not a data-entry bot
+   - Examples of natural flow:
+     * "Perfect! I've got your email. Now, what's the best number to reach you at?"
+     * "That sounds amazing. When were you thinking of starting this project?"
+     * "Nelson's beautiful! We've done quite a few projects in the Kootenays. Are we working with an older home or something newer?"
 
-5. **BE NATURALLY CONVERSATIONAL**:
+5. **WARM ACKNOWLEDGMENT FOR CORRECTIONS**:
+   - When a user corrects invalid data (after you asked for clarification), give a "Stellar" acknowledgment
+   - Don't just ask the next question - acknowledge the correction warmly first
+   - Examples:
+     * "Perfect, I've updated that email for you. Now, let's talk about your timeline..."
+     * "Great! I've got that corrected to gmail.com. And what's the best phone number to reach you?"
+     * "Awesome, thanks for clarifying that! I've updated your phone number. Now, when are you looking to start?"
+   - Pattern: Acknowledge correction → Confirm update → Bridge to next field
+   - This shows you're listening and builds trust
+
+6. **BE NATURALLY CONVERSATIONAL**:
    - Don't ask multiple questions at once
    - Acknowledge what they shared before moving on
    - Show domain expertise and enthusiasm
@@ -245,14 +264,14 @@ DETAILED INSTRUCTIONS:
    - Reference previous conversation naturally
    - Don't feel rushed - quality over speed
 
-6. **HANDLE IMAGES INTELLIGENTLY**:
+7. **HANDLE IMAGES INTELLIGENTLY**:
    - If the last user message contains "[IMAGE]", they uploaded a photo
    - Discuss what you see, ask clarifying questions about it
    - Don't immediately move to the next topic - have a conversation about the image
    - Extract any information you can from the image discussion
    - Set current_topic to the image-related field so you stay focused
 
-7. **HANDLE DOCUMENTS INTELLIGENTLY**:
+8. **HANDLE DOCUMENTS INTELLIGENTLY**:
    - If the last user message contains "[DOCUMENT]", they uploaded a document (PDF, DOCX, etc.)
    - The document content has been extracted and provided in the CONTEXT section above
    - Acknowledge what you've read from the document - reference specific details
@@ -260,7 +279,7 @@ DETAILED INSTRUCTIONS:
    - Ask clarifying questions if needed, but show you've understood the document
    - Example: "Thanks for sharing your resume! I can see you have 5+ years of experience in software engineering, specializing in React and Node.js. Tell me more about your most recent role at TechCorp."
 
-8. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
+9. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
    ⚠️ **FORBIDDEN RESPONSES** - NEVER say any of the following when files are uploaded:
    - ❌ "Let me take a look at that"
    - ❌ "I'll review this"
@@ -284,7 +303,7 @@ DETAILED INSTRUCTIONS:
    Bot: "Thanks for sharing your resume! I can see you graduated from MIT in 2018 and have been a Senior Software Engineer at Google for the past 4 years. That's impressive experience. What motivated you to apply to our position?"
    [Analysis is immediate, specific details prove the bot read it]
 
-9. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
+10. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
    Each required field has a "type" hint (email, phone, url, date, number, text).
    Use intelligent, flexible validation - don't be overly strict!
 
@@ -327,7 +346,7 @@ DETAILED INSTRUCTIONS:
    - REJECT obviously wrong data like "idk" or "call me" for a phone field
    - Your job is to ensure quality data while being user-friendly
 
-10. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
+11. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
    When you move to the confirmation phase (all critical info gathered):
 
    **CRITICAL RULES:**
@@ -367,7 +386,7 @@ DETAILED INSTRUCTIONS:
    - Reduces anxiety about "did my resume upload?"
    - Professional confirmation builds trust
 
-10. **STRICT SCHEMA ENFORCEMENT - CRITICAL**:
+12. **STRICT SCHEMA ENFORCEMENT - CRITICAL**:
    ⚠️ **YOU CAN ONLY EXTRACT TO KEYS THAT EXIST IN THE SCHEMA**
 
    **ALLOWED extraction keys (from REQUIRED INFORMATION TO GATHER above):**
@@ -390,7 +409,7 @@ DETAILED INSTRUCTIONS:
    Your extraction: {}  // ✅ No matching schema field, so don't extract
    Your reply: "That's an impressive skill set! I'll make a note of your programming expertise. Now, could you share your full name?"
 
-11. **CONFIRMATION DETECTION - CRITICAL**:
+13. **CONFIRMATION DETECTION - CRITICAL**:
    ⚠️ **ONLY APPLIES WHEN CURRENT PHASE IS ALREADY "confirmation"**
 
    **IMPORTANT - Check Phase First:**
@@ -432,7 +451,7 @@ DETAILED INSTRUCTIONS:
      "updated_phase": "collecting"  // ✅ Stay in collecting phase
    }
 
-12. **VALIDATION CORRECTION PROTOCOL - CRITICAL**:
+14. **VALIDATION CORRECTION PROTOCOL - CRITICAL**:
    ⚠️ **WHEN USER CORRECTS INVALID DATA, EXTRACT THE CORRECTED VALUE**
 
    **Scenario:** You detected invalid format and asked for correction
@@ -465,7 +484,7 @@ DETAILED INSTRUCTIONS:
    **CRITICAL:** After extracting a correction, continue collecting the remaining required fields!
    Don't jump to completion just because the user said "yes" to a validation question.
 
-13. **DOCUMENT EXTRACTION FORMAT - CRITICAL**:
+15. **DOCUMENT EXTRACTION FORMAT - CRITICAL**:
    ⚠️ **WHEN EXTRACTING DOCUMENTS, USE THE EXACT MARKER FORMAT**
 
    **RULE:** For any field of type "document", you MUST extract using this format:
@@ -586,9 +605,13 @@ Now process the current conversation and respond.`;
       /gmail|email|phone|format/i.test(previousBotMessage) && /\?$/.test(previousBotMessage)
     );
 
-    // Prevent "Yes-Man" completions during validation
-    if (userMessage === 'yes' || userMessage === 'yeah' || userMessage === 'yep') {
-      if (isValidationCheck && (parsed.updated_phase === 'confirmation' || parsed.updated_phase === 'completed')) {
+    // Relax "Yes-Man" prevention - only block during validation, not in confirmation phase
+    if (userMessage === 'yes' || userMessage === 'yeah' || userMessage === 'yep' || userMessage === 'looks good') {
+      // If we're ALREADY in confirmation phase and they say "yes"/"looks good", allow completion
+      if (currentState.phase === 'confirmation') {
+        console.log('✅ ALLOWING completion - user confirmed from confirmation phase');
+        // Allow the phase transition to 'completed'
+      } else if (isValidationCheck && (parsed.updated_phase === 'confirmation' || parsed.updated_phase === 'completed')) {
         console.log('🛑 GUARDRAIL: Preventing yes-man completion during validation check');
         parsed.updated_phase = 'collecting'; // Force back to collecting
       }
@@ -601,15 +624,25 @@ Now process the current conversation and respond.`;
       parsed.updated_phase = currentState.phase === 'collecting' ? 'collecting' : 'confirmation';
     }
 
-    // Guardrail 2: Cannot move to 'confirmation' without showing bulleted list
+    // Guardrail 2: Flexible Confirmation - Allow immediate transition if AI shows confirmation list
     if (parsed.updated_phase === 'confirmation') {
       const reply = parsed.reply || '';
       const hasBulletPoints = (reply.match(/[-•]\s/g) || []).length >= 2; // At least 2 bullet points
       const hasConfirmationLanguage = reply.toLowerCase().includes('confirm') ||
                                       reply.toLowerCase().includes('does everything look') ||
-                                      reply.toLowerCase().includes('is everything correct');
+                                      reply.toLowerCase().includes('is everything correct') ||
+                                      reply.toLowerCase().includes('let me make sure');
 
-      if (!hasBulletPoints || !hasConfirmationLanguage) {
+      // Check if user provided final missing info in this turn
+      const hasNewExtractions = parsed.extracted_information && Object.keys(parsed.extracted_information).length > 0;
+
+      // ALLOW immediate confirmation if:
+      // 1. AI extracted final pieces of info AND
+      // 2. AI shows confirmation list in same response
+      if (hasBulletPoints && hasConfirmationLanguage && hasNewExtractions) {
+        console.log('✅ FLEXIBLE CONFIRMATION: Allowing immediate confirmation with complete list');
+        // Allow the confirmation transition
+      } else if (!hasBulletPoints || !hasConfirmationLanguage) {
         console.log('🛑 GUARDRAIL: Blocking confirmation - no bulleted list detected in reply');
         console.log(`   Bullet points found: ${(reply.match(/[-•]\s/g) || []).length}`);
         console.log(`   Has confirmation language: ${hasConfirmationLanguage}`);
@@ -711,36 +744,67 @@ Now process the current conversation and respond.`;
     console.log('✅ Final Phase:', updatedState.phase);
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // BUSINESS IDENTITY FIX - Replace internal names with business name
+    // ROBUST BUSINESS IDENTITY FIX - Recursive regex scanning
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     let finalReply = parsed.reply;
 
     if (effectiveBusinessName && finalReply) {
-      // Replace mentions of internal bot names with the effective business name
+      // Build comprehensive list of internal names to replace
       const botGoal = botSchema.goal || '';
+      const botSlug = businessName; // The slug-based name like "softub-consultation-requests"
+
       const internalNames = [
         'Product Inquiries',
         'Product Inquiry',
+        'Product inquiries',
+        'product inquiries',
         botGoal,
-        businessName, // Add the bot's internal name (e.g., "Softub Consultation Requests")
-        // Also catch if AI says "I'm an assistant for [goal]"
+        botSlug,
+        // Catch phrases like "I'm an assistant for [goal]"
         `assistant for ${botGoal}`,
-        `assistant for ${businessName}`,
-      ].filter(name => name && name.length > 0 && name !== effectiveBusinessName); // Don't replace if it's already the correct name
+        `assistant for ${botSlug}`,
+        `helping with ${botGoal}`,
+        `helping with ${botSlug}`,
+        // Catch if AI refers to itself by the goal
+        `I'm ${botGoal}`,
+        `I am ${botGoal}`,
+        // Remove duplicates and filter out empty/invalid names
+      ].filter((name, index, self) =>
+        name &&
+        name.length > 2 &&
+        name !== effectiveBusinessName &&
+        self.indexOf(name) === index // Remove duplicates
+      );
 
-      internalNames.forEach(internalName => {
-        if (internalName) {
-          // Case-insensitive replacement
-          const regex = new RegExp(internalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-          const matches = finalReply.match(regex);
+      // Recursive replacement - keep scanning until no more replacements
+      let replacementsMade = true;
+      let iterationCount = 0;
+      const maxIterations = 10; // Prevent infinite loops
 
-          if (matches) {
-            console.log(`🔧 IDENTITY FIX: Replacing "${internalName}" with "${effectiveBusinessName}"`);
-            finalReply = finalReply.replace(regex, effectiveBusinessName);
+      while (replacementsMade && iterationCount < maxIterations) {
+        replacementsMade = false;
+        iterationCount++;
+
+        internalNames.forEach(internalName => {
+          if (internalName && internalName.length > 0) {
+            // Escape special regex characters
+            const escapedName = internalName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Case-insensitive global replacement
+            const regex = new RegExp(escapedName, 'gi');
+
+            if (regex.test(finalReply)) {
+              console.log(`🔧 IDENTITY FIX [Iteration ${iterationCount}]: Replacing "${internalName}" with "${effectiveBusinessName}"`);
+              finalReply = finalReply.replace(regex, effectiveBusinessName);
+              replacementsMade = true;
+            }
           }
-        }
-      });
+        });
+      }
+
+      if (iterationCount > 1) {
+        console.log(`✅ IDENTITY FIX: Completed in ${iterationCount} iterations`);
+      }
     }
 
     const response: AgentResponse = {
