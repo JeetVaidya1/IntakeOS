@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3, Calendar, MapPin, Calculator, Rocket } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3, Calendar, MapPin, Calculator, Rocket, Star, DollarSign, Infinity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden bg-slate-950">
@@ -76,7 +77,7 @@ export default function LandingPage() {
               <Link href="/auth/signup">
                 <Button size="lg" className="h-16 px-10 text-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-indigo-500 hover:from-cyan-600 hover:via-purple-600 hover:to-indigo-600 shadow-2xl shadow-cyan-500/50 rounded-full group relative overflow-hidden">
                   <span className="absolute inset-0 bg-white/20 animate-pulse"></span>
-                  <span className="relative">Deploy Your Receptionist Free</span>
+                  <span className="relative">Start Your 7-Day Pro Trial</span>
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative" />
                 </Button>
               </Link>
@@ -87,7 +88,7 @@ export default function LandingPage() {
             </div>
 
             {/* Trust Line */}
-            <p className="text-slate-500 mt-8 text-sm">No credit card required • 2-minute setup • Free forever</p>
+            <p className="text-slate-500 mt-8 text-sm">No credit card required to start. Setup in 2 minutes.</p>
           </motion.div>
         </div>
 
@@ -843,6 +844,227 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="relative bg-slate-950 py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-medium mb-6">
+              <DollarSign className="w-4 h-4" />
+              Transparent Pricing
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              Choose Your <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Growth Plan.</span>
+            </h2>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-8">
+              Scale from startup to enterprise. Start with a 7-day Pro trial—no strings attached.
+            </p>
+
+            {/* Billing Toggle */}
+            <div className="inline-flex items-center gap-4 p-1.5 bg-white/5 backdrop-blur-lg border border-white/10 rounded-full mb-12">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all relative ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Yearly
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 rounded-full text-xs text-white font-bold">
+                  Save 17%
+                </span>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {/* Tier 1: Starter */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="relative"
+            >
+              <Card className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-all h-full">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">Starter</h3>
+                  <p className="text-sm text-slate-400">Perfect for small businesses just starting with AI</p>
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold text-white">
+                      ${billingPeriod === 'monthly' ? '49' : '41'}
+                    </span>
+                    <span className="text-slate-400">/month</span>
+                  </div>
+                  {billingPeriod === 'yearly' && (
+                    <p className="text-xs text-emerald-400 mt-2">$492/year (2 months free)</p>
+                  )}
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {[
+                    '1 AI Bot',
+                    '50 leads/month',
+                    'Basic webhooks',
+                    'Email notifications',
+                    'Community support',
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/auth/signup" className="block">
+                  <Button className="w-full bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl">
+                    Start Trial
+                  </Button>
+                </Link>
+              </Card>
+            </motion.div>
+
+            {/* Tier 2: Professional (Most Popular) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="relative scale-105"
+            >
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 rounded-2xl blur opacity-30"></div>
+              <Card className="relative p-8 bg-slate-900 backdrop-blur-xl border-2 border-indigo-500/50 rounded-2xl h-full">
+                {/* Most Popular Badge */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full text-white text-xs font-bold shadow-lg flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-white" />
+                  Most Popular
+                </div>
+
+                <div className="mb-6 mt-4">
+                  <h3 className="text-2xl font-bold text-white mb-2">Professional</h3>
+                  <p className="text-sm text-slate-400">Full power for growing businesses</p>
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold text-white">
+                      ${billingPeriod === 'monthly' ? '149' : '124'}
+                    </span>
+                    <span className="text-slate-400">/month</span>
+                  </div>
+                  {billingPeriod === 'yearly' && (
+                    <p className="text-xs text-emerald-400 mt-2">$1,488/year (2 months free)</p>
+                  )}
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {[
+                    '5 AI Bots',
+                    '250 leads/month',
+                    'Vision AI (Image/PDF parsing)',
+                    'Full Dashboard Analytics',
+                    'Advanced webhooks',
+                    'Priority email support',
+                    'CRM integrations',
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm font-medium">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/auth/signup" className="block">
+                  <Button className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white rounded-xl shadow-xl shadow-indigo-500/30">
+                    Start 7-Day Pro Trial
+                  </Button>
+                </Link>
+              </Card>
+            </motion.div>
+
+            {/* Tier 3: Enterprise */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="relative"
+            >
+              <Card className="relative p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:border-white/20 transition-all h-full">
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">Enterprise</h3>
+                  <p className="text-sm text-slate-400">Built for scale and customization</p>
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold text-white">Custom</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">Let's talk about your needs</p>
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {[
+                    'Unlimited AI Bots',
+                    'Unlimited leads',
+                    'White-labeling',
+                    'Full API access',
+                    'Custom integrations',
+                    'Dedicated account manager',
+                    'SLA guarantees',
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-slate-300">
+                      <CheckCircle2 className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button className="w-full bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl">
+                  Contact Sales
+                </Button>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Trust Footer */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <p className="text-slate-400 text-sm">
+              All plans include a 7-day money-back guarantee. No long-term contracts required.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="relative bg-slate-900 py-24 overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
@@ -861,24 +1083,16 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "How much technical setup is required?",
-                a: "If you can write an email, you can build a bot. Our AI Architect builds your entire intake flow in 30 seconds based on your business description."
+                q: "How does the 7-day trial work?",
+                a: "You get full access to Pro features for 7 days. No strings attached. Experience Vision AI, unlimited bots, and our full analytics dashboard. If you love it, you'll automatically roll into your chosen plan. If not, cancel anytime—no questions asked."
               },
               {
-                q: "Can it actually handle my specific industry?",
-                a: "Yes. By filling out your 'Business Profile,' you teach the AI your service areas, pricing, and specialty. It speaks your language, not generic AI-speak."
+                q: "Is my client data secure?",
+                a: "Yes. We use enterprise-grade encryption (AES-256) for all data in transit and at rest. Your lead data is yours—we never share it, sell it, or use it for training AI models. We're SOC 2 compliant and follow strict data privacy standards."
               },
               {
-                q: "How do I get the leads?",
-                a: "Every lead appears instantly in your IntakeOS Dashboard. We also ping you via email or Slack, and can sync data directly to your CRM (like HubSpot or Salesforce)."
-              },
-              {
-                q: "Is this better than a simple contact form?",
-                a: "Significantly. Forms are static and boring. IntakeOS is conversational, it clarifies typos, handles vague answers, and extracts technical data from photos—things a form simply can't do."
-              },
-              {
-                q: "What if the AI says something wrong?",
-                a: "We use 'Strict Logic Guardrails.' The bot is strictly instructed to stick to your Business Profile and the specific fields you require. It's a receptionist, not a creative writer."
+                q: "Can I cancel anytime?",
+                a: "Yes. IntakeOS is a month-to-month service with no long-term contracts required. You can cancel or downgrade your plan at any time from your dashboard. If you cancel, you'll still have access until the end of your billing period."
               },
             ].map((faq, idx) => (
               <motion.div
@@ -941,7 +1155,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
               <Link href="/auth/signup">
                 <Button size="lg" className="h-16 px-12 text-lg bg-white text-indigo-600 hover:bg-gray-50 hover:scale-105 shadow-2xl rounded-full font-bold transition-all">
-                  Start Building Free
+                  Start Your 7-Day Pro Trial
                   <ArrowRight className="ml-2 w-6 h-6" />
                 </Button>
               </Link>
@@ -951,7 +1165,7 @@ export default function LandingPage() {
               </Button>
             </div>
 
-            <p className="text-slate-400 text-sm">No credit card required • 2-minute setup • Free forever</p>
+            <p className="text-slate-400 text-sm">No credit card required to start. Setup in 2 minutes.</p>
           </motion.div>
         </div>
       </section>

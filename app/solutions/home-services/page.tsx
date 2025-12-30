@@ -24,7 +24,7 @@ export default function HomeServicesPage() {
             </Link>
             <Link href="/auth/signup">
               <Button size="sm" className="bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 rounded-full">
-                Get Started Free
+                Start 7-Day Trial
               </Button>
             </Link>
           </nav>
@@ -66,7 +66,7 @@ export default function HomeServicesPage() {
               <Link href="/auth/signup">
                 <Button size="lg" className="h-16 px-10 text-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-indigo-500 hover:from-cyan-600 hover:via-purple-600 hover:to-indigo-600 shadow-2xl shadow-cyan-500/50 rounded-full group relative overflow-hidden">
                   <span className="absolute inset-0 bg-white/20 animate-pulse"></span>
-                  <span className="relative">Start Free Trial</span>
+                  <span className="relative">Start Your 7-Day Pro Trial</span>
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative" />
                 </Button>
               </Link>
@@ -505,14 +505,14 @@ export default function HomeServicesPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <Link href="/auth/signup">
                 <Button size="lg" className="h-16 px-12 text-lg bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-600 hover:to-indigo-600 shadow-2xl shadow-cyan-500/50 rounded-full">
-                  Start Your Free Trial
+                  Start Your 7-Day Pro Trial
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
             </div>
 
             <p className="text-slate-400 text-sm">
-              No credit card required • 14-day free trial • Cancel anytime
+              No credit card required to start. Setup in 2 minutes.
             </p>
           </motion.div>
         </div>
