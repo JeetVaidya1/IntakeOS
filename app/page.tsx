@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench } from 'lucide-react';
+import { ArrowRight, Brain, Zap, Globe, MessageSquare, Workflow, Clock, CheckCircle2, X, Eye, ChevronDown, Shield, Smartphone, Image as ImageIcon, FileText, Sparkles, TrendingUp, Users, Building2, Hammer, Stethoscope, Scale, Wrench, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
@@ -250,6 +250,205 @@ export default function LandingPage() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Command Center Section */}
+      <section className="relative bg-slate-900 py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        <div className="absolute top-1/2 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-0 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-medium mb-6">
+              <BarChart3 className="w-4 h-4" />
+              Real-Time Intelligence
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              Your Lead <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Command Center.</span>
+            </h2>
+            <p className="text-xl text-slate-300 mb-2 max-w-3xl mx-auto">
+              Total Visibility, Zero Effort.
+            </p>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+              Go beyond email pings. Manage your entire intake funnel from a dashboard designed for busy business owners.
+            </p>
+          </motion.div>
+
+          {/* Dashboard Preview - Tilted Container */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-6xl mx-auto mb-16 perspective-1000"
+          >
+            <div className="relative transform hover:scale-[1.02] transition-transform duration-500" style={{ transform: 'rotateX(8deg) rotateY(-4deg)' }}>
+              {/* Dashboard Container */}
+              <div className="bg-slate-900/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+                {/* Dashboard Header */}
+                <div className="bg-gradient-to-r from-indigo-500/20 to-cyan-500/20 border-b border-white/10 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-white font-semibold text-lg">Submission Performance</h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                      <span>Live</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mock Chart Area */}
+                <div className="p-6">
+                  <div className="h-48 relative">
+                    {/* CSS-based Chart */}
+                    <div className="absolute inset-0 flex items-end justify-between gap-2 px-4">
+                      {[
+                        { day: 'Mon', height: '40%', value: 8 },
+                        { day: 'Tue', height: '55%', value: 12 },
+                        { day: 'Wed', height: '45%', value: 10 },
+                        { day: 'Thu', height: '70%', value: 16 },
+                        { day: 'Fri', height: '85%', value: 19 },
+                        { day: 'Sat', height: '60%', value: 13 },
+                        { day: 'Sun', height: '50%', value: 11 },
+                      ].map((bar, idx) => (
+                        <motion.div
+                          key={bar.day}
+                          initial={{ height: 0 }}
+                          whileInView={{ height: bar.height }}
+                          viewport={{ once: true }}
+                          transition={{ delay: idx * 0.1, duration: 0.5 }}
+                          className="flex-1 relative group"
+                        >
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-indigo-500 to-cyan-500 rounded-t-lg opacity-60 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="bg-slate-950 border border-white/20 rounded px-2 py-1 text-xs text-white whitespace-nowrap">
+                                {bar.value} leads
+                              </div>
+                            </div>
+                          </div>
+                          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-slate-400">
+                            {bar.day}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chart Footer */}
+                  <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                      <span className="text-sm text-slate-300">Daily Submissions</span>
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      Total this week: <span className="font-bold text-white">89</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Live Lead Cards */}
+                <div className="px-6 pb-6 space-y-3">
+                  {[
+                    { name: 'John Smith', location: 'Nelson, BC', budget: '$5k-7k', time: '2 mins ago', color: 'emerald' },
+                    { name: 'Sarah Johnson', location: 'Castlegar, BC', budget: '$12k-15k', time: '15 mins ago', color: 'cyan' },
+                    { name: 'Mike Thompson', location: 'Trail, BC', budget: '$3k-5k', time: '1 hour ago', color: 'indigo' },
+                  ].map((lead, idx) => (
+                    <motion.div
+                      key={lead.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-2 h-2 rounded-full bg-${lead.color}-400 animate-pulse`}></div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-semibold">{lead.name}</span>
+                            <span className="text-xs text-slate-500">•</span>
+                            <span className="text-sm text-slate-400">{lead.location}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-slate-500">Budget: {lead.budget}</span>
+                            <span className="text-xs text-slate-500">•</span>
+                            <span className="text-xs text-slate-500">{lead.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm text-white transition-all opacity-0 group-hover:opacity-100">
+                        View Details →
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Floating Stats Badge */}
+              <div className="absolute -right-4 -top-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl px-6 py-4 shadow-2xl shadow-emerald-500/50 border border-white/20">
+                <div className="text-white font-bold text-2xl">89</div>
+                <div className="text-white/90 text-xs">Leads This Week</div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Feature Highlights Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+            {[
+              {
+                icon: TrendingUp,
+                title: 'Lead Analytics',
+                description: 'Track your intake volume with 7-day performance charts. Know exactly when your business is busiest.',
+                color: 'from-indigo-500 to-purple-500'
+              },
+              {
+                icon: Building2,
+                title: 'Centralized Management',
+                description: 'One place to manage all your bots, from Softub consultations to blind repairs.',
+                color: 'from-cyan-500 to-blue-500'
+              },
+              {
+                icon: Eye,
+                title: 'Lead Deep-Dives',
+                description: "Don't just see a name. View full conversation summaries and extracted data in a clean, professional table.",
+                color: 'from-purple-500 to-pink-500'
+              },
+            ].map((feature, idx) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="p-6 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl hover:bg-white/10 transition-all"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg`}>
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="text-lg font-bold text-white mb-2">{feature.title}</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white rounded-full shadow-xl shadow-indigo-500/30 hover:shadow-2xl hover:scale-105 transition-all">
+              <Eye className="mr-2 w-5 h-5" />
+              Take the Dashboard Tour
+            </Button>
+          </motion.div>
         </div>
       </section>
 
