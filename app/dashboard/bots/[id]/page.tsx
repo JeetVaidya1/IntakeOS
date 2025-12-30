@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotSettings } from '@/app/components/BotSettings';
-import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar } from 'lucide-react';
+import { QRCode } from '@/app/preview/[id]/QRcode';
+import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode } from 'lucide-react';
 
 // Helper to intelligently pick a display title for a submission
 function getSubmissionTitle(data: any) {
@@ -187,6 +188,22 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
                 </div>
               </Card>
             </div>
+
+            {/* Option C: QR Code - Full Width */}
+            <Card className="p-6 border border-indigo-500/30 bg-white/5 backdrop-blur-lg hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/20 transition-all group">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg shadow-lg shadow-indigo-500/50">
+                  <QrCode className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-semibold text-white">Option C: QR Code</h3>
+              </div>
+              <p className="text-sm text-slate-300 mb-6">
+                Download or print this QR code to give clients instant access via their mobile devices.
+              </p>
+              <div className="flex justify-center">
+                <QRCode url={chatUrl} />
+              </div>
+            </Card>
           </TabsContent>
 
           {/* TAB 2: SUBMISSIONS - Dark Glass */}
