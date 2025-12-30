@@ -861,24 +861,24 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Do I need to know how to code?",
-                a: "Absolutely not. If you can send an email, you can build an IntakeOS bot. Our AI generates the conversation flow for you—just describe what information you need in plain English."
+                q: "How much technical setup is required?",
+                a: "If you can write an email, you can build a bot. Our AI Architect builds your entire intake flow in 30 seconds based on your business description."
               },
               {
-                q: "Can it really read my blueprints and photos?",
-                a: "Yes. Our Vision AI extracts technical details from images and PDFs—measurements, materials, damage assessments, floor plans, and more. It turns visual data into structured CRM fields automatically."
+                q: "Can it actually handle my specific industry?",
+                a: "Yes. By filling out your 'Business Profile,' you teach the AI your service areas, pricing, and specialty. It speaks your language, not generic AI-speak."
               },
               {
-                q: "What happens to the data my bot collects?",
-                a: "It's yours. We sync it to your CRM (HubSpot, Salesforce, etc.) via webhooks and don't store it long-term. You control the integrations. We're a pipe, not a database."
+                q: "How do I get the leads?",
+                a: "Every lead appears instantly in your IntakeOS Dashboard. We also ping you via email or Slack, and can sync data directly to your CRM (like HubSpot or Salesforce)."
               },
               {
-                q: "How is this different from a chatbot?",
-                a: "Traditional chatbots follow scripts. IntakeOS is agentic—it makes decisions, adapts to context, and extracts structured data from freeform conversations. Think receptionist, not robot."
+                q: "Is this better than a simple contact form?",
+                a: "Significantly. Forms are static and boring. IntakeOS is conversational, it clarifies typos, handles vague answers, and extracts technical data from photos—things a form simply can't do."
               },
               {
-                q: "What if someone gives vague answers?",
-                a: "Our Knowledge Extraction Strategy handles it. If a user says 'I don't know' or 'flexible,' the bot marks it as such and moves on—no infinite loops or frustration."
+                q: "What if the AI says something wrong?",
+                a: "We use 'Strict Logic Guardrails.' The bot is strictly instructed to stick to your Business Profile and the specific fields you require. It's a receptionist, not a creative writer."
               },
             ].map((faq, idx) => (
               <motion.div
