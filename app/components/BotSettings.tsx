@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
-import { Webhook, Check, ExternalLink } from 'lucide-react';
+import { Webhook, Check, ExternalLink, Play, X } from 'lucide-react';
+import { ChatInterfaceAgentic } from './ChatInterfaceAgentic';
 
 export function BotSettings({ bot }: { bot: any }) {
   const [name, setName] = useState(bot.name);
@@ -15,6 +16,8 @@ export function BotSettings({ bot }: { bot: any }) {
   const [integrationLoading, setIntegrationLoading] = useState(false);
   const [integrationSaved, setIntegrationSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTestDrive, setShowTestDrive] = useState(false);
+  const [businessName, setBusinessName] = useState('Your Business');
   const router = useRouter();
   const supabase = createSupabaseClient();
 
@@ -33,6 +36,25 @@ export function BotSettings({ bot }: { bot: any }) {
     }
     fetchIntegration();
   }, [bot.id, supabase]);
+
+  // Fetch business profile for business name
+  useEffect(() => {
+    async function fetchBusinessProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('business_profiles')
+          .select('business_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (data?.business_name) {
+          setBusinessName(data.business_name);
+        }
+      }
+    }
+    fetchBusinessProfile();
+  }, [supabase]);
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -231,6 +253,54 @@ export function BotSettings({ bot }: { bot: any }) {
           </Button>
         </div>
       </Card>
+
+      {/* Test Drive Section */}
+      <Card className="p-6 border border-cyan-500/30 bg-white/5 backdrop-blur-lg">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg shadow-lg">
+            <Play className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="text-lg font-medium text-white">Test Drive</h3>
+        </div>
+
+        <p className="text-sm text-slate-300 mb-4">
+          Try your bot in simulator mode. Test the conversation flow and see exactly what data it collects before going live.
+        </p>
+
+        <Button
+          onClick={() => setShowTestDrive(true)}
+          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 shadow-lg shadow-cyan-500/50"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Start Test Drive
+        </Button>
+      </Card>
+
+      {/* Test Drive Modal */}
+      {showTestDrive && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-5xl">
+            <Button
+              onClick={() => setShowTestDrive(false)}
+              variant="ghost"
+              size="icon"
+              className="absolute -top-12 right-0 text-white hover:bg-white/10"
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <ChatInterfaceAgentic
+              bot={{
+                id: bot.id,
+                name: bot.name,
+                schema: bot.schema,
+                user_id: bot.user_id,
+              }}
+              businessName={businessName}
+              simulatorMode={true}
+            />
+          </div>
+        </div>
+      )}
 
       <Card className="p-6 border border-red-500/20 bg-red-500/10 backdrop-blur-lg">
         <h3 className="text-lg font-medium text-red-400 mb-2">Danger Zone</h3>
