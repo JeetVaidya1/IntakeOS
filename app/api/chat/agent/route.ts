@@ -135,6 +135,10 @@ If the user asks questions about any previously uploaded document, you can answe
     console.log('🤖 Auto-generation enabled:', useAutoPrompt);
     console.log('🏢 Business profile loaded:', !!businessProfile);
 
+    // IDENTITY OVERRIDE: Prioritize business_name from profile over bot name
+    const effectiveBusinessName = (businessProfile?.business_name || businessName);
+    console.log('🏷️ Effective Business Name:', effectiveBusinessName);
+
     // Build the main system prompt
     let mainPrompt: string;
     if (useAutoPrompt && businessProfile) {
@@ -142,7 +146,7 @@ If the user asks questions about any previously uploaded document, you can answe
       // Use auto-generated comprehensive prompt
       mainPrompt = generateAgentPrompt(
         {
-          business_name: businessName,
+          business_name: effectiveBusinessName, // Use effective business name
           business_type: businessProfile.business_type,
           business_description: businessProfile.business_description,
           products_services: businessProfile.products_services,
@@ -151,13 +155,13 @@ If the user asks questions about any previously uploaded document, you can answe
           location: businessProfile.location,
         },
         botSchema,
-        businessName
+        effectiveBusinessName // Use effective business name as fallback
       );
       console.log('📝 Auto-generated prompt length:', mainPrompt.length, 'characters');
     } else {
       console.log('⚠️ USING FALLBACK PROMPT (businessProfile missing or auto-gen disabled)');
       // Fallback to manual prompt
-      mainPrompt = `You are an intelligent conversational agent for ${businessName}.
+      mainPrompt = `You are an intelligent conversational agent for ${effectiveBusinessName}.
 
 ${botSchema.system_prompt || 'You help customers by gathering information in a conversational way.'}
 
@@ -213,21 +217,27 @@ DETAILED INSTRUCTIONS:
 1. **EXTRACT INFORMATION**: Carefully analyze the user's last message. Did they provide ANY information we need? Extract ALL of it, even if they mention multiple things at once.
 
 2. **UPDATE PHASE**: Determine the conversation phase:
-   - 'introduction': First message, welcoming the user (MUST introduce yourself as representing ${businessName})
+   - 'introduction': First message, welcoming the user (MUST introduce yourself as representing ${effectiveBusinessName})
    - 'collecting': Actively gathering required information
    - 'answering_questions': User asked a question, answer it naturally
    - 'confirmation': All critical info gathered, confirming before completion
    - 'completed': User confirmed, ready to submit
 
 3. **DECIDE NEXT ACTION**:
-   - If INTRODUCTION phase: Warmly introduce yourself as an assistant for ${businessName}, briefly mention what you're here to help with, and start the conversation naturally
+   - If INTRODUCTION phase: Warmly introduce yourself as an assistant for ${effectiveBusinessName}, briefly mention what you're here to help with, and start the conversation naturally
    - If user asked a question: Answer it naturally, then gently guide back to missing info
    - If discussing an image: Have a thorough back-and-forth about what you see (don't rush!)
    - If missing critical info: Ask for the next piece naturally
    - If all critical info gathered: Move to confirmation phase
    - If in confirmation and user confirms: Move to completed phase
 
-4. **BE NATURALLY CONVERSATIONAL**:
+4. **BE WARM AND LOCAL**: Always acknowledge the user's input with a small piece of "Small Talk" or a compliment related to the business context before asking the next question. Examples:
+   - If they mention a location: "Nelson is such a beautiful area!" or "I love that neighborhood!"
+   - If they mention a project detail: "A hot tub in a basement sounds like a cozy retreat!" or "That sounds like a great project!"
+   - Avoid sounding like a data-entry form - be warm, personable, and enthusiastic
+   - Show you're listening by referencing what they just shared
+
+5. **BE NATURALLY CONVERSATIONAL**:
    - Don't ask multiple questions at once
    - Acknowledge what they shared before moving on
    - Show domain expertise and enthusiasm
@@ -235,14 +245,14 @@ DETAILED INSTRUCTIONS:
    - Reference previous conversation naturally
    - Don't feel rushed - quality over speed
 
-5. **HANDLE IMAGES INTELLIGENTLY**:
+6. **HANDLE IMAGES INTELLIGENTLY**:
    - If the last user message contains "[IMAGE]", they uploaded a photo
    - Discuss what you see, ask clarifying questions about it
    - Don't immediately move to the next topic - have a conversation about the image
    - Extract any information you can from the image discussion
    - Set current_topic to the image-related field so you stay focused
 
-6. **HANDLE DOCUMENTS INTELLIGENTLY**:
+7. **HANDLE DOCUMENTS INTELLIGENTLY**:
    - If the last user message contains "[DOCUMENT]", they uploaded a document (PDF, DOCX, etc.)
    - The document content has been extracted and provided in the CONTEXT section above
    - Acknowledge what you've read from the document - reference specific details
@@ -250,7 +260,7 @@ DETAILED INSTRUCTIONS:
    - Ask clarifying questions if needed, but show you've understood the document
    - Example: "Thanks for sharing your resume! I can see you have 5+ years of experience in software engineering, specializing in React and Node.js. Tell me more about your most recent role at TechCorp."
 
-7. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
+8. **IMMEDIATE ACTION PROTOCOL - CRITICAL**:
    ⚠️ **FORBIDDEN RESPONSES** - NEVER say any of the following when files are uploaded:
    - ❌ "Let me take a look at that"
    - ❌ "I'll review this"
@@ -274,7 +284,7 @@ DETAILED INSTRUCTIONS:
    Bot: "Thanks for sharing your resume! I can see you graduated from MIT in 2018 and have been a Senior Software Engineer at Google for the past 4 years. That's impressive experience. What motivated you to apply to our position?"
    [Analysis is immediate, specific details prove the bot read it]
 
-8. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
+9. **SMART VALIDATION - INTELLIGENT FORMAT CHECKING**:
    Each required field has a "type" hint (email, phone, url, date, number, text).
    Use intelligent, flexible validation - don't be overly strict!
 
@@ -317,7 +327,7 @@ DETAILED INSTRUCTIONS:
    - REJECT obviously wrong data like "idk" or "call me" for a phone field
    - Your job is to ensure quality data while being user-friendly
 
-9. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
+10. **CONFIRMATION PHASE - SHOW ONLY WHAT WAS PROVIDED**:
    When you move to the confirmation phase (all critical info gathered):
 
    **CRITICAL RULES:**
@@ -607,6 +617,38 @@ Now process the current conversation and respond.`;
       }
     }
 
+    // Guardrail 3: HARD CONFIRMATION GATE - Force confirmation list before completion
+    if (parsed.updated_phase === 'completed') {
+      // Get the last bot message
+      const botMessages = messages.filter(m => m.role === 'bot');
+      const lastBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].content : '';
+
+      // Check if confirmation list was shown
+      const hasConfirmationList = (lastBotMessage.match(/[-•]\s/g) || []).length >= 2;
+
+      // If not in confirmation phase OR no list was shown, force to confirmation
+      if (currentState.phase !== 'confirmation' || !hasConfirmationList) {
+        console.log('🛑 HARD CONFIRMATION GATE: Forcing confirmation list before completion');
+        console.log(`   Current phase: ${currentState.phase}, Has list: ${hasConfirmationList}`);
+
+        // Merge current extraction to get complete picture
+        const tempGatheredInfo = {
+          ...currentState.gathered_information,
+          ...(parsed.extracted_information || {}),
+        };
+
+        // Build confirmation list with ALL gathered information
+        const confirmationItems = Object.entries(tempGatheredInfo)
+          .map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}`)
+          .join('\n');
+
+        // Override reply with friendly confirmation message
+        parsed.reply = `Perfect! Let me confirm everything we've discussed:\n\n${confirmationItems}\n\nDoes everything look correct before we finalize this?`;
+        parsed.updated_phase = 'confirmation';
+        console.log('✅ Generated confirmation list with', Object.keys(tempGatheredInfo).length, 'fields');
+      }
+    }
+
     // Merge extracted information into gathered_information
     const updatedGatheredInfo = {
       ...currentState.gathered_information,
@@ -674,16 +716,18 @@ Now process the current conversation and respond.`;
 
     let finalReply = parsed.reply;
 
-    if (businessProfile?.business_name && finalReply) {
-      // Replace mentions of "Product Inquiries" or the goal with business name
+    if (effectiveBusinessName && finalReply) {
+      // Replace mentions of internal bot names with the effective business name
       const botGoal = botSchema.goal || '';
       const internalNames = [
         'Product Inquiries',
         'Product Inquiry',
         botGoal,
+        businessName, // Add the bot's internal name (e.g., "Softub Consultation Requests")
         // Also catch if AI says "I'm an assistant for [goal]"
         `assistant for ${botGoal}`,
-      ].filter(name => name && name.length > 0);
+        `assistant for ${businessName}`,
+      ].filter(name => name && name.length > 0 && name !== effectiveBusinessName); // Don't replace if it's already the correct name
 
       internalNames.forEach(internalName => {
         if (internalName) {
@@ -692,8 +736,8 @@ Now process the current conversation and respond.`;
           const matches = finalReply.match(regex);
 
           if (matches) {
-            console.log(`🔧 IDENTITY FIX: Replacing "${internalName}" with "${businessProfile.business_name}"`);
-            finalReply = finalReply.replace(regex, businessProfile.business_name);
+            console.log(`🔧 IDENTITY FIX: Replacing "${internalName}" with "${effectiveBusinessName}"`);
+            finalReply = finalReply.replace(regex, effectiveBusinessName);
           }
         }
       });
