@@ -20,8 +20,16 @@ type BotType = {
   user_id: string;
 };
 
-export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; businessName: string }) {
-  const storageKey = `intakeOS_agentic_chat_${bot.id}`;
+export function ChatInterfaceAgentic({
+  bot,
+  businessName,
+  simulatorMode = false
+}: {
+  bot: BotType;
+  businessName: string;
+  simulatorMode?: boolean;
+}) {
+  const storageKey = `intakeOS_agentic_chat_${bot.id}_${simulatorMode ? 'simulator' : 'live'}`;
 
   // Initial conversation state
   const initialState: ConversationState = {
@@ -42,6 +50,8 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showSimulationResult, setShowSimulationResult] = useState(false);
+  const [simulationData, setSimulationData] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Calculate progress based on gathered vs missing info
@@ -285,6 +295,25 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
     conversation: Message[],
     uploadedFiles: UploadedFile[]
   ) => {
+    // If in simulator mode, show simulation result instead of submitting
+    if (simulatorMode) {
+      setSimulationData({
+        gatheredInfo,
+        uploadedFiles,
+        botId: bot.id,
+        botName: bot.name,
+      });
+      setShowSimulationResult(true);
+
+      // Show simulation complete message
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        content: "✅ Test Drive Complete! Check out the simulation results below to see what data was collected."
+      }]);
+      return;
+    }
+
+    // Real submission
     try {
       const response = await fetch('/api/submit-intake', {
         method: 'POST',
@@ -355,8 +384,13 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
               <Bot className="h-6 w-6 text-slate-300" />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white">
+              <h3 className="font-bold text-xl text-white flex items-center gap-2">
                 {businessName || 'Loading...'}
+                {simulatorMode && (
+                  <span className="px-2 py-1 text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg">
+                    Test Drive
+                  </span>
+                )}
               </h3>
               <p className="text-sm text-slate-400">Powered by AI</p>
             </div>
@@ -476,6 +510,64 @@ export function ChatInterfaceAgentic({ bot, businessName }: { bot: BotType; busi
         )}
 
         <div ref={messagesEndRef} />
+
+        {/* Simulation Result Card */}
+        {showSimulationResult && simulationData && (
+          <div className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-2 border-cyan-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg shadow-lg">
+                <Check className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Simulation Complete!</h3>
+            </div>
+
+            <div className="space-y-4">
+              {/* What Business Owner Will Receive */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                <h4 className="text-sm font-bold text-cyan-300 mb-3">What the Business Owner Will Receive:</h4>
+                <div className="space-y-2">
+                  {Object.entries(simulationData.gatheredInfo).map(([key, value]) => (
+                    <div key={key} className="flex items-start gap-2 p-2 bg-black/20 rounded-lg">
+                      <span className="text-xs font-mono text-slate-400 min-w-[120px]">{key}:</span>
+                      <span className="text-sm text-white flex-1">{String(value)}</span>
+                    </div>
+                  ))}
+                  {simulationData.uploadedFiles?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <span className="text-xs font-bold text-slate-400 mb-2 block">Uploaded Files:</span>
+                      {simulationData.uploadedFiles.map((file: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 p-2 bg-black/20 rounded-lg mb-2">
+                          <FileText className="h-4 w-4 text-cyan-400" />
+                          <span className="text-sm text-white">{file.filename}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* JSON Preview */}
+              <div className="p-4 bg-black/40 border border-white/10 rounded-xl">
+                <h4 className="text-sm font-bold text-cyan-300 mb-2">JSON Payload:</h4>
+                <pre className="text-xs text-slate-300 font-mono overflow-x-auto">
+                  {JSON.stringify(simulationData.gatheredInfo, null, 2)}
+                </pre>
+              </div>
+
+              {/* Automation Status */}
+              <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30 rounded-xl">
+                <h4 className="text-sm font-bold text-emerald-300 mb-2">Automation Status:</h4>
+                <div className="flex items-center gap-2 text-sm text-emerald-200">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <span>Webhook would have fired with this data</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  In live mode, this data would be sent to your configured integrations and notification email.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input - Professional Dark Style */}
