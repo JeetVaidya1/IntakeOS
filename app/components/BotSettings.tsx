@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase';
 import { Webhook, Check, ExternalLink, Play, X } from 'lucide-react';
-import { ChatInterfaceAgentic } from './ChatInterfaceAgentic';
+import { ChatInterfaceAgentic } from '@/app/chat/[slug]/ChatInterfaceAgentic';
 
 export function BotSettings({ bot }: { bot: any }) {
   const [name, setName] = useState(bot.name);
