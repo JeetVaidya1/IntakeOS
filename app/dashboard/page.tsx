@@ -37,6 +37,13 @@ export default async function DashboardPage() {
     return redirect('/auth/login');
   }
 
+  // Fetch business profile for this user
+  const { data: businessProfile } = await supabase
+    .from('business_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
   // Fetch bots for this user
   const { data: bots } = await supabase
     .from('bots')
@@ -88,5 +95,5 @@ export default async function DashboardPage() {
     });
   }
 
-  return <DashboardContent user={user} bots={bots} recentSubmissions={recentSubmissions || []} submissionTrend={submissionTrend} />;
+  return <DashboardContent user={user} bots={bots} recentSubmissions={recentSubmissions || []} submissionTrend={submissionTrend} businessProfile={businessProfile} />;
 }
