@@ -3,12 +3,29 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { Sparkles, Building2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Sparkles, Building2, ChevronDown, ChevronUp, Settings, Plus, Trash2, Check, Edit2, Eye } from 'lucide-react';
 import { PromptExamples } from './PromptExamples';
 import { createBrowserClient } from '@supabase/ssr';
+
+interface FieldDefinition {
+  key: string;
+  description: string;
+  critical: boolean;
+  example: string;
+  type: string;
+  behavior: 'strict' | 'conversational';
+}
+
+interface BotBlueprint {
+  botTaskName: string;
+  goal: string;
+  system_prompt: string;
+  required_info: Record<string, any>;
+}
 
 export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () => void }) {
   const [description, setDescription] = useState('');
@@ -16,6 +33,15 @@ export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () =
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showExamples, setShowExamples] = useState(false);
+
+  // Blueprint Review State
+  const [showingBlueprint, setShowingBlueprint] = useState(false);
+  const [blueprint, setBlueprint] = useState<BotBlueprint | null>(null);
+  const [editableName, setEditableName] = useState('');
+  const [editableGoal, setEditableGoal] = useState('');
+  const [editableFields, setEditableFields] = useState<FieldDefinition[]>([]);
+  const [finalizing, setFinalizing] = useState(false);
+
   const router = useRouter();
 
   const supabase = createBrowserClient(
@@ -56,7 +82,80 @@ export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () =
       const response = await fetch('/api/generate-bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ description, previewOnly: true }),
+      });
+
+      const data = await response.json();
+
+      if (data.schema) {
+        // Show blueprint review instead of redirecting
+        const blueprintData: BotBlueprint = {
+          botTaskName: data.botTaskName || 'Intake Bot',
+          goal: data.schema.goal || '',
+          system_prompt: data.schema.system_prompt || '',
+          required_info: data.schema.required_info || {},
+        };
+
+        setBlueprint(blueprintData);
+        setEditableName(blueprintData.botTaskName);
+        setEditableGoal(blueprintData.goal);
+
+        // Convert required_info to editable fields array
+        const fieldsArray: FieldDefinition[] = Object.entries(blueprintData.required_info).map(([key, value]: [string, any]) => ({
+          key,
+          description: value.description || '',
+          critical: value.critical || false,
+          example: value.example || '',
+          type: value.type || 'text',
+          behavior: value.behavior || 'conversational',
+        }));
+
+        setEditableFields(fieldsArray);
+        setShowingBlueprint(true);
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Something went wrong. Check the console for details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (!blueprint) return;
+
+    setFinalizing(true);
+
+    try {
+      // Convert editable fields back to required_info format
+      const required_info: Record<string, any> = {};
+      editableFields.forEach(field => {
+        required_info[field.key] = {
+          description: field.description,
+          critical: field.critical,
+          example: field.example,
+          type: field.type,
+          behavior: field.behavior,
+        };
+      });
+
+      const finalSchema = {
+        goal: editableGoal,
+        system_prompt: blueprint.system_prompt,
+        required_info,
+        schema_version: 'agentic_v1',
+      };
+
+      const response = await fetch('/api/finalize-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          botTaskName: editableName,
+          description,
+          schema: finalSchema,
+        }),
       });
 
       const data = await response.json();
@@ -71,8 +170,41 @@ export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () =
       console.error('Error:', error);
       alert('Something went wrong. Check the console for details.');
     } finally {
-      setLoading(false);
+      setFinalizing(false);
     }
+  };
+
+  const handleAddField = () => {
+    const newField: FieldDefinition = {
+      key: `custom_field_${Date.now()}`,
+      description: 'New field description',
+      critical: false,
+      example: 'Example value',
+      type: 'text',
+      behavior: 'conversational',
+    };
+    setEditableFields([...editableFields, newField]);
+  };
+
+  const handleRemoveField = (index: number) => {
+    setEditableFields(editableFields.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateField = (index: number, updates: Partial<FieldDefinition>) => {
+    const updated = [...editableFields];
+    updated[index] = { ...updated[index], ...updates };
+    setEditableFields(updated);
+  };
+
+  const handleToggleBehavior = (index: number) => {
+    const updated = [...editableFields];
+    updated[index].behavior = updated[index].behavior === 'strict' ? 'conversational' : 'strict';
+    setEditableFields(updated);
+  };
+
+  const handleBackToEdit = () => {
+    setShowingBlueprint(false);
+    setBlueprint(null);
   };
 
   const handleSelectTemplate = (template: string) => {
@@ -108,7 +240,168 @@ export function BotGenerator({ user, onSuccess }: { user: User; onSuccess?: () =
     );
   }
 
-  // 2. Generator View (Dark Glass)
+  // 2. Blueprint Review View
+  if (showingBlueprint && blueprint) {
+    return (
+      <div className="space-y-8">
+        {/* Blueprint Review Header */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg shadow-lg">
+                <Eye className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Review Your Bot Blueprint</h2>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleBackToEdit}
+              className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+            >
+              <Edit2 className="w-4 h-4 mr-2" />
+              Back to Edit
+            </Button>
+          </div>
+
+          {/* Editable Name and Goal */}
+          <div className="space-y-4 mb-8">
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-2">Bot Name</label>
+              <Input
+                value={editableName}
+                onChange={(e) => setEditableName(e.target.value)}
+                className="bg-black/20 border-white/10 text-white text-lg font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-2">Goal</label>
+              <Textarea
+                value={editableGoal}
+                onChange={(e) => setEditableGoal(e.target.value)}
+                className="bg-black/20 border-white/10 text-white min-h-[100px]"
+              />
+            </div>
+          </div>
+
+          {/* Personality Preview */}
+          <div className="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl mb-6">
+            <h3 className="text-sm font-bold text-indigo-300 mb-2">Personality Preview</h3>
+            <p className="text-sm text-slate-300 line-clamp-3">
+              {blueprint.system_prompt.substring(0, 200)}...
+            </p>
+          </div>
+
+          {/* Fields List */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white">Fields to Collect ({editableFields.length})</h3>
+              <Button
+                onClick={handleAddField}
+                size="sm"
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Field
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {editableFields.map((field, index) => (
+                <div
+                  key={field.key}
+                  className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Input
+                          value={field.key}
+                          onChange={(e) => handleUpdateField(index, { key: e.target.value })}
+                          className="bg-black/20 border-white/10 text-white font-mono text-sm flex-1"
+                          placeholder="field_key"
+                        />
+                        <select
+                          value={field.type}
+                          onChange={(e) => handleUpdateField(index, { type: e.target.value })}
+                          className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                        >
+                          <option value="text">Text</option>
+                          <option value="email">Email</option>
+                          <option value="phone">Phone</option>
+                          <option value="date">Date</option>
+                          <option value="number">Number</option>
+                          <option value="url">URL</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        value={field.description}
+                        onChange={(e) => handleUpdateField(index, { description: e.target.value })}
+                        className="bg-black/20 border-white/10 text-white text-sm"
+                        placeholder="Field description"
+                      />
+
+                      <div className="flex items-center gap-3">
+                        <Input
+                          value={field.example}
+                          onChange={(e) => handleUpdateField(index, { example: e.target.value })}
+                          className="bg-black/20 border-white/10 text-white text-sm flex-1"
+                          placeholder="Example value"
+                        />
+                        <button
+                          onClick={() => handleToggleBehavior(index)}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            field.behavior === 'strict'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-emerald-500 text-white'
+                          }`}
+                        >
+                          {field.behavior === 'strict' ? 'Strict' : 'Flexible'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveField(index)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Finalize Button */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <Button
+              onClick={handleFinalize}
+              disabled={finalizing}
+              className="w-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 hover:from-emerald-600 hover:via-cyan-600 hover:to-blue-600 text-lg font-bold py-7 shadow-2xl rounded-2xl"
+            >
+              {finalizing ? (
+                <span className="flex items-center justify-center gap-3">
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Launching Bot...</span>
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="w-5 h-5" />
+                  <span>Finalize & Launch Bot</span>
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Generator View (Dark Glass)
   return (
     <div className="space-y-8">
       {/* Show/Hide Examples Toggle */}
