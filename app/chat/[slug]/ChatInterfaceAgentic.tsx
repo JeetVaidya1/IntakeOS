@@ -440,7 +440,7 @@ export function ChatInterfaceAgentic({
             {/* Progress indicator - Premium with shimmer */}
             <div className="text-right">
               <p className="text-sm text-slate-300 mb-2 font-medium">
-                Consultation Progress: {gatheredCount}/{totalInfo} Details Verified
+                Consultation Readiness: {gatheredCount}/{totalInfo} Details Verified
               </p>
               <div className="relative w-48 h-3 bg-white/5 rounded-full overflow-hidden border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
                 <div
@@ -492,7 +492,7 @@ export function ChatInterfaceAgentic({
               <div
                 className={`inline-block p-4 max-w-[85%] ${
                   message.role === 'bot'
-                    ? 'rounded-2xl rounded-tl-none bg-slate-900/40 border border-white/5 backdrop-blur-xl text-slate-200 tracking-tight leading-relaxed text-[15px]'
+                    ? 'rounded-2xl rounded-tl-none bg-slate-900/40 border border-white/5 backdrop-blur-xl text-slate-200 tracking-tight leading-relaxed text-[15.5px]'
                     : 'rounded-2xl rounded-tr-none bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20'
                 }`}
               >
@@ -544,7 +544,7 @@ export function ChatInterfaceAgentic({
             <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-4 rounded-2xl rounded-tl-none">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
-                <span className="text-sm text-slate-400">Thinking...</span>
+                <span className="text-sm text-slate-400">Consulting with your Business Profile...</span>
               </div>
             </div>
           </div>
