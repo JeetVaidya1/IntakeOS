@@ -269,7 +269,88 @@ export default async function SubmissionDetailPage({
           </div>
 
           {/* Right Column: Full Conversation - Secure Log Style */}
-          <div>
+          <div className="space-y-6">
+            {/* AI Deep Dive Card */}
+            {submission.summary && (
+              <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 backdrop-blur-lg shadow-xl">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🔍</span>
+                  AI Deep Dive
+                </h2>
+
+                <div className="space-y-4">
+                  {/* Executive Summary */}
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <h3 className="text-sm font-bold text-purple-300 mb-2 uppercase tracking-wide">Executive Summary</h3>
+                    <p className="text-white leading-relaxed">{submission.summary}</p>
+                  </div>
+
+                  {/* Key Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {submission.urgency && (
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                        <div className="text-xs text-slate-400 mb-1">Priority Level</div>
+                        <div className="text-lg font-bold text-white flex items-center gap-2">
+                          {getUrgencyDisplay(submission.urgency).emoji}
+                          <span>{submission.urgency}</span>
+                        </div>
+                      </div>
+                    )}
+                    {submission.sentiment && (
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                        <div className="text-xs text-slate-400 mb-1">Customer Mood</div>
+                        <div className="text-lg font-bold text-white flex items-center gap-2">
+                          {getSentimentDisplay(submission.sentiment).emoji}
+                          <span>{getSentimentDisplay(submission.sentiment).label}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommended Actions */}
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                    <h3 className="text-sm font-bold text-purple-300 mb-2 uppercase tracking-wide">Recommended Next Steps</h3>
+                    <ul className="space-y-2 text-sm text-slate-300">
+                      {submission.urgency === 'High' && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-red-400 mt-0.5">🚨</span>
+                          <span><strong className="text-white">Immediate follow-up required.</strong> Contact within 1 hour to maximize conversion.</span>
+                        </li>
+                      )}
+                      {submission.urgency === 'Medium' && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-amber-400 mt-0.5">⚡</span>
+                          <span><strong className="text-white">Follow up soon.</strong> Respond within 24 hours while interest is high.</span>
+                        </li>
+                      )}
+                      {submission.urgency === 'Low' && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-400 mt-0.5">✅</span>
+                          <span><strong className="text-white">Standard follow-up.</strong> Respond within 48 hours with detailed information.</span>
+                        </li>
+                      )}
+                      {submission.sentiment === 'Frustrated' && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-red-400 mt-0.5">💬</span>
+                          <span><strong className="text-white">Address concerns immediately.</strong> Empathize with frustration and provide solutions.</span>
+                        </li>
+                      )}
+                      {submission.sentiment === 'Positive' && (
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-400 mt-0.5">😊</span>
+                          <span><strong className="text-white">Build on positive momentum.</strong> Strike while the iron is hot for best results.</span>
+                        </li>
+                      )}
+                      <li className="flex items-start gap-2">
+                        <span className="text-indigo-400 mt-0.5">📋</span>
+                        <span><strong className="text-white">Review collected information</strong> below and prepare personalized response.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             <Card className="p-6 bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl">
               <h2 className="text-xl font-bold text-white mb-6">Conversation Transcript</h2>
               <div className="space-y-3">

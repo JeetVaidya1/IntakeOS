@@ -1,7 +1,7 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface PerformanceChartProps {
   data: Array<{
@@ -29,7 +29,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
             <XAxis
               dataKey="date"
@@ -51,18 +51,21 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
               labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
               itemStyle={{ color: '#818cf8' }}
             />
-            <Bar
+            <Line
+              type="monotone"
               dataKey="submissions"
-              fill="url(#colorGradient)"
-              radius={[8, 8, 0, 0]}
+              stroke="url(#colorGradient)"
+              strokeWidth={3}
+              dot={{ fill: '#818cf8', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, fill: '#6366f1' }}
             />
             <defs>
-              <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorGradient" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#818cf8" stopOpacity={1} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={1} />
               </linearGradient>
             </defs>
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </Card>
