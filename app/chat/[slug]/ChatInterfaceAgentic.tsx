@@ -617,18 +617,17 @@ export function ChatInterfaceAgentic({
                 id="file-upload-agentic"
                 disabled={loading || isUploading}
               />
-              <label htmlFor="file-upload-agentic">
-                <button
-                  className="p-2 text-slate-400 hover:text-slate-300 transition-colors disabled:opacity-30"
-                  disabled={loading || isUploading}
-                  type="button"
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Paperclip className="h-5 w-5" />
-                  )}
-                </button>
+              <label
+                htmlFor="file-upload-agentic"
+                className={`p-2 text-slate-400 hover:text-slate-300 transition-colors cursor-pointer inline-block ${
+                  loading || isUploading ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Paperclip className="h-5 w-5" />
+                )}
               </label>
             </div>
 
