@@ -44,10 +44,10 @@ export default async function ChatPage({
     <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50'}`}>
       {/* Header - Only show if NOT a widget */}
       {!isWidget && (
-        <header className="border-b border-purple-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
+        <header className="border-b border-indigo-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
           <div className="container mx-auto px-4 py-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{displayName}</h1>
-            <p className="text-sm text-slate-600 font-medium">{bot.name} - Complete your intake form</p>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">{displayName}</h1>
+            <p className="text-sm text-slate-500">AI-Powered Consultation</p>
           </div>
         </header>
       )}
