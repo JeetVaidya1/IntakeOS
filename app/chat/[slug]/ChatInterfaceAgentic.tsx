@@ -388,84 +388,54 @@ export function ChatInterfaceAgentic({
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
-      {/* Background with grid pattern */}
-      <div className="absolute inset-0 bg-slate-950 bg-grid-pattern rounded-3xl" />
-
-      {/* Aurora orbs for depth */}
-      <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.15 }} />
-      <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.1 }} />
-      <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.12 }} />
-
-      <Card className="relative w-full h-[700px] flex flex-col shadow-indigo-glow border border-white/5 bg-slate-950/90 backdrop-blur-xl">
-        {/* Header - Professional Dark Style */}
-        <div className="p-6 border-b border-indigo-500/10 bg-slate-900/80 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Sparkles Bot Icon with glow */}
-            <div className="relative p-3 bg-slate-800/50 rounded-xl border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
-              <Sparkles className="h-6 w-6 text-indigo-400" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xl text-white flex items-center gap-3">
-                <span className="flex items-center gap-2">
-                  {effectiveBusinessName}
-                  {/* Pulsing green dot for "Active" status */}
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                </span>
-                {simulatorMode && (
-                  <span className="px-2 py-1 text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-lg">
-                    Test Drive
-                  </span>
-                )}
-              </h3>
-              <p className="text-sm text-slate-400">AI Consultation System</p>
-            </div>
-          </div>
-
-          {/* Progress indicator and Reset button */}
-          <div className="flex items-center gap-4">
-            {/* Reset Conversation Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetConversation}
-              disabled={loading || messages.length === 0}
-              className="border-indigo-500/10 bg-slate-800/50 hover:bg-slate-700 text-slate-300 hover:text-white transition-all"
-              title="Reset conversation"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-
-            {/* Progress indicator - Premium with shimmer */}
-            <div className="text-right">
-              <p className="text-sm text-slate-300 mb-2 font-medium">
-                Consultation Readiness: {gatheredCount}/{totalInfo} Details Verified
-              </p>
-              <div className="relative w-48 h-3 bg-white/5 rounded-full overflow-hidden border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 transition-all duration-500 relative overflow-hidden"
-                  style={{ width: `${progress}%` }}
-                >
-                  {/* Shimmer effect */}
-                  <div className="absolute inset-0 animate-shimmer" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Background with subtle grid pattern */}
+      <div className="absolute inset-0 bg-slate-950 rounded-3xl opacity-5">
+        <div className="bg-grid-pattern w-full h-full" />
       </div>
 
-      {/* Messages - Professional Dark Style */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-950">
+      {/* Aurora orbs for depth - very subtle */}
+      <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.08 }} />
+      <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.05 }} />
+      <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.06 }} />
+
+      <Card className="relative w-full h-[700px] flex flex-col shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/5 bg-slate-950/90 backdrop-blur-xl overflow-hidden">
+
+        {/* Ultra-thin progress line at very top */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-900">
+          <div
+            className="h-full bg-indigo-500 transition-all duration-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        {/* Minimalist Header - Centered */}
+        <div className="p-8 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
+          <div className="flex items-center justify-center gap-3">
+            {/* Live Badge with pulsing dot */}
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
+            </div>
+
+            {/* Business Name - Centered & Prominent */}
+            <h3 className="text-2xl font-semibold text-white tracking-tight">
+              {effectiveBusinessName}
+            </h3>
+
+            {simulatorMode && (
+              <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-md">
+                Test Drive
+              </span>
+            )}
+          </div>
+        </div>
+
+      {/* Messages - Minimalist Luxury */}
+      <div className={`flex-1 overflow-y-auto p-8 space-y-10 bg-slate-950 transition-opacity duration-500 ${conversationState.phase === 'completed' ? 'opacity-50' : 'opacity-100'}`}>
         {messages.length === 0 && !loading && (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-3">
-              {/* Sparkles Bot Icon */}
-              <div className="mx-auto w-16 h-16 p-4 bg-slate-800/50 rounded-2xl border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
-                <Sparkles className="h-8 w-8 text-indigo-400" />
-              </div>
-              <p className="text-slate-400 text-sm">Start a conversation...</p>
+            <div className="text-center space-y-2">
+              <p className="text-slate-500 text-sm font-light">Start a conversation</p>
             </div>
           </div>
         )}
@@ -473,27 +443,19 @@ export function ChatInterfaceAgentic({
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex items-start gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
           >
-            {/* Premium Avatar Icons with glow */}
-            <div className={`p-2.5 rounded-xl ${
-              message.role === 'bot'
-                ? 'bg-slate-800/50 border border-indigo-500/20 shadow-lg shadow-indigo-500/10'
-                : 'bg-gradient-to-br from-indigo-600/20 to-violet-600/20 border border-indigo-500/30 shadow-lg shadow-indigo-500/10'
-            }`}>
-              {message.role === 'bot' ? (
-                <Sparkles className="h-5 w-5 text-indigo-400" />
-              ) : (
-                <User className="h-5 w-5 text-indigo-300" />
-              )}
-            </div>
+            {/* Text label instead of avatar */}
+            <span className="text-[11px] text-slate-500 font-medium mb-2 px-1 tracking-wide">
+              {message.role === 'bot' ? 'Consultant' : 'You'}
+            </span>
 
-            <div className={`flex-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <div className={`max-w-[75%]`}>
               <div
-                className={`inline-block p-4 max-w-[85%] ${
+                className={`p-5 ${
                   message.role === 'bot'
-                    ? 'rounded-2xl rounded-tl-none bg-slate-900/40 border border-white/5 backdrop-blur-xl text-slate-200 tracking-tight leading-relaxed text-[15.5px]'
-                    : 'rounded-2xl rounded-tr-none bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20'
+                    ? 'rounded-3xl rounded-bl-none bg-slate-900/50 backdrop-blur-2xl text-slate-200 text-[15px] leading-relaxed'
+                    : 'rounded-3xl rounded-br-none bg-indigo-600 text-white text-[15px]'
                 }`}
               >
                 {message.content.startsWith('[IMAGE]') ? (
@@ -535,16 +497,14 @@ export function ChatInterfaceAgentic({
         ))}
 
         {loading && (
-          <div className="flex items-start gap-4">
-            {/* Sparkles Bot Avatar with glow */}
-            <div className="p-2.5 rounded-xl bg-slate-800/50 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
-              <Sparkles className="h-5 w-5 text-indigo-400" />
-            </div>
-            {/* Organic Typing Indicator with Sparkle pulse */}
-            <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-4 rounded-2xl rounded-tl-none">
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] text-slate-500 font-medium mb-2 px-1 tracking-wide">
+              Consultant
+            </span>
+            <div className="bg-slate-900/50 backdrop-blur-2xl p-5 rounded-3xl rounded-bl-none">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
-                <span className="text-sm text-slate-400">Consulting with your Business Profile...</span>
+                <span className="text-sm text-slate-400 font-light">Thinking...</span>
               </div>
             </div>
           </div>
@@ -633,21 +593,21 @@ export function ChatInterfaceAgentic({
         )}
       </div>
 
-      {/* Input - Professional Toolbox Style */}
+      {/* Input - Minimalist Messaging Style */}
       {conversationState.phase !== 'completed' && (
-        <div className="relative p-6 border-t border-white/10 bg-slate-900/90 backdrop-blur-2xl">
+        <div className="relative p-6 border-t border-white/5 bg-transparent">
           {/* Processing Overlay */}
           {isSubmitting && (
-            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-center rounded-b-xl">
+            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-                <p className="text-sm font-medium text-white">Processing your request...</p>
-                <p className="text-xs text-slate-400">Please wait while we submit your information</p>
+                <p className="text-sm font-light text-white">Processing...</p>
               </div>
             </div>
           )}
 
-          <div className="flex items-end gap-3 group">
+          <div className="flex items-center gap-3">
+            {/* File Upload - Minimal */}
             <div className="relative">
               <input
                 type="file"
@@ -658,78 +618,82 @@ export function ChatInterfaceAgentic({
                 disabled={loading || isUploading}
               />
               <label htmlFor="file-upload-agentic">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-indigo-500/10 bg-slate-800/50 hover:bg-slate-700 hover:border-indigo-500/30 transition-all shadow-lg"
+                <button
+                  className="p-2 text-slate-400 hover:text-slate-300 transition-colors disabled:opacity-30"
                   disabled={loading || isUploading}
-                  asChild
+                  type="button"
                 >
-                  <div className="cursor-pointer">
-                    {isUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
-                    ) : (
-                      <Paperclip className="h-5 w-5 text-slate-300" />
-                    )}
-                  </div>
-                </Button>
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-5 w-5" />
+                  )}
+                </button>
               </label>
             </div>
 
+            {/* Transparent Input */}
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
+              placeholder="Message..."
               disabled={loading}
-              className="flex-1 bg-slate-800/50 border-indigo-500/10 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 focus:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all"
+              className="flex-1 bg-transparent border-0 border-b border-white/10 rounded-none text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 text-[15px] font-light"
             />
 
+            {/* Ghost Reset Button */}
+            <button
+              onClick={handleResetConversation}
+              disabled={loading || messages.length === 0}
+              className="p-2 text-slate-600 hover:text-slate-400 transition-colors disabled:opacity-20"
+              title="Reset conversation"
+              type="button"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+
+            {/* Send Button - Minimal */}
             <Button
               onClick={handleSend}
               disabled={loading || !input.trim()}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50"
+              size="icon"
+              className="bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-30 h-9 w-9"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Powered by IntakeOS Branding */}
-          <div className="text-center py-3 mt-3 border-t border-white/5">
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest">
-              Powered by IntakeOS
+          {/* Subtle Branding */}
+          <div className="text-center pt-4">
+            <p className="text-[9px] text-slate-600 font-light tracking-widest">
+              POWERED BY INTAKEOS
             </p>
           </div>
         </div>
       )}
 
-      {/* Celebratory Completion State */}
+      {/* Floating Success Overlay - Cinematic */}
       {conversationState.phase === 'completed' && (
-        <div className="p-8 border-t border-emerald-500/30 bg-gradient-to-br from-slate-900/90 via-emerald-900/20 to-slate-900/90 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex flex-col items-center text-center space-y-6">
-            {/* Large CheckCircle Icon with scale-in animation */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-emerald-500/30 rounded-full blur-xl animate-pulse" />
-              <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full shadow-2xl shadow-emerald-500/50 animate-in zoom-in duration-500">
-                <CheckCircle className="h-16 w-16 text-white" />
+        <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-700">
+          <div className="bg-slate-900/90 border border-emerald-500/20 rounded-3xl p-12 max-w-md shadow-2xl shadow-emerald-500/10 animate-in zoom-in duration-700">
+            <div className="flex flex-col items-center text-center space-y-6">
+              {/* Large Floating CheckCircle Icon */}
+              <div className="relative animate-float">
+                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
+                <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full">
+                  <CheckCircle className="h-20 w-20 text-white" />
+                </div>
               </div>
-            </div>
 
-            {/* Success Message */}
-            <div className="space-y-3">
-              <h3 className="text-3xl font-bold text-white tracking-tight">
-                Consultation Successfully Prepared
-              </h3>
-              <p className="text-lg text-emerald-100 max-w-2xl mx-auto leading-relaxed">
-                {effectiveBusinessName} will reach out to you shortly with next steps.
-              </p>
-            </div>
-
-            {/* Additional Info Card */}
-            <div className="mt-4 p-5 bg-white/5 rounded-xl border border-emerald-500/20 backdrop-blur-sm max-w-md">
-              <div className="flex items-center justify-center gap-3 text-sm text-emerald-100">
-                <Sparkles className="h-5 w-5 text-emerald-400 animate-pulse" />
-                <span className="font-medium">Your information has been securely submitted</span>
+              {/* Success Message */}
+              <div className="space-y-3">
+                <h3 className="text-2xl font-semibold text-white tracking-tight">
+                  Intake Finalized
+                </h3>
+                <p className="text-sm text-slate-400 font-light leading-relaxed">
+                  {effectiveBusinessName} has received your details and will be in touch shortly.
+                </p>
               </div>
             </div>
           </div>
