@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotSettings } from '@/app/components/BotSettings';
 import { QRCode } from '@/app/preview/[id]/QRcode';
-import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode } from 'lucide-react';
+import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode, AlertTriangle, Smile } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Helper to intelligently pick a display title for a submission
 function getSubmissionTitle(data: any) {
@@ -25,6 +26,94 @@ function getSubmissionTitle(data: any) {
   if (firstValue && typeof firstValue === 'string') return firstValue;
 
   return "Submission";
+}
+
+// Helper to get submissions per day for the last 7 days
+function getLast7DaysData(submissions: any[]) {
+  const today = new Date();
+  const last7Days = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    date.setHours(0, 0, 0, 0);
+
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    const count = submissions.filter((sub: any) => {
+      const subDate = new Date(sub.created_at);
+      return subDate >= date && subDate < nextDate;
+    }).length;
+
+    last7Days.push({
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      submissions: count
+    });
+  }
+
+  return last7Days;
+}
+
+// Helper to calculate primary urgency level
+function getPrimaryUrgency(submissions: any[]) {
+  if (!submissions || submissions.length === 0) return { label: 'No Data', count: 0, percentage: 0 };
+
+  const urgencyCounts = submissions.reduce((acc: any, sub: any) => {
+    const urgency = sub.urgency || 'Unknown';
+    acc[urgency] = (acc[urgency] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sortedUrgencies = Object.entries(urgencyCounts).sort((a: any, b: any) => b[1] - a[1]);
+  const [topUrgency, count] = sortedUrgencies[0] || ['Unknown', 0];
+  const percentage = Math.round((count as number / submissions.length) * 100);
+
+  return { label: topUrgency, count, percentage };
+}
+
+// Helper to calculate sentiment pulse
+function getSentimentPulse(submissions: any[]) {
+  if (!submissions || submissions.length === 0) return { label: 'No Data', percentage: 0, dominant: 'Neutral' };
+
+  const sentimentCounts = submissions.reduce((acc: any, sub: any) => {
+    const sentiment = sub.sentiment || 'Unknown';
+    acc[sentiment] = (acc[sentiment] || 0) + 1;
+    return acc;
+  }, {});
+
+  const positivePct = Math.round(((sentimentCounts['Positive'] || 0) / submissions.length) * 100);
+  const neutralPct = Math.round(((sentimentCounts['Neutral'] || 0) / submissions.length) * 100);
+  const frustratedPct = Math.round(((sentimentCounts['Frustrated'] || 0) / submissions.length) * 100);
+
+  const dominant = positivePct >= neutralPct && positivePct >= frustratedPct ? 'Positive'
+    : frustratedPct > neutralPct ? 'Frustrated'
+    : 'Neutral';
+
+  const dominantPct = dominant === 'Positive' ? positivePct : dominant === 'Frustrated' ? frustratedPct : neutralPct;
+
+  return {
+    label: `${dominantPct}% ${dominant}`,
+    percentage: dominantPct,
+    dominant,
+    breakdown: { positive: positivePct, neutral: neutralPct, frustrated: frustratedPct }
+  };
+}
+
+// Helper to get urgency emoji and color
+function getUrgencyDisplay(urgency: string | null | undefined) {
+  if (urgency === 'High') return { emoji: '🚨', color: 'from-red-500 to-rose-600', textColor: 'text-red-400' };
+  if (urgency === 'Medium') return { emoji: '⚠️', color: 'from-amber-500 to-orange-500', textColor: 'text-amber-400' };
+  if (urgency === 'Low') return { emoji: '✅', color: 'from-emerald-500 to-teal-500', textColor: 'text-emerald-400' };
+  return { emoji: '❓', color: 'from-slate-500 to-slate-600', textColor: 'text-slate-400' };
+}
+
+// Helper to get sentiment emoji
+function getSentimentEmoji(sentiment: string | null | undefined) {
+  if (sentiment === 'Positive') return '😊';
+  if (sentiment === 'Frustrated') return '😤';
+  if (sentiment === 'Neutral') return '😐';
+  return '❓';
 }
 
 export default async function BotDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,6 +138,11 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
     .select('*')
     .eq('bot_id', bot.id)
     .order('created_at', { ascending: false });
+
+  // Calculate analytics data
+  const last7DaysData = getLast7DaysData(submissions || []);
+  const primaryUrgency = getPrimaryUrgency(submissions || []);
+  const sentimentPulse = getSentimentPulse(submissions || []);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const chatUrl = `${baseUrl}/chat/${bot.slug}`;
@@ -101,6 +195,62 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
 
           {/* TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {/* Performance Chart - Dark Glass */}
+            <Card className="p-6 bg-white/5 border border-white/10 backdrop-blur-lg hover:border-indigo-500/50 transition-all shadow-xl relative overflow-hidden">
+              {/* Aurora effect */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10"></div>
+
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-1">Performance Overview</h3>
+                  <p className="text-sm text-slate-400">Last 7 days submission activity</p>
+                </div>
+                <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-lg">
+                  <span className="text-sm font-semibold text-indigo-300">📊 Live Metrics</span>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={last7DaysData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                    <XAxis
+                      dataKey="date"
+                      stroke="rgba(255,255,255,0.5)"
+                      tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                    />
+                    <YAxis
+                      stroke="rgba(255,255,255,0.5)"
+                      tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                      labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
+                      itemStyle={{ color: '#818cf8' }}
+                    />
+                    <Bar
+                      dataKey="submissions"
+                      fill="url(#colorGradient)"
+                      radius={[8, 8, 0, 0]}
+                    />
+                    <defs>
+                      <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#818cf8" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
             {/* KPI Cards - Dark Glass */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-6 bg-white/5 border border-white/10 hover:border-indigo-500/50 transition-all shadow-xl hover:shadow-indigo-500/20 backdrop-blur-lg group">
@@ -116,31 +266,35 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
                 </div>
               </Card>
 
-              <Card className="p-6 bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all shadow-xl hover:shadow-emerald-500/20 backdrop-blur-lg group">
+              <Card className="p-6 bg-white/5 border border-white/10 hover:border-amber-500/50 transition-all shadow-xl hover:shadow-amber-500/20 backdrop-blur-lg group relative overflow-hidden">
+                {/* Aurora effect */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl -z-10"></div>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-400 mb-1">Completion Rate</p>
-                    <p className="text-4xl font-bold text-white mb-2">—%</p>
-                    <p className="text-xs text-slate-500">Coming soon</p>
+                    <p className="text-sm font-medium text-slate-400 mb-1">Primary Urgency</p>
+                    <p className="text-4xl font-bold text-white mb-2">{primaryUrgency.percentage}%</p>
+                    <p className="text-xs text-slate-500">Mostly {primaryUrgency.label} Priority</p>
                   </div>
-                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/50 group-hover:scale-110 transition-transform">
-                    <TrendingUp className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg shadow-amber-500/50 group-hover:scale-110 transition-transform">
+                    <AlertTriangle className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6 bg-white/5 border border-white/10 hover:border-cyan-500/50 transition-all shadow-xl hover:shadow-cyan-500/20 backdrop-blur-lg group">
+              <Card className="p-6 bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all shadow-xl hover:shadow-emerald-500/20 backdrop-blur-lg group relative overflow-hidden">
+                {/* Aurora effect */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -z-10"></div>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-400 mb-1">Status</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse shadow-lg shadow-emerald-500/50" />
-                      <span className="text-2xl font-bold text-white">Active</span>
+                    <p className="text-sm font-medium text-slate-400 mb-1">Sentiment Pulse</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-3xl">{getSentimentEmoji(sentimentPulse.dominant)}</span>
+                      <p className="text-3xl font-bold text-white">{sentimentPulse.percentage}%</p>
                     </div>
-                    <p className="text-xs text-slate-500 mt-2">Accepting submissions</p>
+                    <p className="text-xs text-slate-500">{sentimentPulse.dominant} Experience</p>
                   </div>
-                  <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl shadow-lg shadow-cyan-500/50 group-hover:scale-110 transition-transform">
-                    <Check className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/50 group-hover:scale-110 transition-transform">
+                    <Smile className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </Card>
@@ -223,30 +377,60 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden">
                 {/* Header Row */}
                 <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-slate-400 text-sm font-medium">
-                  <div className="col-span-6">Contact</div>
+                  <div className="col-span-6">Contact & Insights</div>
                   <div className="col-span-4">Submitted</div>
                   <div className="col-span-2 text-right">Action</div>
                 </div>
 
                 {/* Data Rows */}
                 <div className="divide-y divide-white/5">
-                  {submissions.map((sub: any) => (
-                    <Link key={sub.id} href={`/dashboard/submissions/${sub.id}`}>
-                      <div className="grid grid-cols-12 gap-4 p-4 hover:bg-white/5 transition-colors cursor-pointer group">
-                        <div className="col-span-6">
-                          <div className="font-semibold text-white group-hover:text-indigo-400 transition-colors">{getSubmissionTitle(sub.data)}</div>
+                  {submissions.map((sub: any) => {
+                    const urgencyDisplay = getUrgencyDisplay(sub.urgency);
+                    const sentimentEmoji = getSentimentEmoji(sub.sentiment);
+
+                    return (
+                      <Link key={sub.id} href={`/dashboard/submissions/${sub.id}`}>
+                        <div className="grid grid-cols-12 gap-4 p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+                          <div className="col-span-6">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="font-semibold text-white group-hover:text-indigo-400 transition-colors">
+                                {getSubmissionTitle(sub.data)}
+                              </div>
+                              {sub.urgency && (
+                                <Badge className={`bg-gradient-to-r ${urgencyDisplay.color} border-0 text-white text-xs px-2 py-0.5`}>
+                                  <span className="mr-1">{urgencyDisplay.emoji}</span>
+                                  {sub.urgency}
+                                </Badge>
+                              )}
+                            </div>
+                            {sub.summary && (
+                              <p className="text-sm text-slate-400 line-clamp-1 mt-1">
+                                {sub.summary}
+                              </p>
+                            )}
+                          </div>
+                          <div className="col-span-4 text-slate-300 text-sm flex items-start gap-2 pt-1">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-3 w-3 text-slate-500" />
+                                {new Date(sub.created_at).toLocaleString()}
+                              </div>
+                              {sub.sentiment && (
+                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                  <span className="text-sm">{sentimentEmoji}</span>
+                                  <span>{sub.sentiment}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-span-2 text-right text-slate-400 group-hover:text-indigo-400 transition-colors flex items-center justify-end gap-2">
+                            <span className="text-sm font-medium">View</span>
+                            <ExternalLink className="h-4 w-4" />
+                          </div>
                         </div>
-                        <div className="col-span-4 text-slate-300 text-sm flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-slate-500" />
-                          {new Date(sub.created_at).toLocaleString()}
-                        </div>
-                        <div className="col-span-2 text-right text-slate-400 group-hover:text-indigo-400 transition-colors flex items-center justify-end gap-2">
-                          <span className="text-sm font-medium">View</span>
-                          <ExternalLink className="h-4 w-4" />
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             )}
