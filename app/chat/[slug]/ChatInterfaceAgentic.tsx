@@ -408,7 +408,7 @@ export function ChatInterfaceAgentic({
             <div>
               <h3 className="font-bold text-xl text-white flex items-center gap-3">
                 <span className="flex items-center gap-2">
-                  {businessName || 'Loading...'}
+                  {effectiveBusinessName}
                   {/* Pulsing green dot for "Active" status */}
                   <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 </span>
@@ -418,7 +418,7 @@ export function ChatInterfaceAgentic({
                   </span>
                 )}
               </h3>
-              <p className="text-sm text-slate-400">Stellar Business Operating System</p>
+              <p className="text-sm text-slate-400">AI Consultation System</p>
             </div>
           </div>
 
@@ -610,8 +610,8 @@ export function ChatInterfaceAgentic({
           </div>
         )}
 
-        {/* Submission Success Card */}
-        {submissionComplete && (
+        {/* Submission Success Card - HIDDEN (using new celebratory completion state below instead) */}
+        {submissionComplete && simulatorMode && (
           <div className="w-full p-8 bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-2xl">
             <div className="flex flex-col items-center text-center space-y-4">
               {/* Success Icon */}
@@ -622,24 +622,12 @@ export function ChatInterfaceAgentic({
               {/* Success Message */}
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-white">
-                  {simulatorMode ? '✅ Test Drive Complete!' : '✅ Perfect! Your Information Has Been Submitted'}
+                  ✅ Test Drive Complete!
                 </h3>
                 <p className="text-base text-emerald-100 max-w-md mx-auto">
-                  {simulatorMode
-                    ? 'Check out the simulation results above to see what data was collected.'
-                    : "We've received everything we need. We'll be in touch soon!"}
+                  Check out the simulation results above to see what data was collected.
                 </p>
               </div>
-
-              {/* Additional Info */}
-              {!simulatorMode && (
-                <div className="mt-4 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-sm text-white">
-                    <Sparkles className="h-4 w-4 text-emerald-300" />
-                    <span>Your request has been securely submitted</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
