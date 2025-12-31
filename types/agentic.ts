@@ -94,6 +94,16 @@ export interface ConversationState {
 
   // Documents with extracted text (for persistent context)
   uploaded_documents?: UploadedDocument[];
+
+  // Intelligence fields for dashboard insights
+  // AI-generated 2-3 sentence snapshot of the submission
+  summary?: string;
+
+  // User sentiment: 'Positive', 'Neutral', or 'Frustrated'
+  sentiment?: 'Positive' | 'Neutral' | 'Frustrated';
+
+  // Submission urgency level: 'Low', 'Medium', or 'High'
+  urgency?: 'Low' | 'Medium' | 'High';
 }
 
 /**
