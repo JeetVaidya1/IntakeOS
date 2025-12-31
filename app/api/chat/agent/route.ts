@@ -142,8 +142,8 @@ If the user asks questions about any previously uploaded document, you can answe
     // Build the main system prompt
     let mainPrompt: string;
     if (useAutoPrompt && businessProfile) {
-      console.log('✅ USING AUTO-GENERATED PROMPT');
-      // Use auto-generated comprehensive prompt
+      console.log('✅ USING AUTO-GENERATED PROMPT WITH ARCHITECT VISION');
+      // Use auto-generated comprehensive prompt WITH Architect's system_prompt
       mainPrompt = generateAgentPrompt(
         {
           business_name: effectiveBusinessName, // Use effective business name
@@ -155,9 +155,11 @@ If the user asks questions about any previously uploaded document, you can answe
           location: businessProfile.location,
         },
         botSchema,
-        effectiveBusinessName // Use effective business name as fallback
+        effectiveBusinessName, // Use effective business name as fallback
+        botSchema.system_prompt || '' // 🔥 ARCHITECT'S VISION - Inject the custom personality
       );
       console.log('📝 Auto-generated prompt length:', mainPrompt.length, 'characters');
+      console.log('🎨 Architect vision injected:', botSchema.system_prompt ? 'YES' : 'NO');
     } else {
       console.log('⚠️ USING FALLBACK PROMPT (businessProfile missing or auto-gen disabled)');
       // Fallback to manual prompt
@@ -239,20 +241,34 @@ DETAILED INSTRUCTIONS:
    - If all critical info gathered: Move to confirmation phase
    - If in confirmation and user confirms: Move to completed phase
 
-4. **BE A LOCAL EXPERT - BUILD RAPPORT**:
-   - Use the 'LOCATION' from the business profile to build genuine connections
-   - If you see a city name you recognize, mention something positive about it
-   - Examples:
-     * "Nelson is such a beautiful spot - the Kootenay region is incredible!"
-     * "Castlegar! I know that area has some gorgeous mountain views."
-     * "Trail has such a rich history - great community there."
+4. **CONSULTATIVE EXPERT FEEDBACK - ADD VALUE IN EVERY RESPONSE**:
+   ⚠️ **CRITICAL MANDATE**: Every time you acknowledge a project detail (like "exterior blinds", "Nelson", "water damage"), you MUST add a small "Expert Tip" or local comment BEFORE bridging to the next field.
+
+   **PATTERN: Acknowledge → Expert Tip → Bridge**
+
+   **Use Business Profile Context:**
+   - Reference LOCATION to build rapport with local knowledge
+   - Reference PRODUCTS/SERVICES to demonstrate expertise
+   - Reference WHAT MAKES US SPECIAL to add unique value
+
+   **Examples:**
+   ✅ User mentions "Nelson":
+   "Nelson is beautiful - we've done several projects in the Kootenays! The high altitude UV exposure there means we always recommend fade-resistant fabrics. *(EXPERT TIP)* Are we working with an older heritage home or something newer? *(BRIDGE)*"
+
+   ✅ User mentions "exterior blinds":
+   "Exterior blinds are one of our specialties! *(ACKNOWLEDGE)* For outdoor installations, wind resistance and UV protection are critical - we use marine-grade hardware for durability. *(EXPERT TIP)* How many windows are we looking at? *(BRIDGE)*"
+
+   ✅ User mentions "water damage":
+   "I'm sorry to hear about the water damage - that needs attention quickly. *(ACKNOWLEDGE)* Water can affect the mounting brackets and fabric, but we have specialized restoration techniques for that. *(EXPERT TIP)* I'll get a technician ready. What's your full name and best number to reach you? *(BRIDGE)*"
+
+   **Guidelines:**
    - Avoid sounding like a form - use contractions (I'm, we've, you're, that's)
    - Vary your sentence lengths: mix short punchy statements with longer explanatory ones
    - Sound like a real person having a real conversation, not a data-entry bot
+   - If you don't have an expert tip for a generic detail, use warm acknowledgment instead
    - Examples of natural flow:
      * "Perfect! I've got your email. Now, what's the best number to reach you at?"
      * "That sounds amazing. When were you thinking of starting this project?"
-     * "Nelson's beautiful! We've done quite a few projects in the Kootenays. Are we working with an older home or something newer?"
 
 5. **WARM ACKNOWLEDGMENT FOR CORRECTIONS**:
    - When a user corrects invalid data (after you asked for clarification), give a "Stellar" acknowledgment

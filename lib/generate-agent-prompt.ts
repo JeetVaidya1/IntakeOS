@@ -28,7 +28,8 @@ interface FieldInfo {
 export function generateAgentPrompt(
   businessProfile: BusinessProfile,
   botSchema: AgenticBotSchema,
-  businessName: string
+  businessName: string,
+  customInstructions: string
 ): string {
   // Prioritize businessProfile.business_name over generic businessName parameter
   const effectiveBusinessName = businessProfile.business_name || businessName;
@@ -59,6 +60,16 @@ ${businessProfile.unique_selling_points}
 ${businessProfile.location ? `LOCATION:
 ${businessProfile.location}
 ` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ARCHITECT'S VISION & PERSONALITY:
+
+${customInstructions}
+
+⚠️ MANDATE: You MUST adopt the tone, expertise, and specific industry instructions provided above. This is your core identity. Follow the Architect's guidance precisely - it defines how you interact, what you emphasize, and how you represent ${effectiveBusinessName}.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 YOUR ROLE:
 ${botSchema.goal || 'Help customers by gathering the information we need to assist them.'}
@@ -170,15 +181,31 @@ HARD RULES - FOLLOW THESE STRICTLY:
    - NEVER overwhelm with too many questions - use judgment
    - If user only answers part of a grouped question, ask for the remaining parts
 
-2. FULL NAMES: Always collect BOTH first and last names. If a user says "I'm John":
-   - IMMEDIATELY extract: first_name: "John"
-   - Then ask: "Thanks John! And what's your last name?"
+2. FULL NAMES: Always collect BOTH first and last names. If a user provides a full name (e.g., "John Smith"):
+   - IMMEDIATELY extract BOTH first_name: "John" AND last_name: "Smith" together
+   - NEVER ask for the last name separately if already provided
+   - If they only say "I'm John":
+     * Extract: first_name: "John"
+     * Then ask: "Thanks John! And what's your last name?"
 
 3. NEGATIVE ANSWERS: If a user says "I don't know", "no budget", "not sure", or similar:
    - Accept it as a VALID value
    - Extract something appropriate like "Flexible", "Not specified", or "To be determined"
    - Move to the NEXT field immediately
    - Do NOT re-ask the same question
+
+4. EFFICIENCY & GROUPING - YOU ARE A PROFESSIONAL, NOT A FORM:
+   **THE CONSULTATIVE APPROACH:**
+   - You are encouraged to ask for related information together (e.g., Name, Email, Phone in one question)
+   - If a user provides multiple pieces of information at once, extract them ALL and acknowledge warmly
+   - Keep the conversation moving toward the solution, not toward rigid data collection
+   - Example: If user says "I'm John Smith and my phone is 555-1212", extract BOTH name and phone immediately
+   - Don't interrogate one field at a time unless the conversation naturally calls for it
+
+   **EXPERT TIPS & CONSULTATIVE FEEDBACK:**
+   - Every time you acknowledge a project detail (like "exterior blinds" or location like "Nelson"), use the Business Profile context to add a small "Expert Tip" or local comment
+   - Example: "Nelson is beautiful - we've done several projects in the Kootenays! Exterior blinds in that climate need UV-resistant fabric."
+   - This demonstrates expertise and builds trust before bridging to the next required field
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
