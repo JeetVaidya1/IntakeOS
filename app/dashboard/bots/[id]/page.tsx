@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotSettings } from '@/app/components/BotSettings';
 import { QRCode } from '@/app/preview/[id]/QRcode';
-import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode, AlertTriangle, Smile } from 'lucide-react';
+import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode, AlertTriangle, Flame } from 'lucide-react';
 import { PerformanceChart } from './PerformanceChart';
 
 // Helper to intelligently pick a display title for a submission
@@ -72,31 +72,17 @@ function getPrimaryUrgency(submissions: any[]) {
   return { label: topUrgency, count, percentage };
 }
 
-// Helper to calculate sentiment pulse
-function getSentimentPulse(submissions: any[]) {
-  if (!submissions || submissions.length === 0) return { label: 'No Data', percentage: 0, dominant: 'Neutral' };
+// Helper to calculate hot leads (high urgency submissions)
+function getHotLeads(submissions: any[]) {
+  if (!submissions || submissions.length === 0) return { count: 0, percentage: 0, label: 'No Data' };
 
-  const sentimentCounts = submissions.reduce((acc: any, sub: any) => {
-    const sentiment = sub.sentiment || 'Unknown';
-    acc[sentiment] = (acc[sentiment] || 0) + 1;
-    return acc;
-  }, {});
-
-  const positivePct = Math.round(((sentimentCounts['Positive'] || 0) / submissions.length) * 100);
-  const neutralPct = Math.round(((sentimentCounts['Neutral'] || 0) / submissions.length) * 100);
-  const frustratedPct = Math.round(((sentimentCounts['Frustrated'] || 0) / submissions.length) * 100);
-
-  const dominant = positivePct >= neutralPct && positivePct >= frustratedPct ? 'Positive'
-    : frustratedPct > neutralPct ? 'Frustrated'
-    : 'Neutral';
-
-  const dominantPct = dominant === 'Positive' ? positivePct : dominant === 'Frustrated' ? frustratedPct : neutralPct;
+  const hotLeadsCount = submissions.filter((sub: any) => sub.urgency === 'High').length;
+  const percentage = submissions.length > 0 ? Math.round((hotLeadsCount / submissions.length) * 100) : 0;
 
   return {
-    label: `${dominantPct}% ${dominant}`,
-    percentage: dominantPct,
-    dominant,
-    breakdown: { positive: positivePct, neutral: neutralPct, frustrated: frustratedPct }
+    count: hotLeadsCount,
+    percentage,
+    label: hotLeadsCount === 1 ? '1 Hot Lead' : `${hotLeadsCount} Hot Leads`
   };
 }
 
@@ -142,7 +128,7 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
   // Calculate analytics data
   const last7DaysData = getLast7DaysData(submissions || []);
   const primaryUrgency = getPrimaryUrgency(submissions || []);
-  const sentimentPulse = getSentimentPulse(submissions || []);
+  const hotLeads = getHotLeads(submissions || []);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const chatUrl = `${baseUrl}/chat/${bot.slug}`;
@@ -228,20 +214,17 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
                 </div>
               </Card>
 
-              <Card className="p-6 bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-all shadow-xl hover:shadow-emerald-500/20 backdrop-blur-lg group relative overflow-hidden">
+              <Card className="p-6 bg-white/5 border border-white/10 hover:border-red-500/50 transition-all shadow-xl hover:shadow-red-500/20 backdrop-blur-lg group relative overflow-hidden">
                 {/* Aurora effect */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -z-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-2xl -z-10"></div>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-400 mb-1">Sentiment Pulse</p>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-3xl">{getSentimentEmoji(sentimentPulse.dominant)}</span>
-                      <p className="text-3xl font-bold text-white">{sentimentPulse.percentage}%</p>
-                    </div>
-                    <p className="text-xs text-slate-500">{sentimentPulse.dominant} Experience</p>
+                    <p className="text-sm font-medium text-slate-400 mb-1">Hot Leads</p>
+                    <p className="text-4xl font-bold text-white mb-2">{hotLeads.count}</p>
+                    <p className="text-xs text-slate-500">High urgency submissions ({hotLeads.percentage}%)</p>
                   </div>
-                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/50 group-hover:scale-110 transition-transform">
-                    <Smile className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl shadow-lg shadow-red-500/50 group-hover:scale-110 transition-transform">
+                    <Flame className="h-6 w-6 text-white" />
                   </div>
                 </div>
               </Card>
