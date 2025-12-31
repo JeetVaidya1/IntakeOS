@@ -144,49 +144,6 @@ export default async function SubmissionDetailPage({
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Stellar Snapshot Card */}
-        {submission.summary && (
-          <Card className="p-8 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 backdrop-blur-lg shadow-2xl mb-8 relative overflow-hidden">
-            {/* Aurora orbs */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -z-10"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -z-10"></div>
-
-            <div className="flex items-start gap-4 mb-4">
-              <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl shadow-lg shadow-indigo-500/50">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-2">✨ Stellar Snapshot</h2>
-                <p className="text-slate-300 text-sm">AI-generated executive summary</p>
-              </div>
-              <div className="flex gap-2">
-                {submission.urgency && (
-                  <div className={`px-4 py-2 rounded-lg ${urgencyDisplay.bgColor} border ${urgencyDisplay.borderColor}`}>
-                    <div className="text-xs text-slate-400 mb-1">Urgency</div>
-                    <div className="font-bold text-white flex items-center gap-1">
-                      <span>{urgencyDisplay.emoji}</span>
-                      <span>{submission.urgency}</span>
-                    </div>
-                  </div>
-                )}
-                {submission.sentiment && (
-                  <div className={`px-4 py-2 rounded-lg bg-white/5 border border-white/10`}>
-                    <div className="text-xs text-slate-400 mb-1">Sentiment</div>
-                    <div className="font-bold text-white flex items-center gap-1">
-                      <span>{sentimentDisplay.emoji}</span>
-                      <span>{sentimentDisplay.label}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6">
-              <p className="text-lg text-white leading-relaxed">{submission.summary}</p>
-            </div>
-          </Card>
-        )}
-
         {/* Enhanced Actions */}
         <div className="mb-8">
           <EnhancedSubmissionActions
@@ -419,9 +376,57 @@ export default async function SubmissionDetailPage({
                     );
                   })
                 ) : (
-                  <div className="text-center py-8 text-slate-400">
-                    <p className="text-sm">No conversation history available.</p>
-                    <p className="text-xs mt-2 text-slate-500">This may be a legacy submission created before conversational tracking was enabled.</p>
+                  // No conversation history - show AI-powered summary instead
+                  <div className="space-y-4">
+                    {submission.summary ? (
+                      <>
+                        <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Sparkles className="h-5 w-5 text-indigo-400" />
+                            <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wide">AI Analysis</h3>
+                          </div>
+                          <p className="text-white leading-relaxed">{submission.summary}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {submission.urgency && (
+                            <div className={`${urgencyDisplay.bgColor} border ${urgencyDisplay.borderColor} rounded-lg p-4`}>
+                              <div className="text-xs text-slate-400 mb-1 uppercase tracking-wide">Priority Level</div>
+                              <div className="text-lg font-bold text-white flex items-center gap-2">
+                                <span>{urgencyDisplay.emoji}</span>
+                                <span>{submission.urgency}</span>
+                              </div>
+                            </div>
+                          )}
+                          {submission.sentiment && (
+                            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                              <div className="text-xs text-slate-400 mb-1 uppercase tracking-wide">Customer Mood</div>
+                              <div className="text-lg font-bold text-white flex items-center gap-2">
+                                <span>{sentimentDisplay.emoji}</span>
+                                <span>{sentimentDisplay.label}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                          <p className="text-sm text-slate-400 italic">
+                            💡 This is a legacy submission. Full conversation tracking was not available when this was created,
+                            but our AI has analyzed the collected data to provide you with actionable insights.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-800/50 rounded-full mb-4">
+                          <FileText className="h-8 w-8 text-slate-500" />
+                        </div>
+                        <p className="text-slate-400 text-sm">No conversation data available</p>
+                        <p className="text-slate-500 text-xs mt-2">
+                          This submission was created before conversation tracking and AI analysis were enabled.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

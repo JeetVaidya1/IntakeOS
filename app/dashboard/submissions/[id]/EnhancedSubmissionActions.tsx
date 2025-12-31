@@ -242,23 +242,25 @@ export function EnhancedSubmissionActions({
       </div>
 
       {/* Additional Actions */}
-      <div className="flex gap-4">
+      <div className="flex gap-3 justify-end">
         <Button
-          variant="outline"
-          className="flex-1 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+          variant="ghost"
+          size="sm"
+          className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-sm"
           onClick={handleExport}
           disabled={loading}
         >
-          <Download className="mr-2 h-4 w-4" />
-          Export Data
+          <Download className="mr-1.5 h-3.5 w-3.5" />
+          Export
         </Button>
         <Button
-          variant="outline"
-          className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+          variant="ghost"
+          size="sm"
+          className="bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 text-sm"
           onClick={handleDelete}
           disabled={loading}
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
           Delete
         </Button>
       </div>
