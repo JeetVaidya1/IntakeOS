@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotSettings } from '@/app/components/BotSettings';
 import { QRCode } from '@/app/preview/[id]/QRcode';
 import { Users, TrendingUp, Check, Code, ExternalLink, Copy, Calendar, QrCode, AlertTriangle, Smile } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { PerformanceChart } from './PerformanceChart';
 
 // Helper to intelligently pick a display title for a submission
 function getSubmissionTitle(data: any) {
@@ -196,60 +196,7 @@ export default async function BotDetailPage({ params }: { params: Promise<{ id: 
           {/* TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {/* Performance Chart - Dark Glass */}
-            <Card className="p-6 bg-white/5 border border-white/10 backdrop-blur-lg hover:border-indigo-500/50 transition-all shadow-xl relative overflow-hidden">
-              {/* Aurora effect */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10"></div>
-
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-1">Performance Overview</h3>
-                  <p className="text-sm text-slate-400">Last 7 days submission activity</p>
-                </div>
-                <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-lg">
-                  <span className="text-sm font-semibold text-indigo-300">📊 Live Metrics</span>
-                </div>
-              </div>
-
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={last7DaysData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="rgba(255,255,255,0.5)"
-                      tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-                    />
-                    <YAxis
-                      stroke="rgba(255,255,255,0.5)"
-                      tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        backdropFilter: 'blur(10px)'
-                      }}
-                      labelStyle={{ color: 'rgba(255,255,255,0.9)' }}
-                      itemStyle={{ color: '#818cf8' }}
-                    />
-                    <Bar
-                      dataKey="submissions"
-                      fill="url(#colorGradient)"
-                      radius={[8, 8, 0, 0]}
-                    />
-                    <defs>
-                      <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#818cf8" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#6366f1" stopOpacity={0.8} />
-                      </linearGradient>
-                    </defs>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+            <PerformanceChart data={last7DaysData} />
 
             {/* KPI Cards - Dark Glass */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
