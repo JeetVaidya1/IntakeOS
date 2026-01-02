@@ -107,22 +107,31 @@ function ChatInterfaceContent({
 
         {/* Minimalist Header - Centered */}
         <div className="p-8 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
-          <div className="flex items-center justify-center gap-3">
-            {/* Live Badge with pulsing dot */}
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-3">
+              {/* Live Badge with pulsing dot */}
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
+              </div>
+
+              {/* Business Name - Centered & Prominent */}
+              <h3 className="text-2xl font-semibold text-white tracking-tight">
+                {effectiveBusinessName}
+              </h3>
+
+              {simulatorMode && (
+                <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-md">
+                  Test Drive
+                </span>
+              )}
             </div>
-
-            {/* Business Name - Centered & Prominent */}
-            <h3 className="text-2xl font-semibold text-white tracking-tight">
-              {effectiveBusinessName}
-            </h3>
-
-            {simulatorMode && (
-              <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-md">
-                Test Drive
-              </span>
+            
+            {/* Bot Purpose/Goal - Small text under business name */}
+            {bot.schema?.goal && (
+              <p className="text-sm text-slate-400 font-light text-center max-w-md">
+                {bot.schema.goal}
+              </p>
             )}
           </div>
         </div>
