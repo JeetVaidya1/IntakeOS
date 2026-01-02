@@ -240,7 +240,7 @@
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: #6366f1 transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -252,12 +252,13 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: #6366f1;
   border-radius: 4px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: #818cf8;
 }
 
 /* Aurora Gradient Animation - Deep, Rich Colors */
