@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, Sparkles, Loader2, CheckCircle, FileText, RotateCcw, Check } from 'lucide-react';
+import { Send, Paperclip, Loader2, CheckCircle, FileText, RotateCcw } from 'lucide-react';
 import type { AgenticBotSchema, BotDisplayMode } from '@/types/agentic';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { StandardForm } from './components/StandardForm';
@@ -72,8 +72,8 @@ function ChatInterfaceContent({
   const gatheredCount = Object.keys(conversationState.gathered_information).length;
   const progress = totalInfo > 0 ? (gatheredCount / totalInfo) * 100 : 0;
 
-  // Use effective business name for display
-  const effectiveBusinessName = businessName || bot.name || 'The business';
+  // Use business name - don't fall back to bot.name, as bot.name might be the purpose
+  const effectiveBusinessName = businessName || 'The business';
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -85,325 +85,254 @@ function ChatInterfaceContent({
   // Render chat interface
   return (
     <div className="relative w-full max-w-4xl mx-auto">
-          {/* Background with subtle grid pattern */}
-          <div className="absolute inset-0 bg-slate-950 rounded-3xl opacity-5">
-            <div className="bg-grid-pattern w-full h-full" />
-          </div>
+      <Card className="w-full h-[700px] flex flex-col bg-gradient-to-br from-white via-white to-slate-50/40 border-2 border-slate-200/60 shadow-2xl shadow-slate-200/50 overflow-hidden backdrop-blur-sm">
 
-          {/* Aurora orbs for depth - very subtle */}
-          <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.08 }} />
-          <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.05 }} />
-          <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.06 }} />
-
-          <Card className="relative w-full h-[700px] flex flex-col shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/5 bg-slate-950/90 backdrop-blur-xl overflow-hidden">
-
-        {/* Ultra-thin progress line at very top */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-900">
-          <div
-            className="h-full bg-indigo-500 transition-all duration-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* Minimalist Header - Centered */}
-        <div className="p-8 border-b border-white/5 bg-slate-900/50 backdrop-blur-md">
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center gap-3">
-              {/* Live Badge with pulsing dot */}
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
+        {/* Beautiful Header with Gradient */}
+        <div className="px-6 py-6 border-b border-slate-200/60 bg-gradient-to-r from-white via-slate-50/30 to-white">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+                  {effectiveBusinessName}
+                </h2>
+                {bot.schema?.goal && (
+                  <p className="text-sm text-slate-600 leading-relaxed max-w-2xl">
+                    {bot.schema.goal}
+                  </p>
+                )}
               </div>
-
-              {/* Business Name - Centered & Prominent */}
-              <h3 className="text-2xl font-semibold text-white tracking-tight">
-                {effectiveBusinessName}
-              </h3>
-
               {simulatorMode && (
-                <span className="px-2 py-1 text-xs font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 rounded-md">
-                  Test Drive
+                <span className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-sm">
+                  Test Mode
                 </span>
               )}
             </div>
-            
-            {/* Bot Purpose/Goal - Small text under business name */}
-            {bot.schema?.goal && (
-              <p className="text-sm text-slate-400 font-light text-center max-w-md">
-                {bot.schema.goal}
-              </p>
-            )}
           </div>
         </div>
 
-      {/* Messages - Minimalist Luxury */}
-      <div className={`flex-1 overflow-y-auto p-8 space-y-10 bg-slate-950 transition-opacity duration-500 ${conversationState.phase === 'completed' ? 'opacity-50' : 'opacity-100'}`}>
-        {messages.length === 0 && !loading && (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-2">
-              <p className="text-slate-500 text-sm font-light">Start a conversation</p>
+        {/* Messages Area with Subtle Pattern */}
+        <div className={`flex-1 overflow-y-auto p-6 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/60 custom-scrollbar ${conversationState.phase === 'completed' ? 'opacity-60' : ''}`}>
+          {messages.length === 0 && !loading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-2">
+                <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-slate-500 text-sm font-medium">Start a conversation</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
-          >
-            {/* Text label instead of avatar */}
-            <span className="text-[11px] text-slate-500 font-medium mb-2 px-1 tracking-wide">
-              {message.role === 'bot' ? 'Consultant' : 'You'}
-            </span>
-
-            <div className={`max-w-[75%]`}>
+          <div className="space-y-5">
+            {messages.map((message, index) => (
               <div
-                className={`p-5 ${
-                  message.role === 'bot'
-                    ? 'rounded-3xl rounded-bl-none bg-slate-900/50 backdrop-blur-2xl text-slate-200 text-[15px] leading-relaxed'
-                    : 'rounded-3xl rounded-br-none bg-indigo-600 text-white text-[15px]'
-                }`}
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                style={{ animation: 'fadeIn 0.3s ease-out' }}
               >
-                {message.content.startsWith('[IMAGE]') ? (
-                  <div className="relative space-y-2 p-4 bg-white/5 rounded-lg border border-white/10 shadow-xl">
-                    {/* Polaroid style image */}
-                    <img
-                      src={message.content.replace('[IMAGE] ', '')}
-                      alt="Uploaded"
-                      className="w-full rounded-md border-4 border-white/20 shadow-lg"
-                    />
-                    {/* Check badge */}
-                    <div className="absolute top-2 right-2 p-1.5 bg-emerald-500 rounded-full shadow-lg">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                    <p className="text-xs text-slate-400 text-center pt-2">Image processed by AI</p>
-                  </div>
-                ) : message.content.startsWith('[DOCUMENT]') ? (
-                  <div className="relative flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10 shadow-xl">
-                    <div className="p-2.5 bg-indigo-500/20 rounded-lg">
-                      <FileText className="h-5 w-5 text-indigo-300" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate text-white">
-                        {message.content.split(' | ')[1] || 'Document uploaded'}
-                      </p>
-                      <p className="text-xs text-slate-400">Document processed by AI</p>
-                    </div>
-                    {/* Check badge */}
-                    <div className="p-1.5 bg-emerald-500 rounded-full shadow-lg">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex flex-col items-start">
-            <span className="text-[11px] text-slate-500 font-medium mb-2 px-1 tracking-wide">
-              Consultant
-            </span>
-            <div className="bg-slate-900/50 backdrop-blur-2xl p-5 rounded-3xl rounded-bl-none">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
-                <span className="text-sm text-slate-400 font-light">Thinking...</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-
-        {/* Simulation Result Card */}
-        {showSimulationResult && simulationData && (
-          <div className="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border-2 border-cyan-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg shadow-lg">
-                <CheckCircle className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Simulation Complete!</h3>
-            </div>
-
-            <div className="space-y-4">
-              {/* What Business Owner Will Receive */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
-                <h4 className="text-sm font-bold text-cyan-300 mb-3">What the Business Owner Will Receive:</h4>
-                <div className="space-y-2">
-                  {Object.entries(simulationData.gatheredInfo).map(([key, value]) => (
-                    <div key={key} className="flex items-start gap-2 p-2 bg-black/20 rounded-lg">
-                      <span className="text-xs font-mono text-slate-400 min-w-[120px]">{key}:</span>
-                      <span className="text-sm text-white flex-1">{String(value)}</span>
-                    </div>
-                  ))}
-                  {simulationData.uploadedFiles?.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/10">
-                      <span className="text-xs font-bold text-slate-400 mb-2 block">Uploaded Files:</span>
-                      {simulationData.uploadedFiles.map((file: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-2 p-2 bg-black/20 rounded-lg mb-2">
-                          <FileText className="h-4 w-4 text-cyan-400" />
-                          <span className="text-sm text-white">{file.filename}</span>
+                <div className={`max-w-[75%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
+                  <div
+                    className={`px-4 py-3 rounded-2xl shadow-sm ${
+                      message.role === 'bot'
+                        ? 'bg-white text-slate-900 border border-slate-200/60 rounded-tl-md shadow-slate-100'
+                        : 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-md shadow-blue-200'
+                    }`}
+                  >
+                    {message.content.startsWith('[IMAGE]') ? (
+                      <div className="space-y-2">
+                        <div className="relative rounded-lg overflow-hidden border border-slate-200 shadow-inner">
+                          <img
+                            src={message.content.replace('[IMAGE] ', '')}
+                            alt="Uploaded"
+                            className="w-full"
+                          />
                         </div>
-                      ))}
+                        <p className="text-xs text-slate-500 font-medium">Image uploaded</p>
+                      </div>
+                    ) : message.content.startsWith('[DOCUMENT]') ? (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-lg border border-slate-200/50">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate text-slate-900">
+                            {message.content.split(' | ')[1] || 'Document uploaded'}
+                          </p>
+                          <p className="text-xs text-slate-500">Document uploaded</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                <div className="bg-white border border-slate-200/60 rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                  )}
+                    <span className="text-sm text-slate-600 font-medium">Typing...</span>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* JSON Preview */}
-              <div className="p-4 bg-black/40 border border-white/10 rounded-xl">
-                <h4 className="text-sm font-bold text-cyan-300 mb-2">JSON Payload:</h4>
-                <pre className="text-xs text-slate-300 font-mono overflow-x-auto">
-                  {JSON.stringify(simulationData.gatheredInfo, null, 2)}
-                </pre>
-              </div>
+            <div ref={messagesEndRef} />
+          </div>
 
-              {/* Automation Status */}
-              <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30 rounded-xl">
-                <h4 className="text-sm font-bold text-emerald-300 mb-2">Automation Status:</h4>
-                <div className="flex items-center gap-2 text-sm text-emerald-200">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span>Webhook would have fired with this data</span>
+          {/* Simulation Result Card with Better Design */}
+          {showSimulationResult && simulationData && (
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl mx-6 mb-6 shadow-lg">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
+                  <CheckCircle className="h-5 w-5 text-white" />
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
-                  In live mode, this data would be sent to your configured integrations and notification email.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Submission Success Card - HIDDEN (using new celebratory completion state below instead) */}
-        {submissionComplete && simulatorMode && (
-          <div className="w-full p-8 bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-2xl">
-            <div className="flex flex-col items-center text-center space-y-4">
-              {/* Success Icon */}
-              <div className="p-4 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full shadow-lg animate-in zoom-in duration-300">
-                <CheckCircle className="h-12 w-12 text-white" />
+                <h3 className="text-lg font-bold text-slate-900">Test Complete</h3>
               </div>
 
-              {/* Success Message */}
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-white">
-                  ✅ Test Drive Complete!
-                </h3>
-                <p className="text-base text-emerald-100 max-w-md mx-auto">
-                  Check out the simulation results above to see what data was collected.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+              <div className="space-y-4">
+                <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                  <h4 className="text-sm font-bold text-slate-900 mb-4">Collected Information:</h4>
+                  <div className="space-y-2">
+                    {Object.entries(simulationData.gatheredInfo).map(([key, value]) => (
+                      <div key={key} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200/60">
+                        <span className="text-xs font-semibold text-slate-600 min-w-[120px] uppercase tracking-wide">{key}:</span>
+                        <span className="text-sm text-slate-900 flex-1 font-medium">{String(value)}</span>
+                      </div>
+                    ))}
+                    {simulationData.uploadedFiles?.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <span className="text-xs font-bold text-slate-600 mb-3 block uppercase tracking-wide">Uploaded Files:</span>
+                        {simulationData.uploadedFiles.map((file: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200/60 mb-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <span className="text-sm text-slate-900 font-medium">{file.filename}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-      {/* Input - Minimalist Messaging Style */}
-      {conversationState.phase !== 'completed' && (
-        <div className="relative p-6 border-t border-white/5 bg-transparent">
-          {/* Processing Overlay */}
-          {isSubmitting && (
-            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
-                <p className="text-sm font-light text-white">Processing...</p>
+                <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                  <h4 className="text-sm font-bold text-slate-900 mb-3">JSON Payload:</h4>
+                  <pre className="text-xs text-slate-700 font-mono overflow-x-auto bg-slate-900 text-slate-100 p-4 rounded-lg border border-slate-700 shadow-inner">
+                    {JSON.stringify(simulationData.gatheredInfo, null, 2)}
+                  </pre>
+                </div>
               </div>
             </div>
           )}
-
-          <div className="flex items-center gap-3">
-            {/* File Upload - Minimal */}
-            <div className="relative">
-              <input
-                type="file"
-                accept="image/*,.pdf,.doc,.docx,.txt"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload-agentic"
-                disabled={loading || isUploading}
-              />
-              <label
-                htmlFor="file-upload-agentic"
-                className={`p-2 text-slate-400 hover:text-slate-300 transition-colors cursor-pointer inline-block ${
-                  loading || isUploading ? 'opacity-30 cursor-not-allowed' : ''
-                }`}
-              >
-                {isUploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Paperclip className="h-5 w-5" />
-                )}
-              </label>
-            </div>
-
-            {/* Transparent Input */}
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Message..."
-              disabled={loading}
-              className="flex-1 bg-transparent border-0 border-b border-white/10 rounded-none text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 text-[15px] font-light"
-            />
-
-            {/* Ghost Reset Button */}
-            <button
-              onClick={resetConversation}
-              disabled={loading || messages.length === 0}
-              className="p-2 text-slate-600 hover:text-slate-400 transition-colors disabled:opacity-20"
-              title="Reset conversation"
-              type="button"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-
-            {/* Send Button - Minimal */}
-            <Button
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              size="icon"
-              className="bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-30 h-9 w-9"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Subtle Branding */}
-          <div className="text-center pt-4">
-            <p className="text-[9px] text-slate-600 font-light tracking-widest">
-              POWERED BY INTAKEOS
-            </p>
-          </div>
         </div>
-      )}
 
-          {/* Floating Success Overlay - Cinematic */}
-          {conversationState.phase === 'completed' && (
-            <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-700">
-              <div className="bg-slate-900/90 border border-emerald-500/20 rounded-3xl p-12 max-w-md shadow-2xl shadow-emerald-500/10 animate-in zoom-in duration-700">
-                <div className="flex flex-col items-center text-center space-y-6">
-                  {/* Large Floating CheckCircle Icon */}
-                  <div className="relative animate-float">
-                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
-                    <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full">
-                      <CheckCircle className="h-20 w-20 text-white" />
-                    </div>
-                  </div>
+        {/* Input Area with Elegant Design */}
+        {conversationState.phase !== 'completed' && (
+          <div className="relative border-t border-slate-200/60 bg-gradient-to-r from-white via-slate-50/50 to-white p-5">
+            {/* Processing Overlay */}
+            {isSubmitting && (
+              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-center rounded-b-lg">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
+                  <p className="text-sm font-medium text-slate-600">Processing...</p>
+                </div>
+              </div>
+            )}
 
-                  {/* Success Message */}
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-semibold text-white tracking-tight">
-                      Intake Finalized
-                    </h3>
-                    <p className="text-sm text-slate-400 font-light leading-relaxed">
-                      {effectiveBusinessName} has received your details and will be in touch shortly.
-                    </p>
+            <div className="flex items-center gap-3">
+              {/* File Upload */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload-agentic"
+                  disabled={loading || isUploading}
+                />
+                <label
+                  htmlFor="file-upload-agentic"
+                  className={`p-2.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 cursor-pointer inline-block transition-all ${
+                    loading || isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-5 w-5" />
+                  )}
+                </label>
+              </div>
+
+              {/* Input with Better Styling */}
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                disabled={loading}
+                className="flex-1 bg-white border-2 border-slate-200 rounded-xl px-5 py-3 text-[15px] placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
+              />
+
+              {/* Reset Button */}
+              {messages.length > 0 && (
+                <button
+                  onClick={resetConversation}
+                  disabled={loading}
+                  className="p-2.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all disabled:opacity-50"
+                  title="Reset conversation"
+                  type="button"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              )}
+
+              {/* Send Button with Gradient */}
+              <Button
+                onClick={handleSend}
+                disabled={loading || !input.trim()}
+                size="default"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none transition-all font-medium"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Success Overlay with Beautiful Design */}
+        {conversationState.phase === 'completed' && (
+          <div className="absolute inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-white/95 via-slate-50/95 to-white/95 backdrop-blur-sm">
+            <div className="bg-white border-2 border-green-200 rounded-2xl p-10 max-w-md shadow-2xl shadow-green-500/10">
+              <div className="flex flex-col items-center text-center space-y-5">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-green-400 rounded-full blur-xl opacity-30 animate-pulse" />
+                  <div className="relative p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-lg">
+                    <CheckCircle className="h-10 w-10 text-white" />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    Thank You!
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {effectiveBusinessName} has received your information and will be in touch soon.
+                  </p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -13,7 +13,7 @@ export default async function ChatPage({
   const { mode } = await searchParams;
   const isWidget = mode === 'widget';
 
-  // Fetch bot by slug
+  // Fetch bot by slug (using anon key - bots table has public read policy)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -30,31 +30,57 @@ export default async function ChatPage({
     notFound();
   }
 
-  // Fetch business profile for this bot's owner
-  const { data: businessProfile } = await supabase
-    .from('business_profiles')
-    .select('business_name, business_type')
-    .eq('user_id', bot.user_id)
-    .single();
+  // Fetch business profile using service role key to bypass RLS
+  // This is safe because business_name is public information that should be displayed
+  const supabaseService = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
 
-  // Use business name if available, fallback to bot name
-  const displayName = businessProfile?.business_name || bot.name;
+  const { data: businessProfile, error: profileError } = await supabaseService
+    .from('business_profiles')
+    .select('business_name')
+    .eq('user_id', bot.user_id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Error fetching business profile:', profileError);
+  }
+
+  // Use business name from profile - this should always exist since profile is required
+  // If not found, something is wrong - log it but provide a fallback for display
+  const displayName = businessProfile?.business_name;
+
+  if (!displayName) {
+    console.error('⚠️ Business profile not found for bot owner:', bot.user_id, 'Bot:', bot.id);
+    console.error('Profile error:', profileError);
+  }
+
+  // Ensure we have a string value (fallback should rarely be needed)
+  const finalDisplayName = displayName || 'Business';
 
   return (
-    <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50'}`}>
+    <div className={`min-h-screen ${isWidget ? 'bg-transparent' : 'bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50'}`}>
       {/* Header - Only show if NOT a widget */}
       {!isWidget && (
-        <header className="border-b border-indigo-200/50 bg-white/80 backdrop-blur-lg shadow-sm">
-          <div className="container mx-auto px-4 py-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">{displayName}</h1>
-            <p className="text-sm text-slate-500">AI-Powered Consultation</p>
+        <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm shadow-sm">
+          <div className="container mx-auto px-4 py-5">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+              {finalDisplayName}
+            </h1>
           </div>
         </header>
       )}
 
       {/* Chat Interface - Remove padding if widget to use full iframe space */}
       <main className={isWidget ? 'p-0 h-screen' : 'container mx-auto px-4 py-8 max-w-3xl'}>
-        <ChatInterfaceWrapper bot={bot} businessName={displayName} />
+        <ChatInterfaceWrapper bot={bot} businessName={finalDisplayName} />
       </main>
     </div>
   );
