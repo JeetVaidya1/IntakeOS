@@ -124,7 +124,7 @@ export interface AgentResponse {
  * Type guard to check if a bot schema is agentic
  */
 export function isAgenticSchema(schema: any): schema is AgenticBotSchema {
-  return (
+  return !!(
     schema &&
     typeof schema === 'object' &&
     !Array.isArray(schema) &&
