@@ -5,34 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import type { AgenticBotSchema, BotDisplayMode } from '@/types/agentic';
+import { CheckCircle } from 'lucide-react';
+import type { AgenticBotSchema } from '@/types/agentic';
 
 type BotType = {
   id: string;
   name: string;
   schema: AgenticBotSchema;
   user_id: string;
-  display_mode?: BotDisplayMode;
 };
 
 interface StandardFormProps {
   bot: BotType;
   businessName: string;
-  mode: BotDisplayMode;
-  onSubmit?: (formData: Record<string, string>) => void;
-  onHybridActivate?: (formData: Record<string, string>) => void;
 }
 
 export function StandardForm({ 
   bot, 
-  businessName, 
-  mode, 
-  onSubmit,
-  onHybridActivate 
+  businessName
 }: StandardFormProps) {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionComplete, setSubmissionComplete] = useState(false);
 
   const requiredInfo = bot.schema.required_info;
   const fields = Object.entries(requiredInfo);
@@ -95,16 +90,27 @@ export function StandardForm({
     setIsSubmitting(true);
 
     try {
-      if (mode === 'hybrid' && onHybridActivate) {
-        // Hybrid mode: activate chat with form data
-        onHybridActivate(formData);
-      } else if (mode === 'form' && onSubmit) {
-        // Form mode: submit directly
-        await onSubmit(formData);
+      const response = await fetch('/api/submit-intake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          botId: bot.id,
+          data: formData,
+          conversation: [],
+          uploadedFiles: [],
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSubmissionComplete(true);
+      } else {
+        throw new Error(result.error || 'Submission failed');
       }
     } catch (error) {
       console.error('Form submission error:', error);
-      // Error handling can be added here
+      alert('Failed to submit form. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,6 +130,27 @@ export function StandardForm({
   const getPlaceholder = (info: { example?: string; description: string }) => {
     return info.example || info.description || '';
   };
+
+  // Show thank you message after successful submission
+  if (submissionComplete) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+              <CheckCircle className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            Thank You!
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            Your submission has been received. We'll be in touch soon.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-4xl mx-auto p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg">
@@ -175,20 +202,13 @@ export function StandardForm({
             {isSubmitting ? (
               <>
                 <span className="animate-spin mr-2">⏳</span>
-                {mode === 'hybrid' ? 'Starting conversation...' : 'Submitting...'}
+                Submitting...
               </>
             ) : (
-              mode === 'hybrid' ? 'Continue with AI Assistant' : 'Submit'
+              'Submit'
             )}
           </Button>
         </div>
-
-        {/* Helper Text */}
-        {mode === 'hybrid' && (
-          <p className="text-xs text-center text-slate-500 dark:text-slate-400 pt-2">
-            After submitting, you'll be connected with our AI assistant for a personalized consultation.
-          </p>
-        )}
       </form>
     </Card>
   );

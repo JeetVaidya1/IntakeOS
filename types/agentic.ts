@@ -158,7 +158,7 @@ export function isLegacySchema(schema: any): schema is LegacyFieldSchema[] {
 /**
  * Bot Display Mode - Controls how the bot interface is presented
  */
-export type BotDisplayMode = 'chat' | 'form' | 'hybrid';
+export type BotDisplayMode = 'chat' | 'form';
 
 /**
  * Bot Interface - Represents a bot configuration
