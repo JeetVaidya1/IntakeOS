@@ -1,17 +1,21 @@
 'use client';
 
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Send, Paperclip, Sparkles, Loader2, CheckCircle, FileText, RotateCcw, Check } from 'lucide-react';
 import type { AgenticBotSchema } from '@/types/agentic';
 import { useAgentChat } from '@/hooks/useAgentChat';
+import { StandardForm } from './components/StandardForm';
 
 type BotType = {
   id: string;
   name: string;
   schema: AgenticBotSchema;
   user_id: string;
+  display_mode?: 'chat' | 'form' | 'hybrid';
 };
 
 export function ChatInterfaceAgentic({
@@ -38,7 +42,12 @@ export function ChatInterfaceAgentic({
     messagesEndRef,
     showSimulationResult,
     simulationData,
+    isChatActive,
+    activateChat,
+    displayMode,
   } = useAgentChat({ bot, businessName, simulatorMode });
+
+  const [formSubmissionComplete, setFormSubmissionComplete] = useState(false);
 
   // Calculate progress based on gathered vs missing info (UI calculation)
   const totalInfo = Object.keys(bot.schema.required_info).length;
@@ -55,7 +64,87 @@ export function ChatInterfaceAgentic({
     }
   };
 
+  // Handle form submission (for 'form' mode)
+  const handleFormSubmit = async (formData: Record<string, string>) => {
+    try {
+      const response = await fetch('/api/submit-intake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          botId: bot.id,
+          data: formData,
+          conversation: [],
+          uploadedFiles: [],
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setFormSubmissionComplete(true);
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      alert('Failed to submit form. Please try again.');
+    }
+  };
+
+  // Handle hybrid mode activation
+  const handleHybridActivate = (formData: Record<string, string>) => {
+    activateChat(formData);
+  };
+
+  // Render form mode completion
+  if (displayMode === 'form' && formSubmissionComplete) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+              <CheckCircle className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+            Thank You!
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            Your submission has been received. We'll be in touch soon.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Render form or chat interface with smooth transitions
   return (
+    <AnimatePresence mode="wait">
+      {!isChatActive && (displayMode === 'form' || displayMode === 'hybrid') ? (
+        <motion.div
+          key="form"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+        >
+          <StandardForm
+            bot={bot}
+            businessName={effectiveBusinessName}
+            mode={displayMode}
+            onSubmit={handleFormSubmit}
+            onHybridActivate={handleHybridActivate}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="chat"
+          initial={{ opacity: 0, x: 20, scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="relative w-full max-w-4xl mx-auto"
+        >
     <div className="relative w-full max-w-4xl mx-auto">
       {/* Background with subtle grid pattern */}
       <div className="absolute inset-0 bg-slate-950 rounded-3xl opacity-5">
@@ -312,7 +401,7 @@ export function ChatInterfaceAgentic({
 
             {/* Ghost Reset Button */}
             <button
-              onClick={handleResetConversation}
+              onClick={resetConversation}
               disabled={loading || messages.length === 0}
               className="p-2 text-slate-600 hover:text-slate-400 transition-colors disabled:opacity-20"
               title="Reset conversation"
@@ -368,6 +457,7 @@ export function ChatInterfaceAgentic({
         </div>
       )}
       </Card>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

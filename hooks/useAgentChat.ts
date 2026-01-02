@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { uploadFile } from '@/lib/supabase';
-import type { AgenticBotSchema, ConversationState, UploadedFile } from '@/types/agentic';
+import type { AgenticBotSchema, ConversationState, UploadedFile, BotDisplayMode } from '@/types/agentic';
 
 type Message = {
   role: 'bot' | 'user';
@@ -12,6 +12,7 @@ type BotType = {
   name: string;
   schema: AgenticBotSchema;
   user_id: string;
+  display_mode?: BotDisplayMode;
 };
 
 export function useAgentChat({
@@ -24,6 +25,7 @@ export function useAgentChat({
   simulatorMode?: boolean;
 }) {
   const storageKey = `intakeOS_agentic_chat_${bot.id}_${simulatorMode ? 'simulator' : 'live'}`;
+  const displayMode = bot.display_mode || 'chat';
 
   // Initial conversation state
   const initialState: ConversationState = {
@@ -38,6 +40,8 @@ export function useAgentChat({
 
   const defaultMessages: Message[] = [];
 
+  // isChatActive: true for 'chat' mode, false for 'form' or 'hybrid' (until activated)
+  const [isChatActive, setIsChatActive] = useState<boolean>(displayMode === 'chat');
   const [messages, setMessages] = useState<Message[]>(defaultMessages);
   const [conversationState, setConversationState] = useState<ConversationState>(initialState);
   const [input, setInput] = useState('');
@@ -137,16 +141,17 @@ export function useAgentChat({
     }
   }, [bot.schema, bot.user_id, businessName, initialState]);
 
-  // Initial message - start the conversation
+  // Initial message - start the conversation (only if chat is active)
   useEffect(() => {
     if (!isHydrated) return;
+    if (!isChatActive) return; // Don't start if form mode
     if (messages.length > 0) return; // Already started
     if (loading) return; // Avoid double-triggering
 
     // Kick off the conversation by calling the agent
     initiateConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHydrated]);
+  }, [isHydrated, isChatActive]);
 
   const handleSubmit = useCallback(async (
     gatheredInfo: Record<string, string>,
@@ -362,12 +367,73 @@ export function useAgentChat({
       setConversationState(initialState);
       setInput('');
 
-      // Re-initiate conversation
-      setTimeout(() => {
-        initiateConversation();
-      }, 100);
+      // Reset chat active state based on display mode
+      setIsChatActive(displayMode === 'chat');
+
+      // Re-initiate conversation if chat is active
+      if (displayMode === 'chat') {
+        setTimeout(() => {
+          initiateConversation();
+        }, 100);
+      }
     }
-  }, [storageKey, initialState, initiateConversation]);
+  }, [storageKey, initialState, initiateConversation, displayMode]);
+
+  /**
+   * Activate chat mode and inject form data into conversation context
+   * This is called when user submits form in hybrid mode
+   */
+  const activateChat = useCallback(async (formData: Record<string, string>) => {
+    setIsChatActive(true);
+
+    // Create initial state with form data pre-filled
+    const stateWithFormData: ConversationState = {
+      gathered_information: formData,
+      // Calculate missing info by checking what's not in formData
+      missing_info: Object.keys(bot.schema.required_info).filter(
+        key => !formData[key] || formData[key].trim() === ''
+      ),
+      phase: 'collecting',
+      current_topic: undefined,
+      last_user_message: undefined,
+      uploaded_files: [],
+      uploaded_documents: [],
+    };
+
+    setConversationState(stateWithFormData);
+    setLoading(true);
+
+    try {
+      // Start conversation with agent, providing the form data in context
+      const response = await fetch('/api/chat/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [], // Empty - agent will see the gathered_information and respond accordingly
+          currentState: stateWithFormData,
+          botSchema: bot.schema,
+          businessName,
+          botUserId: bot.user_id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.reply) {
+        setMessages([{ role: 'bot', content: data.reply }]);
+        setConversationState(data.updated_state);
+      }
+    } catch (error) {
+      console.error('Failed to activate chat:', error);
+      // Fallback message
+      setMessages([{
+        role: 'bot',
+        content: `Thanks! I see you've provided some information. How can I help you further?`
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [bot.schema, bot.user_id, businessName]);
 
   return {
     messages,
@@ -384,6 +450,9 @@ export function useAgentChat({
     messagesEndRef,
     showSimulationResult,
     simulationData,
+    isChatActive,
+    activateChat,
+    displayMode,
   };
 }
 

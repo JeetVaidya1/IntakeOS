@@ -154,3 +154,19 @@ export interface LegacyFieldSchema {
 export function isLegacySchema(schema: any): schema is LegacyFieldSchema[] {
   return Array.isArray(schema);
 }
+
+/**
+ * Bot Display Mode - Controls how the bot interface is presented
+ */
+export type BotDisplayMode = 'chat' | 'form' | 'hybrid';
+
+/**
+ * Bot Interface - Represents a bot configuration
+ */
+export interface Bot {
+  id: string;
+  name: string;
+  schema: AgenticBotSchema | LegacyFieldSchema[];
+  user_id: string;
+  display_mode?: BotDisplayMode; // Optional for backward compatibility, defaults to 'chat'
+}
