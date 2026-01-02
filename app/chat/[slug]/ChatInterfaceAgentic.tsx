@@ -145,18 +145,17 @@ export function ChatInterfaceAgentic({
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="relative w-full max-w-4xl mx-auto"
         >
-    <div className="relative w-full max-w-4xl mx-auto">
-      {/* Background with subtle grid pattern */}
-      <div className="absolute inset-0 bg-slate-950 rounded-3xl opacity-5">
-        <div className="bg-grid-pattern w-full h-full" />
-      </div>
+          {/* Background with subtle grid pattern */}
+          <div className="absolute inset-0 bg-slate-950 rounded-3xl opacity-5">
+            <div className="bg-grid-pattern w-full h-full" />
+          </div>
 
-      {/* Aurora orbs for depth - very subtle */}
-      <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.08 }} />
-      <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.05 }} />
-      <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.06 }} />
+          {/* Aurora orbs for depth - very subtle */}
+          <div className="aurora-orb aurora-orb-1" style={{ opacity: 0.08 }} />
+          <div className="aurora-orb aurora-orb-2" style={{ opacity: 0.05 }} />
+          <div className="aurora-orb aurora-orb-3" style={{ opacity: 0.06 }} />
 
-      <Card className="relative w-full h-[700px] flex flex-col shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/5 bg-slate-950/90 backdrop-blur-xl overflow-hidden">
+          <Card className="relative w-full h-[700px] flex flex-col shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] border border-white/5 bg-slate-950/90 backdrop-blur-xl overflow-hidden">
 
         {/* Ultra-thin progress line at very top */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-slate-900">
@@ -430,34 +429,35 @@ export function ChatInterfaceAgentic({
         </div>
       )}
 
-      {/* Floating Success Overlay - Cinematic */}
-      {conversationState.phase === 'completed' && (
-        <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-700">
-          <div className="bg-slate-900/90 border border-emerald-500/20 rounded-3xl p-12 max-w-md shadow-2xl shadow-emerald-500/10 animate-in zoom-in duration-700">
-            <div className="flex flex-col items-center text-center space-y-6">
-              {/* Large Floating CheckCircle Icon */}
-              <div className="relative animate-float">
-                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
-                <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full">
-                  <CheckCircle className="h-20 w-20 text-white" />
+          {/* Floating Success Overlay - Cinematic */}
+          {conversationState.phase === 'completed' && (
+            <div className="absolute inset-0 flex items-center justify-center z-50 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-700">
+              <div className="bg-slate-900/90 border border-emerald-500/20 rounded-3xl p-12 max-w-md shadow-2xl shadow-emerald-500/10 animate-in zoom-in duration-700">
+                <div className="flex flex-col items-center text-center space-y-6">
+                  {/* Large Floating CheckCircle Icon */}
+                  <div className="relative animate-float">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
+                    <div className="relative p-6 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full">
+                      <CheckCircle className="h-20 w-20 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Success Message */}
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-semibold text-white tracking-tight">
+                      Intake Finalized
+                    </h3>
+                    <p className="text-sm text-slate-400 font-light leading-relaxed">
+                      {effectiveBusinessName} has received your details and will be in touch shortly.
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              {/* Success Message */}
-              <div className="space-y-3">
-                <h3 className="text-2xl font-semibold text-white tracking-tight">
-                  Intake Finalized
-                </h3>
-                <p className="text-sm text-slate-400 font-light leading-relaxed">
-                  {effectiveBusinessName} has received your details and will be in touch shortly.
-                </p>
-              </div>
             </div>
-          </div>
-        </div>
+          )}
+          </Card>
+        </motion.div>
       )}
-      </Card>
-      </motion.div>
     </AnimatePresence>
   );
 }
