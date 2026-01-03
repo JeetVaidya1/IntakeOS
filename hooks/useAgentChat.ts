@@ -44,6 +44,7 @@ export function useAgentChat({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<UploadedFile[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [showSimulationResult, setShowSimulationResult] = useState(false);
   const [simulationData, setSimulationData] = useState<any>(null);
@@ -209,14 +210,54 @@ export function useAgentChat({
   }, [simulatorMode, bot.id, bot.name, storageKey]);
 
   const handleSend = useCallback(async () => {
-    if (!input.trim() || loading) return;
-
     const userMessage = input.trim();
-    setInput('');
+    const hasFiles = pendingFiles.length > 0;
+    
+    // Don't send if there's no message and no files
+    if (!userMessage && !hasFiles) return;
+    if (loading) return;
 
-    // Add user message to chat
-    const newMessages = [...messages, { role: 'user' as const, content: userMessage }];
+    setInput('');
+    
+    // Build message content - combine text and files
+    const fileMessages: string[] = [];
+    
+    pendingFiles.forEach(file => {
+      const isImage = file.type.startsWith('image/');
+      const isDocument = file.type.includes('pdf') ||
+                         file.type.includes('msword') ||
+                         file.type.includes('wordprocessingml') ||
+                         file.filename.toLowerCase().endsWith('.pdf') ||
+                         file.filename.toLowerCase().endsWith('.docx') ||
+                         file.filename.toLowerCase().endsWith('.doc') ||
+                         file.filename.toLowerCase().endsWith('.txt');
+      
+      if (isDocument) {
+        fileMessages.push(`[DOCUMENT] ${file.url} | ${file.filename}`);
+      } else if (isImage) {
+        fileMessages.push(`[IMAGE] ${file.url}`);
+      } else {
+        fileMessages.push(`[FILE] ${file.url} | ${file.filename}`);
+      }
+    });
+    
+    // Combine text and file messages
+    const fullMessage = userMessage 
+      ? userMessage + (fileMessages.length > 0 ? '\n' + fileMessages.join('\n') : '')
+      : fileMessages.join('\n');
+
+    // Add user message(s) to chat
+    const newMessages = [...messages, { role: 'user' as const, content: fullMessage }];
     setMessages(newMessages);
+
+    // Update conversation state with file metadata
+    const updatedState = {
+      ...conversationState,
+      uploaded_files: [...(conversationState.uploaded_files || []), ...pendingFiles],
+    };
+
+    // Clear pending files
+    setPendingFiles([]);
 
     // Call the agent brain
     setLoading(true);
@@ -227,7 +268,7 @@ export function useAgentChat({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: newMessages,
-          currentState: conversationState,
+          currentState: updatedState,
           botSchema: bot.schema,
           businessName,
           botUserId: bot.user_id,
@@ -263,11 +304,11 @@ export function useAgentChat({
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, conversationState, bot.schema, bot.user_id, businessName, handleSubmit]);
+  }, [input, pendingFiles, loading, messages, conversationState, bot.schema, bot.user_id, businessName, handleSubmit]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || loading) return;
+    if (!file || loading || isUploading) return;
 
     setIsUploading(true);
 
@@ -279,16 +320,6 @@ export function useAgentChat({
         throw new Error('Failed to upload file');
       }
 
-      // Determine if it's an image or document
-      const isImage = file.type.startsWith('image/');
-      const isDocument = file.type.includes('pdf') ||
-                         file.type.includes('msword') ||
-                         file.type.includes('wordprocessingml') ||
-                         file.name.toLowerCase().endsWith('.pdf') ||
-                         file.name.toLowerCase().endsWith('.docx') ||
-                         file.name.toLowerCase().endsWith('.doc') ||
-                         file.name.toLowerCase().endsWith('.txt');
-
       // Create file metadata
       const fileMetadata: UploadedFile = {
         url: publicUrl,
@@ -297,61 +328,24 @@ export function useAgentChat({
         uploaded_at: new Date().toISOString(),
       };
 
-      // Add appropriate message
-      let fileMessage: string;
-      if (isDocument) {
-        fileMessage = `[DOCUMENT] ${publicUrl} | ${file.name}`;
-      } else if (isImage) {
-        fileMessage = `[IMAGE] ${publicUrl}`;
-      } else {
-        fileMessage = `[FILE] ${publicUrl} | ${file.name}`;
-      }
-
-      const newMessages = [...messages, { role: 'user' as const, content: fileMessage }];
-      setMessages(newMessages);
-
-      // Update conversation state with file metadata
-      const updatedState = {
-        ...conversationState,
-        uploaded_files: [...(conversationState.uploaded_files || []), fileMetadata],
-      };
-
-      // Call agent to analyze and respond
-      setLoading(true);
-
-      const response = await fetch('/api/chat/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages,
-          currentState: updatedState,
-          botSchema: bot.schema,
-          businessName,
-          botUserId: bot.user_id,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.reply) {
-        setMessages(prev => [...prev, { role: 'bot', content: data.reply }]);
-        setConversationState(data.updated_state);
-      }
+      // Add to pending files instead of sending immediately
+      setPendingFiles(prev => [...prev, fileMetadata]);
 
     } catch (error) {
       console.error('File upload error:', error);
-      setMessages(prev => [...prev, {
-        role: 'bot',
-        content: "I had trouble processing that file. Could you try uploading it again?"
-      }]);
+      // Could show a toast or error message here
     } finally {
       setIsUploading(false);
-      setLoading(false);
-
       // Reset file input
-      e.target.value = '';
+      if (e.target) {
+        e.target.value = '';
+      }
     }
-  }, [loading, messages, conversationState, bot.schema, bot.user_id, businessName]);
+  }, [loading, isUploading]);
+
+  const removePendingFile = useCallback((index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   const resetConversation = useCallback(() => {
     if (confirm('Are you sure you want to reset the conversation? All progress will be lost.')) {
@@ -362,6 +356,7 @@ export function useAgentChat({
       setMessages([]);
       setConversationState(initialState);
       setInput('');
+      setPendingFiles([]);
 
       // Re-initiate conversation
       setTimeout(() => {
@@ -376,6 +371,8 @@ export function useAgentChat({
     setInput,
     handleSend,
     handleFileUpload,
+    removePendingFile,
+    pendingFiles,
     loading,
     isUploading,
     conversationState,

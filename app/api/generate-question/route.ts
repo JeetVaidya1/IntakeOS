@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // 3. Generate the response
     const completion = await openai.chat.completions.create({
-      model: 'gpt5-nano',
+      model: 'gpt-5-nano',
       messages: [
         {
           role: 'system',
@@ -143,7 +143,6 @@ Now generate your next message:`,
           content: userContent,
         },
       ],
-      temperature: 0.9, // Higher temp for more creative, consultative responses
     });
 
     const question = completion.choices[0].message.content;

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     // Use GPT-5 Vision to analyze the image
     const completion = await openai.chat.completions.create({
-      model: 'gpt5-nano',
+      model: 'gpt-5-nano',
       messages: [
         {
           role: 'system',
@@ -62,7 +62,6 @@ Be brief (2-3 sentences max) but insightful.`,
           ]
         },
       ],
-      temperature: 0.7,
     });
 
     const analysis = completion.choices[0].message.content;

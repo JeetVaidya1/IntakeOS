@@ -39,13 +39,12 @@ Analyze this submission and return ONLY a valid JSON object (no markdown, no cod
 Return only the JSON object.`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt5-nano',
+      model: 'gpt-5-nano',
       messages: [
         { role: 'system', content: 'You are a professional sales assistant. Always respond with valid JSON only.' },
         { role: 'user', content: aiPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 500,
+      max_completion_tokens: 500,
     });
 
     const aiResponse = completion.choices[0].message.content?.trim();

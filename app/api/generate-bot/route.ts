@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     const systemPrompt = buildBotGenerationPrompt(businessProfile);
     
     const completion = await openai.chat.completions.create({
-      model: 'gpt5-nano', // Using nano model for bot generation
+      model: 'gpt-5-mini',
       messages: [
         {
           role: 'system',
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
           content: description,
         },
       ],
-      temperature: 0.4,
+      reasoning_effort: 'medium',
       response_format: { type: "json_object" },
     });
 

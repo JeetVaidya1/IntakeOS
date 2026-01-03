@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Paperclip, Loader2, CheckCircle, FileText, RotateCcw } from 'lucide-react';
+import { Send, Paperclip, Loader2, CheckCircle, FileText, RotateCcw, X } from 'lucide-react';
 import type { AgenticBotSchema, BotDisplayMode } from '@/types/agentic';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { StandardForm } from './components/StandardForm';
@@ -56,6 +56,8 @@ function ChatInterfaceContent({
     setInput,
     handleSend,
     handleFileUpload,
+    removePendingFile,
+    pendingFiles,
     loading,
     isUploading,
     conversationState,
@@ -258,6 +260,28 @@ function ChatInterfaceContent({
               </div>
             )}
 
+            {/* Pending Files Preview */}
+            {pendingFiles.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {pendingFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-800/80 border border-indigo-500/30 rounded-lg"
+                  >
+                    <FileText className="h-4 w-4 text-cyan-400" />
+                    <span className="text-sm text-slate-200">{file.filename}</span>
+                    <button
+                      onClick={() => removePendingFile(index)}
+                      className="p-1 hover:bg-slate-700 rounded transition-colors"
+                      type="button"
+                    >
+                      <X className="h-3 w-3 text-slate-400 hover:text-red-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
               {/* File Upload */}
               <div className="relative">
@@ -309,7 +333,7 @@ function ChatInterfaceContent({
               {/* Send Button with IntakeOS Brand Gradient */}
               <Button
                 onClick={handleSend}
-                disabled={loading || !input.trim()}
+                disabled={loading || (!input.trim() && pendingFiles.length === 0)}
                 size="default"
                 className="bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 hover:from-indigo-600 hover:via-purple-600 hover:to-cyan-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/50 disabled:opacity-50 disabled:shadow-none transition-all font-medium"
               >

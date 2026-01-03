@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       try {
         // Use GPT-4 Vision to analyze the image
         const visionCompletion = await openai.chat.completions.create({
-          model: 'gpt5-nano',
+          model: 'gpt-5-nano',
           messages: [
             {
               role: 'system',
@@ -108,8 +108,7 @@ Be accurate and specific. If the user said it's "blinds", describe BLINDS. If th
               ]
             }
           ],
-          temperature: 0.3, // Lower temperature for more accurate descriptions
-          max_tokens: 300
+          max_completion_tokens: 300
         });
 
         imageAnalysis = visionCompletion.choices[0].message.content || '';
@@ -204,7 +203,7 @@ If the user asks questions about any previously uploaded document, you can answe
 
     // Call OpenAI to make the agent decision
     const completion = await openai.chat.completions.create({
-      model: 'gpt5-nano', // Using nano model - prompt optimized for better instruction following
+      model: 'gpt-5-nano', // Using nano model - prompt optimized for better instruction following
       messages: [
         {
           role: 'system',
@@ -255,7 +254,7 @@ If the user asks questions about any previously uploaded document, you can answe
 What should I reply, and what information can I extract? Return your response as JSON.`,
         },
       ],
-      temperature: 0.5, // Lower temperature for more consistent instruction following with mini model
+      reasoning_effort: 'low',
       response_format: { type: "json_object" },
     });
 
