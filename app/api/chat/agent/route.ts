@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       try {
         // Use GPT-4 Vision to analyze the image
         const visionCompletion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: 'gpt5-nano',
           messages: [
             {
               role: 'system',
@@ -204,7 +204,7 @@ If the user asks questions about any previously uploaded document, you can answe
 
     // Call OpenAI to make the agent decision
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Using mini model - prompt optimized for better instruction following
+      model: 'gpt5-nano', // Using nano model - prompt optimized for better instruction following
       messages: [
         {
           role: 'system',

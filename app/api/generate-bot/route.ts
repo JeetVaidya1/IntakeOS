@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     const systemPrompt = buildBotGenerationPrompt(businessProfile);
     
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o', // Using gpt-4o for highest reasoning - this is the Architect phase
+      model: 'gpt5-nano', // Using nano model for bot generation
       messages: [
         {
           role: 'system',

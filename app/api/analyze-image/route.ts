@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     // Use GPT-5 Vision to analyze the image
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt5-nano',
       messages: [
         {
           role: 'system',
