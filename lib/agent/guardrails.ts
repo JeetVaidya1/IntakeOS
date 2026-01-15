@@ -76,7 +76,10 @@ export function enforceGuardrails(
   }
 
   // Guardrail 2: HARD CONFIRMATION GATE - Force confirmation list before completion
-  if (parsed.updated_phase === 'completed') {
+  // BUT: Skip this for service mismatches (they should exit immediately)
+  const isServiceMismatch = (parsed as any).service_mismatch === true;
+  
+  if (parsed.updated_phase === 'completed' && !isServiceMismatch) {
     // Get the last bot message
     const botMessages = messages.filter(m => m.role === 'bot');
     const lastBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].content : '';
@@ -105,6 +108,8 @@ export function enforceGuardrails(
       parsed.updated_phase = 'confirmation';
       console.log('✅ Generated confirmation list with', Object.keys(tempGatheredInfo).length, 'fields');
     }
+  } else if (isServiceMismatch) {
+    console.log('✅ SERVICE MISMATCH: Allowing immediate completion without confirmation');
   }
 
   // Recalculate missing info after extraction (needed for enforcement rules)

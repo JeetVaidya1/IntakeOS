@@ -118,6 +118,9 @@ export interface AgentResponse {
 
   // Reasoning/debug info (optional, for development)
   reasoning?: string;
+
+  // Service mismatch flag - true if conversation ended due to service mismatch
+  service_mismatch?: boolean;
 }
 
 /**

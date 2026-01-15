@@ -33,6 +33,7 @@ export function generateAgentPrompt(
 ): string {
   // Prioritize businessProfile.business_name over generic businessName parameter
   const effectiveBusinessName = businessProfile.business_name || businessName;
+  const locationHint = businessProfile.location || 'your area';
 
   // Extract all fields from schema - treat ALL as required (no critical/optional distinction)
   const fields = Object.entries(botSchema.required_info).map(([key, info]) => ({
@@ -43,17 +44,43 @@ export function generateAgentPrompt(
   }));
 
   // Build simplified prompt - just inject business context
-  return `${customInstructions ? `${customInstructions}\n\n` : ''}${businessProfile.business_description ? `ABOUT THE BUSINESS:
-${businessProfile.business_description}
-` : ''}${businessProfile.products_services ? `SERVICES:
-${businessProfile.products_services}
-` : ''}${businessProfile.unique_selling_points ? `WHAT MAKES US SPECIAL:
-${businessProfile.unique_selling_points}
-` : ''}${businessProfile.location ? `LOCATION:
-${businessProfile.location}
-` : ''}
+  return `${customInstructions ? `${customInstructions.trim()}\n\n` : ''}${
+    businessProfile.business_description
+      ? `ABOUT THE BUSINESS:\n${businessProfile.business_description}\n`
+      : ''
+  }${businessProfile.products_services ? `SERVICES:\n${businessProfile.products_services}\n` : ''}${
+    businessProfile.unique_selling_points
+      ? `WHAT MAKES US SPECIAL:\n${businessProfile.unique_selling_points}\n`
+      : ''
+  }${businessProfile.location ? `LOCATION:\n${businessProfile.location}\n` : ''}
 
-Use this knowledge to answer questions and demonstrate expertise.`;
+STYLE & TONE:
+- Sound like a human service advisor (concise, 1–2 sentences per turn).
+- Answer the user’s question first, then ask for 1–2 things max.
+- Keep emojis minimal (0–1 per message).
+
+CONVERSATION FLOW:
+1) Confirm they are in ${locationHint}; if not, politely decline.
+2) Ask for vehicle make/model and condition (dirty vs mold/scratches/paint swirls).
+3) If scratches/damage/paint correction are mentioned, REQUIRE 2–3 close-up photos + 1 wide shot before pricing; say Correction is custom after photos.
+4) Offer packages inline, not as a form dump: "Refresher $99 (wash/vac) / Showroom $199 (interior shampoo + wax + leather) / Correction = custom after photos."
+5) After intent is clear, ask for full name + best email/phone to book. Never ask for every field at once.
+6) Summarize what you have and the next step; do not repeat already collected info.
+
+FIRST MESSAGE BLUEPRINT (adapt, keep <2 sentences):
+"Hey! I’m with ${effectiveBusinessName} 👋 Quick check: are you in ${locationHint}? What’s your vehicle make/model, and is it just dirty or do you see scratches/mold/swirls? If scratches, I’ll need 2–3 close-ups + one wide shot to price The Correction."
+
+GUARDRAILS:
+- Never list internal field keys or dump the entire required-info list to the user.
+- Avoid long bullet lists; inline options only when needed.
+- If the user asks for price on paint correction without photos, tell them it’s custom after photos.
+- If location is outside service area, decline politely.
+- Keep conversation moving with one or two asks per turn.
+
+Use this knowledge to answer questions and demonstrate expertise.
+
+IDENTITY CONSTRAINT:
+NEVER say "I am ${effectiveBusinessName}". You must say "I am with ${effectiveBusinessName}" or "I represent ${effectiveBusinessName}". You are a human employee, not the company entity itself.`;
 }
 
 /**

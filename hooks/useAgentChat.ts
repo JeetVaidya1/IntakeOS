@@ -287,12 +287,21 @@ export function useAgentChat({
 
       // Check if conversation is complete
       if (data.updated_state.phase === 'completed') {
-        // Submit the gathered information with uploaded files
-        await handleSubmit(
-          data.updated_state.gathered_information,
-          newMessages,
-          data.updated_state.uploaded_files || []
-        );
+        // Only submit if it's NOT a service mismatch
+        if (!data.service_mismatch) {
+          // Submit the gathered information with uploaded files
+          await handleSubmit(
+            data.updated_state.gathered_information,
+            newMessages,
+            data.updated_state.uploaded_files || []
+          );
+        } else {
+          // Service mismatch - just mark as complete, don't submit
+          console.log('🚫 Service mismatch - not submitting');
+          setSubmissionComplete(true);
+          setIsSubmitting(false);
+          setLoading(false);
+        }
       }
 
     } catch (error) {

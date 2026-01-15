@@ -201,85 +201,94 @@ If the user asks questions about any previously uploaded document, you can answe
       messages
     );
 
-    // Call OpenAI to make the agent decision
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-5-nano', // Using nano model - prompt optimized for better instruction following
-      messages: [
-        {
-          role: 'system',
-          content: agentSystemPrompt,
-        },
-        {
-          role: 'user',
-          content: `The user just said: "${messages[messages.length - 1]?.content || ''}"
-
-⚠️⚠️⚠️ CRITICAL REMINDERS - READ CAREFULLY ⚠️⚠️⚠️
-
-**BEFORE ASKING ANY QUESTION:**
-1. **CHECK CONVERSATION HISTORY FIRST**: Look at "RECENT CONVERSATION FLOW" - did the user already mention this information?
-   - If they said "I already gave you X" or "use that one" - they're right! Check conversation history and extract it
-   - If you see [IMAGE] in conversation history, they already uploaded a photo - don't ask again!
-   - If they mentioned address, email, phone, name earlier - extract it from conversation history!
-
-2. **AGGRESSIVE EXTRACTION**: Extract information from:
-   - Current user message
-   - Conversation history (if they mentioned it earlier, extract it now!)
-   - Image analysis (if image was uploaded)
-
-3. **NEVER ASK FOR ALREADY-PROVIDED INFO**:
-   - Check "INFORMATION ALREADY GATHERED" section - NEVER ask for those fields
-   - Check conversation history - if they mentioned it, extract it and don't ask again
-   - If user says "I already gave you X", acknowledge and use what they provided
-
-**CONVERSATION FLOW:**
-- **MAINTAIN CONTEXT**: Reference what was said earlier (check "RECENT CONVERSATION FLOW" section)
-- **BUILD ON PREVIOUS STATEMENTS**: Don't start fresh each time - show you're listening
-- **NATURAL TOPIC PROGRESSION**: Problem → Details → Images → Contact → Confirmation
-- **COMPLETE TOPICS**: Finish discussing the current topic before moving to the next one
-- Ask 1-2 questions MAX per response (contact info grouping is the only exception)
-- If user says they're doing something ("wait, I'll get a photo"), acknowledge and WAIT
-
-**IMAGE HANDLING:**
-- If you see "IMAGE ANALYSIS" section, the user just uploaded an image:
-  * USE the exact terminology from the analysis (if it says "blinds", say "blinds", not "awnings")
-  * EXTRACT information from the analysis (damage_description, severity, etc.)
-  * DESCRIBE what you see using specific details from the analysis
-  * Have a conversation about the image before asking for other information
-
-**EXTRACTION:**
-- If the user provided multiple pieces of information (e.g., name, email, phone), extract ALL of them at once
-- Only ask for fields listed under "INFORMATION STILL NEEDED"
-- Keep it natural - have a real conversation, not a checklist
-
-What should I reply, and what information can I extract? Return your response as JSON.`,
-        },
-      ],
-      reasoning_effort: 'low',
-      response_format: { type: "json_object" },
+    // Dynamically build the tool schema for incremental updates
+    const toolProperties: Record<string, any> = {};
+    Object.entries(botSchema.required_info).forEach(([key, info]) => {
+      toolProperties[key] = {
+        type: 'string',
+        description: info.description,
+      };
     });
 
-    const agentDecision = completion.choices[0].message.content;
-    if (!agentDecision) throw new Error('No agent response');
+    toolProperties['_conversation_status'] = {
+      type: 'string',
+      enum: ['active', 'completed'],
+      description:
+        "Set to 'completed' ONLY when all critical info is gathered and you are saying goodbye.",
+    };
 
-    console.log('🤖 Agent Decision:', agentDecision);
+    const tools: OpenAI.Chat.ChatCompletionTool[] = [
+      {
+        type: 'function',
+        function: {
+          name: 'update_lead_info',
+          description:
+            'Save extracted lead information to the database. Call this whenever the user provides relevant info.',
+          parameters: {
+            type: 'object',
+            properties: toolProperties,
+            required: [],
+          },
+        },
+      },
+    ];
 
-    const parsed = JSON.parse(agentDecision);
+    const formattedMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      {
+        role: 'system',
+        content: agentSystemPrompt,
+      },
+      ...messages.map(
+        (m) =>
+          ({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: m.content,
+          } as OpenAI.Chat.ChatCompletionMessageParam)
+      ),
+    ];
 
-    console.log('📤 Agent Reply:', parsed.reply?.substring(0, 100) + '...');
-    console.log('📥 Extracted Info:', parsed.extracted_information);
-    console.log('🔄 Phase Transition:', currentState.phase, '→', parsed.updated_phase);
+    // Call OpenAI using tool-first approach (natural text + function calls)
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-5-nano',
+      messages: formattedMessages,
+      tools,
+      tool_choice: 'auto',
+      reasoning_effort: 'low',
+    });
+
+    const message = completion.choices[0].message;
+    if (!message) throw new Error('No agent response');
+
+    let reply = message.content || '';
+    let extractedInfo: Record<string, string> = {};
+    let newPhase: ConversationState['phase'] = currentState.phase;
+
+    if (message.tool_calls) {
+      for (const toolCall of message.tool_calls) {
+        if (toolCall.type === 'function' && toolCall.function?.name === 'update_lead_info') {
+          try {
+            const args = JSON.parse(toolCall.function.arguments || '{}');
+            console.log('🛠️ Agent extracted info:', args);
+
+            if (args._conversation_status === 'completed') {
+              newPhase = 'completed';
+            }
+
+            delete args._conversation_status;
+            extractedInfo = { ...extractedInfo, ...args };
+          } catch (e) {
+            console.error('Error parsing tool args:', e);
+          }
+        }
+      }
+    }
 
     // Handle duplicate closing prevention (early return)
     if (currentState.phase === 'completed') {
       console.log('🛑 DUPLICATE CLOSING PREVENTION: Already completed, sending final acknowledgement');
 
-      // Send a very short final acknowledgement
-      parsed.reply = "You're very welcome! Goodbye!";
-      parsed.updated_phase = 'completed'; // Keep phase as completed
-      parsed.extracted_information = {}; // No new extractions
-
       const response: AgentResponse = {
-        reply: parsed.reply,
+        reply: "You're very welcome! Goodbye!",
         updated_state: {
           ...currentState,
           phase: 'completed',
@@ -294,17 +303,95 @@ What should I reply, and what information can I extract? Return your response as
     // Update conversation state by merging extracted information
     const { updatedGatheredInfo, newMissingInfo } = updateConversationState(
       currentState,
-      parsed.extracted_information,
+      extractedInfo,
       allRequiredKeys,
       botSchema
     );
 
-    console.log('📊 Gathered so far:', Object.keys(updatedGatheredInfo).join(', '));
+    console.log('📊 Gathered so far:', Object.keys(updatedGatheredInfo).join(', ') || 'None');
     console.log('⏳ Still missing:', newMissingInfo.join(', ') || 'Nothing!');
 
-    // Enforce guardrails on phase transitions
+    // Helpers to create concise follow-ups (avoid dumping internal descriptions)
+    const formatLabel = (key: string) =>
+      key
+        .split('_')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+
+    const buildProactiveFollowUp = (): string => {
+      if (newMissingInfo.length === 0) {
+        return 'Great—that covers what we need. Want me to lock this in?';
+      }
+
+      const contactKeywords = ['email', 'phone', 'name', 'contact', 'full_name'];
+      const photoRegex = /photo|image|picture|upload/i;
+      const transcript = messages.map(m => m.content?.toLowerCase?.() || '').join(' ');
+      const damageMentioned = /scratch|damage|dent|swirl|scuff/.test(transcript);
+      const noDamageMentioned = /no (scratch|scratches|damage|dent|dents|swirl|swirls|issues)/.test(transcript);
+
+      const coreNonPhoto = newMissingInfo.filter(
+        key =>
+          !contactKeywords.some(k => key.toLowerCase().includes(k)) && !photoRegex.test(key)
+      );
+      const photoFields = newMissingInfo.filter(key => photoRegex.test(key));
+      const contactOnly = newMissingInfo.filter(key =>
+        contactKeywords.some(k => key.toLowerCase().includes(k))
+      );
+
+      let nextKey: string | undefined = coreNonPhoto[0];
+
+      if (!nextKey) {
+        if (photoFields.length > 0 && damageMentioned && !noDamageMentioned) {
+          nextKey = photoFields[0];
+        } else if (contactOnly.length > 0) {
+          nextKey = contactOnly[0];
+        } else if (photoFields.length > 0) {
+          // photo is optional if no damage mentioned and nothing else to ask
+          return 'No worries on photos since there’s no damage. Want me to finalize the booking details?';
+        } else {
+          nextKey = newMissingInfo[0];
+        }
+      }
+
+      const label = formatLabel(nextKey);
+      const isContact = contactOnly.includes(nextKey);
+      const isPhoto = photoRegex.test(nextKey);
+
+      if (isPhoto) {
+        return 'If there’s visible damage or scratches, could you share 2–3 close-ups plus a wide shot? If not, we can skip photos.';
+      }
+
+      return isContact
+        ? `Awesome. To finalize, what’s your ${label.toLowerCase()}?`
+        : `Got it. Next up: ${label}?`;
+    };
+
+    // If the model only returned a tool call without surface text, provide a proactive follow-up
+    if (!reply?.trim() && Object.keys(extractedInfo).length > 0) {
+      reply = buildProactiveFollowUp();
+    }
+
+    // Phase progression based on gathered info and model signal
+    if (newPhase !== 'completed') {
+      if (currentState.phase === 'introduction') {
+        newPhase = 'collecting';
+      }
+
+      if (newMissingInfo.length === 0) {
+        newPhase = 'confirmation';
+      }
+    }
+
+    const parsedForGuardrails = {
+      reply,
+      extracted_information: extractedInfo,
+      updated_phase: newPhase,
+      current_topic: currentState.current_topic || null,
+      reasoning: 'Processed via tool-first extraction',
+    };
+
     const { finalPhase } = enforceGuardrails(
-      parsed,
+      parsedForGuardrails,
       currentState,
       messages,
       botSchema,
@@ -312,22 +399,18 @@ What should I reply, and what information can I extract? Return your response as
       allRequiredKeys
     );
 
-    // Build the updated state
     const updatedState: ConversationState = {
       gathered_information: updatedGatheredInfo,
       missing_info: newMissingInfo,
       phase: finalPhase as ConversationState['phase'],
-      current_topic: parsed.current_topic || null,
+      current_topic: currentState.current_topic ?? undefined,
       last_user_message: messages[messages.length - 1]?.content || '',
       uploaded_files: currentState.uploaded_files || [],
       uploaded_documents: uploadedDocuments,
     };
 
-    console.log('✅ Final Phase:', updatedState.phase);
-
-    // Fix bot identity by replacing internal names with effective business name
     const finalReply = fixBotIdentity(
-      parsed.reply || '',
+      reply || '',
       effectiveBusinessName,
       botSchema,
       businessName
@@ -336,7 +419,7 @@ What should I reply, and what information can I extract? Return your response as
     const response: AgentResponse = {
       reply: finalReply,
       updated_state: updatedState,
-      reasoning: parsed.reasoning,
+      reasoning: 'Processed via tool-first extraction',
     };
 
     return NextResponse.json(response);
