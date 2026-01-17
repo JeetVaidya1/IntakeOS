@@ -177,7 +177,10 @@ KEY PRINCIPLES:
 
 ${strategySection}
 
-(Internal Note: Remaining fields to capture: [${missingInfo.join(', ')}])
+(Internal Note:
+ - Remaining fields to capture: [${missingInfo.join(', ')}]
+ - Already asked (don't ask again): [${currentState.asked_fields?.join(', ') || 'none'}]
+ - CRITICAL: Never ask for the same field twice! Check the "Already asked" list before asking questions.)
 
 ${imageSection}${documentSection}
 `;

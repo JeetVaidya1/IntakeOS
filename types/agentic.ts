@@ -17,8 +17,16 @@ export interface AgenticBotSchema {
 }
 
 export interface RequiredInfoItem {
-  // Description of what this information is
+  // INTERNAL: Description for bot creator (never shown to users)
   description: string;
+
+  // USER-FACING: What the bot asks users
+  // Example: "What's your name?" instead of "client's first and last name for booking"
+  prompt?: string;
+
+  // LABEL: How this appears in confirmation lists
+  // Example: "Name" instead of "client's first and last name for booking and follow-up"
+  label?: string;
 
   // Is this critical information (must have) or optional (nice to have)
   critical: boolean;
@@ -28,6 +36,9 @@ export interface RequiredInfoItem {
 
   // Optional: Type hint for validation
   type?: 'text' | 'email' | 'phone' | 'date' | 'number' | 'url';
+
+  // Optional: Hints for AI extraction (not shown to users)
+  extraction_hint?: string;
 }
 
 /**
@@ -94,6 +105,14 @@ export interface ConversationState {
 
   // Documents with extracted text (for persistent context)
   uploaded_documents?: UploadedDocument[];
+
+  // DEDUPLICATION: Track which fields have been explicitly asked for
+  // Prevents asking "What's your name?" twice
+  asked_fields?: string[];
+
+  // FAILED EXTRACTIONS: Track fields where user declined or provided unclear answer
+  // Example: { 'phone': { attempts: 2, last_response: 'i dont have one' } }
+  failed_extractions?: Record<string, { attempts: number; last_response: string }>;
 
   // Intelligence fields for dashboard insights
   // AI-generated 2-3 sentence snapshot of the submission
