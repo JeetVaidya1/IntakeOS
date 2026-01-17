@@ -368,6 +368,7 @@ export function useAgentChat({
       const isStreaming = contentType?.includes('text/event-stream');
 
       if (isStreaming) {
+        console.log('🌊 CLIENT: Starting streaming response handler');
         // Handle streaming response
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
@@ -378,9 +379,11 @@ export function useAgentChat({
         let finalState: ConversationState | null = null;
         let streamComplete = false;
         let pendingUpdate = false;
+        let chunkCount = 0;
 
         // Add placeholder bot message that we'll update
         setMessages(prev => [...prev, { role: 'bot', content: '' }]);
+        console.log('🌊 CLIENT: Added placeholder message');
 
         // Batch UI updates using requestAnimationFrame for smoother rendering
         const scheduleUpdate = () => {
@@ -399,47 +402,64 @@ export function useAgentChat({
 
         while (!streamComplete) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log('🌊 CLIENT: Stream reader done signal received');
+            break;
+          }
 
           const chunk = decoder.decode(value);
+          chunkCount++;
+          console.log(`🌊 CLIENT: Received chunk #${chunkCount}, length: ${chunk.length}`);
+
           const lines = chunk.split('\n');
+          console.log(`🌊 CLIENT: Chunk contains ${lines.length} lines`);
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
+                console.log(`🌊 CLIENT: Parsed SSE event:`, { type: data.type, hasContent: !!data.content, hasState: !!data.state });
 
                 if (data.type === 'token') {
                   // Append token to message
                   botMessage += data.content;
+                  console.log(`🌊 CLIENT: Token received, total message length: ${botMessage.length}`);
                   // Schedule batched UI update
                   scheduleUpdate();
                 } else if (data.type === 'state_update') {
                   // Store state update
                   finalState = data.state;
+                  console.log('🌊 CLIENT: State update received', { phase: data.state?.phase, gathered: Object.keys(data.state?.gathered_information || {}).length });
                 } else if (data.type === 'done') {
                   // Stream complete - set flag to exit both loops
+                  console.log('🌊 CLIENT: Done event received, setting streamComplete flag');
                   streamComplete = true;
                   break;
                 } else if (data.type === 'error') {
+                  console.error('🌊 CLIENT: Error event received:', data.error);
                   throw new Error(data.error);
                 }
               } catch (parseError) {
-                console.error('Failed to parse SSE chunk:', parseError);
+                console.error('🌊 CLIENT: Failed to parse SSE chunk:', parseError, 'Line:', line);
               }
             }
           }
         }
 
+        console.log(`🌊 CLIENT: Stream complete. Total chunks: ${chunkCount}, Final message length: ${botMessage.length}`);
+        console.log(`🌊 CLIENT: Final state present: ${!!finalState}`);
+
         // Final update to ensure all content is displayed
         setMessages(prev => {
           const updated = [...prev];
           updated[updated.length - 1] = { role: 'bot', content: botMessage };
+          console.log(`🌊 CLIENT: Final message update, content length: ${botMessage.length}`);
           return updated;
         });
 
         // Update final state
         if (finalState) {
+          console.log('🌊 CLIENT: Updating conversation state');
           setConversationState(finalState);
 
           // Check if conversation is complete

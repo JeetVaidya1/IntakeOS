@@ -286,6 +286,7 @@ If the user asks questions about any previously uploaded document, you can answe
 
     // === STREAMING MODE ===
     if (useStreaming) {
+      console.log('🌊 SERVER: Starting streaming mode');
       const stream = createSSEStream(async (controller, sendChunk) => {
         // Call OpenAI with streaming enabled
         const streamingCompletion = await openai.chat.completions.create({
@@ -300,21 +301,26 @@ If the user asks questions about any previously uploaded document, you can answe
         let reply = '';
         let extractedInfo: Record<string, string> = {};
         let newPhase: ConversationState['phase'] = currentState.phase;
+        let tokenCount = 0;
 
+        console.log('🌊 SERVER: Processing OpenAI stream');
         // Process the stream
         const { fullMessage, toolCalls } = await processOpenAIStream(
           streamingCompletion,
           (token) => {
             // Send each token immediately
+            tokenCount++;
             sendChunk({ type: 'token', content: token });
           },
           (name, args) => {
             // Send tool call info
+            console.log(`🌊 SERVER: Tool call received: ${name}`);
             sendChunk({ type: 'tool_call', toolCall: { name, arguments: args } });
           }
         );
 
         reply = fullMessage;
+        console.log(`🌊 SERVER: Stream complete. Tokens sent: ${tokenCount}, Full message length: ${reply.length}`);
 
         // Process tool calls
         for (const toolCall of toolCalls) {
@@ -357,9 +363,11 @@ If the user asks questions about any previously uploaded document, you can answe
           reply
         );
 
+        console.log('🌊 SERVER: Validation result:', { shouldShowConfirmation: validationResult.shouldShowConfirmation });
         if (validationResult.shouldShowConfirmation && validationResult.confirmationList) {
           reply = validationResult.confirmationList;
           // Send replacement message
+          console.log('🌊 SERVER: Sending additional confirmation list token');
           sendChunk({ type: 'token', content: '\n\n' + validationResult.confirmationList });
         }
 
@@ -381,6 +389,8 @@ If the user asks questions about any previously uploaded document, you can answe
           allRequiredKeys
         );
 
+        console.log('🌊 SERVER: Final phase after guardrails:', finalPhase);
+
         const updatedState: ConversationState = {
           gathered_information: updatedGatheredInfo,
           missing_info: newMissingInfo,
@@ -398,8 +408,12 @@ If the user asks questions about any previously uploaded document, you can answe
           businessName
         );
 
+        console.log(`🌊 SERVER: Final reply after fixBotIdentity - Original: ${reply.length} chars, Final: ${finalReply.length} chars`);
+
         // Send final state update
+        console.log('🌊 SERVER: Sending state_update event');
         sendChunk({ type: 'state_update', state: updatedState });
+        console.log('🌊 SERVER: Sending done event');
         sendChunk({ type: 'done' });
       });
 
