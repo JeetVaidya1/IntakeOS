@@ -341,8 +341,49 @@ If the user asks questions about any previously uploaded document, you can answe
           }
         }
 
-        // Continue with state updates (same logic as non-streaming)
-        // [Rest of processing will be the same, we'll refactor this next]
+        // CRITICAL FIX: If AI only used tool calls without text response, generate contextual follow-up
+        if (!reply.trim() && Object.keys(extractedInfo).length > 0) {
+          console.log('🌊 SERVER: AI used tool calls but sent no text. Generating contextual response...');
+
+          // Get what was just extracted to acknowledge it
+          const extractedKeys = Object.keys(extractedInfo);
+          const acknowledgedFields = extractedKeys
+            .filter(key => !key.startsWith('_'))
+            .map(key => {
+              const fieldInfo = botSchema.required_info[key];
+              return fieldInfo ? fieldInfo.description : key;
+            })
+            .slice(0, 2); // Only acknowledge first 2 fields
+
+          // Generate contextual response via OpenAI
+          const fallbackCompletion = await openai.chat.completions.create({
+            model: 'gpt-5-nano',
+            messages: [
+              {
+                role: 'system',
+                content: `You are ${effectiveBusinessName}'s AI assistant. The user just provided information. Generate a brief, natural acknowledgment (1-2 sentences) and ask the next most important missing question. Be conversational and friendly.`,
+              },
+              {
+                role: 'user',
+                content: `The user just told you: ${messages[messages.length - 1]?.content}\n\nYou extracted: ${acknowledgedFields.join(', ')}.\n\nMissing info still needed: ${allRequiredKeys.filter(k => !extractedInfo[k]).slice(0, 3).join(', ')}.\n\nGenerate a brief acknowledgment and ask for the next piece of info.`,
+              },
+            ],
+            max_tokens: 100,
+            stream: true,
+          });
+
+          // Stream the fallback response
+          let fallbackTokens = 0;
+          for await (const chunk of fallbackCompletion) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+              reply += content;
+              sendChunk({ type: 'token', content });
+              fallbackTokens++;
+            }
+          }
+          console.log(`🌊 SERVER: Generated ${fallbackTokens} fallback tokens`);
+        }
 
         // Update conversation state
         const { updatedGatheredInfo, newMissingInfo } = updateConversationState(
