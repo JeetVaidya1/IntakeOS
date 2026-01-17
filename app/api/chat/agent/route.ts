@@ -230,9 +230,20 @@ If the user asks questions about any previously uploaded document, you can answe
     // Dynamically build the tool schema for incremental updates
     const toolProperties: Record<string, any> = {};
     Object.entries(botSchema.required_info).forEach(([key, info]) => {
+      // Use extraction_hint if available, otherwise sanitize description
+      // Remove parentheticals, instructions, and keep only the core concept
+      const cleanDescription = info.extraction_hint ||
+                              info.label ||
+                              info.description
+                                .replace(/\(.*?\)/g, '') // Remove (parenthetical notes)
+                                .replace(/if.*?request.*?\./gi, '') // Remove "if X mentions Y, request Z"
+                                .replace(/please.*?$/gi, '') // Remove "please do X"
+                                .split('.')[0] // Take only first sentence
+                                .trim();
+
       toolProperties[key] = {
         type: 'string',
-        description: info.description,
+        description: cleanDescription,
       };
     });
 
@@ -389,9 +400,15 @@ If the user asks questions about any previously uploaded document, you can answe
           if (fallbackTokens === 0) {
             console.log('🌊 SERVER: Using template-based fallback');
 
+            // Use user-friendly prompt instead of backend description
+            // Priority: prompt > label > fallback to cleaned description
+            const userPrompt = nextFieldInfo?.prompt ||
+                              (nextFieldInfo?.label ? `What's your ${nextFieldInfo.label.toLowerCase()}?` : null) ||
+                              `What's your ${nextFieldInfo?.description.replace(/\(.*?\)/g, '').split('.')[0].trim().toLowerCase()}?`;
+
             const templateResponse = nextFieldInfo
-              ? `Got it! What's your ${nextFieldInfo.description.toLowerCase()}?`
-              : `Perfect! What's your full name?`;
+              ? `Perfect! ${userPrompt}`
+              : `Great! What's your name?`;
 
             reply = templateResponse;
 
