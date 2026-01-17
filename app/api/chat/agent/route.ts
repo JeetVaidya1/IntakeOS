@@ -347,42 +347,60 @@ If the user asks questions about any previously uploaded document, you can answe
 
           // Get what was just extracted to acknowledge it
           const extractedKeys = Object.keys(extractedInfo);
-          const acknowledgedFields = extractedKeys
-            .filter(key => !key.startsWith('_'))
-            .map(key => {
-              const fieldInfo = botSchema.required_info[key];
-              return fieldInfo ? fieldInfo.description : key;
-            })
-            .slice(0, 2); // Only acknowledge first 2 fields
 
-          // Generate contextual response via OpenAI
-          const fallbackCompletion = await openai.chat.completions.create({
-            model: 'gpt-5-nano',
-            messages: [
-              {
-                role: 'system',
-                content: `You are ${effectiveBusinessName}'s AI assistant. The user just provided information. Generate a brief, natural acknowledgment (1-2 sentences) and ask the next most important missing question. Be conversational and friendly.`,
-              },
-              {
-                role: 'user',
-                content: `The user just told you: ${messages[messages.length - 1]?.content}\n\nYou extracted: ${acknowledgedFields.join(', ')}.\n\nMissing info still needed: ${allRequiredKeys.filter(k => !extractedInfo[k]).slice(0, 3).join(', ')}.\n\nGenerate a brief acknowledgment and ask for the next piece of info.`,
-              },
-            ],
-            max_completion_tokens: 100,
-            stream: true,
-          });
+          // Find next missing critical field to ask about
+          const nextMissingField = allRequiredKeys.find(key => !extractedInfo[key] && botSchema.required_info[key]?.critical);
+          const nextFieldInfo = nextMissingField ? botSchema.required_info[nextMissingField] : null;
 
-          // Stream the fallback response
+          // Try OpenAI-generated fallback first
           let fallbackTokens = 0;
-          for await (const chunk of fallbackCompletion) {
-            const content = chunk.choices[0]?.delta?.content;
-            if (content) {
-              reply += content;
-              sendChunk({ type: 'token', content });
-              fallbackTokens++;
+          try {
+            const fallbackCompletion = await openai.chat.completions.create({
+              model: 'gpt-5-nano',
+              messages: [
+                {
+                  role: 'system',
+                  content: `You are ${effectiveBusinessName}'s AI assistant. Generate a brief, friendly acknowledgment (1 sentence) and ask for the next piece of info.`,
+                },
+                {
+                  role: 'user',
+                  content: `User said: "${messages[messages.length - 1]?.content}"\nExtracted: ${extractedKeys.join(', ')}\nNext needed: ${nextFieldInfo?.description || 'contact info'}\nRespond in 1-2 sentences.`,
+                },
+              ],
+              max_completion_tokens: 60,
+              stream: true,
+            });
+
+            // Stream the fallback response
+            for await (const chunk of fallbackCompletion) {
+              const content = chunk.choices[0]?.delta?.content;
+              if (content) {
+                reply += content;
+                sendChunk({ type: 'token', content });
+                fallbackTokens++;
+              }
             }
+            console.log(`🌊 SERVER: Generated ${fallbackTokens} AI fallback tokens`);
+          } catch (fallbackError) {
+            console.error('🌊 SERVER: AI fallback failed:', fallbackError);
           }
-          console.log(`🌊 SERVER: Generated ${fallbackTokens} fallback tokens`);
+
+          // If OpenAI fallback produced nothing, use template-based fallback
+          if (fallbackTokens === 0) {
+            console.log('🌊 SERVER: Using template-based fallback');
+
+            const templateResponse = nextFieldInfo
+              ? `Got it! What's your ${nextFieldInfo.description.toLowerCase()}?`
+              : `Perfect! What's your full name?`;
+
+            reply = templateResponse;
+
+            // Send the template response token by token for natural feel
+            for (const char of templateResponse) {
+              sendChunk({ type: 'token', content: char });
+            }
+            console.log(`🌊 SERVER: Sent ${templateResponse.length} template chars`);
+          }
         }
 
         // Update conversation state
