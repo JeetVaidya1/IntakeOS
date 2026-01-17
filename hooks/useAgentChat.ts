@@ -78,20 +78,26 @@ export function useAgentChat({
     setIsHydrated(true);
   }, [storageKey]);
 
-  // Save state to localStorage
+  // Save state to localStorage with debouncing to prevent race conditions
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (conversationState.phase === 'completed') return;
+    if (loading) return; // Don't save while streaming/loading
 
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({
-        messages,
-        conversationState,
-      }));
-    } catch (error) {
-      console.error('Failed to save agentic chat state:', error);
-    }
-  }, [messages, conversationState, storageKey]);
+    // Debounce saves to avoid excessive writes during rapid state changes
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({
+          messages,
+          conversationState,
+        }));
+      } catch (error) {
+        console.error('Failed to save agentic chat state:', error);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [messages, conversationState, storageKey, loading]);
 
   // Auto-scroll
   useEffect(() => {
@@ -138,8 +144,21 @@ export function useAgentChat({
 
         let botMessage = '';
         let finalState: ConversationState | null = null;
+        let streamComplete = false;
+        let pendingUpdate = false;
 
-        while (true) {
+        // Batch UI updates using requestAnimationFrame for smoother rendering
+        const scheduleUpdate = () => {
+          if (!pendingUpdate) {
+            pendingUpdate = true;
+            requestAnimationFrame(() => {
+              setMessages([{ role: 'bot', content: botMessage }]);
+              pendingUpdate = false;
+            });
+          }
+        };
+
+        while (!streamComplete) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -153,10 +172,13 @@ export function useAgentChat({
 
                 if (data.type === 'token') {
                   botMessage += data.content;
-                  setMessages([{ role: 'bot', content: botMessage }]);
+                  // Schedule batched UI update
+                  scheduleUpdate();
                 } else if (data.type === 'state_update') {
                   finalState = data.state;
                 } else if (data.type === 'done') {
+                  // Stream complete - set flag to exit both loops
+                  streamComplete = true;
                   break;
                 }
               } catch (parseError) {
@@ -165,6 +187,9 @@ export function useAgentChat({
             }
           }
         }
+
+        // Final update to ensure all content is displayed
+        setMessages([{ role: 'bot', content: botMessage }]);
 
         if (finalState) {
           setConversationState(finalState);
@@ -263,16 +288,16 @@ export function useAgentChat({
   const handleSend = useCallback(async () => {
     const userMessage = input.trim();
     const hasFiles = pendingFiles.length > 0;
-    
+
     // Don't send if there's no message and no files
     if (!userMessage && !hasFiles) return;
     if (loading) return;
 
     setInput('');
-    
+
     // Build message content - combine text and files
     const fileMessages: string[] = [];
-    
+
     pendingFiles.forEach(file => {
       const isImage = file.type.startsWith('image/');
       const isDocument = file.type.includes('pdf') ||
@@ -282,7 +307,7 @@ export function useAgentChat({
                          file.filename.toLowerCase().endsWith('.docx') ||
                          file.filename.toLowerCase().endsWith('.doc') ||
                          file.filename.toLowerCase().endsWith('.txt');
-      
+
       if (isDocument) {
         fileMessages.push(`[DOCUMENT] ${file.url} | ${file.filename}`);
       } else if (isImage) {
@@ -291,9 +316,9 @@ export function useAgentChat({
         fileMessages.push(`[FILE] ${file.url} | ${file.filename}`);
       }
     });
-    
+
     // Combine text and file messages
-    const fullMessage = userMessage 
+    const fullMessage = userMessage
       ? userMessage + (fileMessages.length > 0 ? '\n' + fileMessages.join('\n') : '')
       : fileMessages.join('\n');
 
@@ -310,10 +335,19 @@ export function useAgentChat({
     // Clear pending files
     setPendingFiles([]);
 
-    // Call the agent brain
+    // Call the agent brain with retry logic
     setLoading(true);
 
-    try {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(`🔄 Retry attempt ${attempt}/${maxRetries}...`);
+          // Exponential backoff: 2s, 4s, 8s
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
       const response = await fetch('/api/chat/agent', {
         method: 'POST',
         headers: {
@@ -342,11 +376,28 @@ export function useAgentChat({
 
         let botMessage = '';
         let finalState: ConversationState | null = null;
+        let streamComplete = false;
+        let pendingUpdate = false;
 
         // Add placeholder bot message that we'll update
         setMessages(prev => [...prev, { role: 'bot', content: '' }]);
 
-        while (true) {
+        // Batch UI updates using requestAnimationFrame for smoother rendering
+        const scheduleUpdate = () => {
+          if (!pendingUpdate) {
+            pendingUpdate = true;
+            requestAnimationFrame(() => {
+              setMessages(prev => {
+                const updated = [...prev];
+                updated[updated.length - 1] = { role: 'bot', content: botMessage };
+                return updated;
+              });
+              pendingUpdate = false;
+            });
+          }
+        };
+
+        while (!streamComplete) {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -361,16 +412,14 @@ export function useAgentChat({
                 if (data.type === 'token') {
                   // Append token to message
                   botMessage += data.content;
-                  setMessages(prev => {
-                    const updated = [...prev];
-                    updated[updated.length - 1] = { role: 'bot', content: botMessage };
-                    return updated;
-                  });
+                  // Schedule batched UI update
+                  scheduleUpdate();
                 } else if (data.type === 'state_update') {
                   // Store state update
                   finalState = data.state;
                 } else if (data.type === 'done') {
-                  // Stream complete
+                  // Stream complete - set flag to exit both loops
+                  streamComplete = true;
                   break;
                 } else if (data.type === 'error') {
                   throw new Error(data.error);
@@ -381,6 +430,13 @@ export function useAgentChat({
             }
           }
         }
+
+        // Final update to ensure all content is displayed
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'bot', content: botMessage };
+          return updated;
+        });
 
         // Update final state
         if (finalState) {
@@ -425,15 +481,26 @@ export function useAgentChat({
         }
       }
 
-    } catch (error) {
-      console.error('Agent error:', error);
-      setMessages(prev => [...prev, {
-        role: 'bot',
-        content: "I'm sorry, I had trouble understanding that. Could you try rephrasing?"
-      }]);
-    } finally {
-      setLoading(false);
+        // If we reach here, the request succeeded - break out of retry loop
+        break;
+
+      } catch (error) {
+        console.error(`Agent error (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
+        lastError = error as Error;
+
+        // If this was the last attempt, show error to user
+        if (attempt === maxRetries) {
+          setMessages(prev => [...prev, {
+            role: 'bot',
+            content: "I'm having trouble connecting. Please check your internet connection and try again."
+          }]);
+        }
+        // Otherwise, continue to next retry attempt
+      }
     }
+
+    // Always stop loading after all retries are exhausted or success
+    setLoading(false);
   }, [input, pendingFiles, loading, messages, conversationState, bot.schema, bot.user_id, businessName, handleSubmit]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
