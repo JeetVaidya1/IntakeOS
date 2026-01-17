@@ -5,8 +5,17 @@ import type { AgenticBotSchema, ConversationState, AgentResponse, UploadedDocume
 import { parseDocumentFromUrl } from '@/lib/document-parser';
 import { buildSystemPrompt } from '@/lib/agent/system-prompt';
 import { enforceGuardrails } from '@/lib/agent/guardrails';
+import { validateConversationPhase } from '@/lib/agent/smart-validation';
 import { fixBotIdentity } from '@/lib/agent/identity';
 import { updateConversationState } from '@/lib/agent/state';
+import { summarizeConversation, estimateTokenCount } from '@/lib/agent/conversation-summary';
+import {
+  createSSEStream,
+  processOpenAIStream,
+  getSSEHeaders,
+  isStreamingRequest
+} from '@/lib/agent/streaming';
+import type { StreamChunk } from '@/lib/agent/streaming';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -43,6 +52,23 @@ export async function POST(request: Request) {
     console.log('🧠 Agent Brain invoked');
     console.log('📊 Current State:', currentState);
     console.log('💬 Message count:', messages.length);
+
+    // Summarize long conversations to reduce token usage
+    let processedMessages = messages;
+    const tokenEstimate = estimateTokenCount(messages);
+    console.log('💭 Estimated tokens:', tokenEstimate);
+
+    if (messages.length >= 20) {
+      const summarizationResult = await summarizeConversation(
+        messages,
+        currentState.gathered_information
+      );
+
+      if (summarizationResult.shouldSummarize && summarizationResult.summarizedMessages) {
+        processedMessages = summarizationResult.summarizedMessages;
+        console.log(`✂️ Conversation summarized: ${messages.length} → ${processedMessages.length} messages`);
+      }
+    }
 
     // Fetch business profile for enhanced context
     let businessProfile = null;
@@ -238,7 +264,7 @@ If the user asks questions about any previously uploaded document, you can answe
         role: 'system',
         content: agentSystemPrompt,
       },
-      ...messages.map(
+      ...processedMessages.map(
         (m) =>
           ({
             role: m.role === 'assistant' ? 'assistant' : 'user',
@@ -247,13 +273,148 @@ If the user asks questions about any previously uploaded document, you can answe
       ),
     ];
 
-    // Call OpenAI using tool-first approach (natural text + function calls)
+    // Use extended thinking for confirmation phase (better decision making)
+    const reasoningEffort = currentState.phase === 'collecting' && missingInfo.length <= 2
+      ? 'medium'
+      : 'low';
+
+    console.log('🧠 Using reasoning effort:', reasoningEffort);
+
+    // Check if client wants streaming
+    const useStreaming = isStreamingRequest(request);
+    console.log('🌊 Streaming mode:', useStreaming);
+
+    // === STREAMING MODE ===
+    if (useStreaming) {
+      const stream = createSSEStream(async (controller, sendChunk) => {
+        // Call OpenAI with streaming enabled
+        const streamingCompletion = await openai.chat.completions.create({
+          model: 'gpt-5-nano',
+          messages: formattedMessages,
+          tools,
+          tool_choice: 'auto',
+          reasoning_effort: reasoningEffort,
+          stream: true, // Enable streaming
+        });
+
+        let reply = '';
+        let extractedInfo: Record<string, string> = {};
+        let newPhase: ConversationState['phase'] = currentState.phase;
+
+        // Process the stream
+        const { fullMessage, toolCalls } = await processOpenAIStream(
+          streamingCompletion,
+          (token) => {
+            // Send each token immediately
+            sendChunk({ type: 'token', content: token });
+          },
+          (name, args) => {
+            // Send tool call info
+            sendChunk({ type: 'tool_call', toolCall: { name, arguments: args } });
+          }
+        );
+
+        reply = fullMessage;
+
+        // Process tool calls
+        for (const toolCall of toolCalls) {
+          if (toolCall.name === 'update_lead_info') {
+            try {
+              const args = JSON.parse(toolCall.arguments || '{}');
+              console.log('🛠️ Agent extracted info:', args);
+
+              if (args._conversation_status === 'completed') {
+                newPhase = 'completed';
+              }
+
+              delete args._conversation_status;
+              extractedInfo = { ...extractedInfo, ...args };
+            } catch (e) {
+              console.error('Error parsing tool args:', e);
+            }
+          }
+        }
+
+        // Continue with state updates (same logic as non-streaming)
+        // [Rest of processing will be the same, we'll refactor this next]
+
+        // Update conversation state
+        const { updatedGatheredInfo, newMissingInfo } = updateConversationState(
+          currentState,
+          extractedInfo,
+          allRequiredKeys,
+          botSchema
+        );
+
+        // Smart validation
+        const lastUserMessage = messages[messages.length - 1]?.content || '';
+        const validationResult = validateConversationPhase(
+          newPhase,
+          currentState.phase,
+          updatedGatheredInfo,
+          botSchema,
+          lastUserMessage,
+          reply
+        );
+
+        if (validationResult.shouldShowConfirmation && validationResult.confirmationList) {
+          reply = validationResult.confirmationList;
+          // Send replacement message
+          sendChunk({ type: 'token', content: '\n\n' + validationResult.confirmationList });
+        }
+
+        newPhase = validationResult.correctedPhase;
+
+        // Apply guardrails as fallback
+        const { finalPhase } = enforceGuardrails(
+          {
+            reply,
+            extracted_information: extractedInfo,
+            updated_phase: newPhase,
+            current_topic: currentState.current_topic || null,
+            reasoning: 'Processed via streaming',
+          },
+          currentState,
+          messages,
+          botSchema,
+          updatedGatheredInfo,
+          allRequiredKeys
+        );
+
+        const updatedState: ConversationState = {
+          gathered_information: updatedGatheredInfo,
+          missing_info: newMissingInfo,
+          phase: finalPhase as ConversationState['phase'],
+          current_topic: currentState.current_topic ?? undefined,
+          last_user_message: messages[messages.length - 1]?.content || '',
+          uploaded_files: currentState.uploaded_files || [],
+          uploaded_documents: uploadedDocuments,
+        };
+
+        const finalReply = fixBotIdentity(
+          reply || '',
+          effectiveBusinessName,
+          botSchema,
+          businessName
+        );
+
+        // Send final state update
+        sendChunk({ type: 'state_update', state: updatedState });
+        sendChunk({ type: 'done' });
+      });
+
+      return new Response(stream, {
+        headers: getSSEHeaders()
+      });
+    }
+
+    // === NON-STREAMING MODE (Original) ===
     const completion = await openai.chat.completions.create({
       model: 'gpt-5-nano',
       messages: formattedMessages,
       tools,
       tool_choice: 'auto',
-      reasoning_effort: 'low',
+      reasoning_effort: reasoningEffort,
     });
 
     const message = completion.choices[0].message;
@@ -382,6 +543,34 @@ If the user asks questions about any previously uploaded document, you can answe
       }
     }
 
+    // Use smart validation first (improved logic-based validation)
+    const lastUserMessage = messages[messages.length - 1]?.content || '';
+    const lastBotMessage = messages.length >= 2 ? messages[messages.length - 2]?.content || '' : '';
+
+    const validationResult = validateConversationPhase(
+      newPhase,
+      currentState.phase,
+      updatedGatheredInfo,
+      botSchema,
+      lastUserMessage,
+      lastBotMessage
+    );
+
+    console.log('🔍 Smart Validation Result:', {
+      isValid: validationResult.isValid,
+      correctedPhase: validationResult.correctedPhase,
+      issues: validationResult.issues
+    });
+
+    // If validation suggests showing confirmation list, use it
+    if (validationResult.shouldShowConfirmation && validationResult.confirmationList) {
+      reply = validationResult.confirmationList;
+      console.log('📝 Using auto-generated confirmation list');
+    }
+
+    // Use corrected phase from smart validation
+    newPhase = validationResult.correctedPhase;
+
     const parsedForGuardrails = {
       reply,
       extracted_information: extractedInfo,
@@ -390,6 +579,7 @@ If the user asks questions about any previously uploaded document, you can answe
       reasoning: 'Processed via tool-first extraction',
     };
 
+    // Keep guardrails as fallback (will remove in future iteration)
     const { finalPhase } = enforceGuardrails(
       parsedForGuardrails,
       currentState,
