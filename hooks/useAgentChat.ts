@@ -112,7 +112,10 @@ export function useAgentChat({
     try {
       const response = await fetch('/api/chat/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream', // Request streaming
+        },
         body: JSON.stringify({
           messages: [], // Empty - let agent send introduction
           currentState: initialState,
@@ -122,11 +125,59 @@ export function useAgentChat({
         }),
       });
 
-      const data = await response.json();
+      // Check if response is streaming
+      const contentType = response.headers.get('content-type');
+      const isStreaming = contentType?.includes('text/event-stream');
 
-      if (data.reply) {
-        setMessages([{ role: 'bot', content: data.reply }]);
-        setConversationState(data.updated_state);
+      if (isStreaming) {
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) throw new Error('No reader available');
+
+        let botMessage = '';
+        let finalState: ConversationState | null = null;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.type === 'token') {
+                  botMessage += data.content;
+                  setMessages([{ role: 'bot', content: botMessage }]);
+                } else if (data.type === 'state_update') {
+                  finalState = data.state;
+                } else if (data.type === 'done') {
+                  break;
+                }
+              } catch (parseError) {
+                console.error('Failed to parse SSE chunk:', parseError);
+              }
+            }
+          }
+        }
+
+        if (finalState) {
+          setConversationState(finalState);
+        }
+
+      } else {
+        // Fallback to JSON
+        const data = await response.json();
+
+        if (data.reply) {
+          setMessages([{ role: 'bot', content: data.reply }]);
+          setConversationState(data.updated_state);
+        }
       }
     } catch (error) {
       console.error('Failed to initiate conversation:', error);
@@ -265,7 +316,10 @@ export function useAgentChat({
     try {
       const response = await fetch('/api/chat/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream', // Request streaming
+        },
         body: JSON.stringify({
           messages: newMessages,
           currentState: updatedState,
@@ -275,32 +329,99 @@ export function useAgentChat({
         }),
       });
 
-      const data = await response.json();
+      // Check if response is streaming (SSE)
+      const contentType = response.headers.get('content-type');
+      const isStreaming = contentType?.includes('text/event-stream');
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (isStreaming) {
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-      // Add agent's reply
-      setMessages(prev => [...prev, { role: 'bot', content: data.reply }]);
-      setConversationState(data.updated_state);
+        if (!reader) throw new Error('No reader available');
 
-      // Check if conversation is complete
-      if (data.updated_state.phase === 'completed') {
-        // Only submit if it's NOT a service mismatch
-        if (!data.service_mismatch) {
-          // Submit the gathered information with uploaded files
-          await handleSubmit(
-            data.updated_state.gathered_information,
-            newMessages,
-            data.updated_state.uploaded_files || []
-          );
-        } else {
-          // Service mismatch - just mark as complete, don't submit
-          console.log('🚫 Service mismatch - not submitting');
-          setSubmissionComplete(true);
-          setIsSubmitting(false);
-          setLoading(false);
+        let botMessage = '';
+        let finalState: ConversationState | null = null;
+
+        // Add placeholder bot message that we'll update
+        setMessages(prev => [...prev, { role: 'bot', content: '' }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.type === 'token') {
+                  // Append token to message
+                  botMessage += data.content;
+                  setMessages(prev => {
+                    const updated = [...prev];
+                    updated[updated.length - 1] = { role: 'bot', content: botMessage };
+                    return updated;
+                  });
+                } else if (data.type === 'state_update') {
+                  // Store state update
+                  finalState = data.state;
+                } else if (data.type === 'done') {
+                  // Stream complete
+                  break;
+                } else if (data.type === 'error') {
+                  throw new Error(data.error);
+                }
+              } catch (parseError) {
+                console.error('Failed to parse SSE chunk:', parseError);
+              }
+            }
+          }
+        }
+
+        // Update final state
+        if (finalState) {
+          setConversationState(finalState);
+
+          // Check if conversation is complete
+          if (finalState.phase === 'completed') {
+            await handleSubmit(
+              finalState.gathered_information,
+              newMessages,
+              finalState.uploaded_files || []
+            );
+          }
+        }
+
+      } else {
+        // Fallback to JSON response (backward compatibility)
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // Add agent's reply
+        setMessages(prev => [...prev, { role: 'bot', content: data.reply }]);
+        setConversationState(data.updated_state);
+
+        // Check if conversation is complete
+        if (data.updated_state.phase === 'completed') {
+          if (!data.service_mismatch) {
+            await handleSubmit(
+              data.updated_state.gathered_information,
+              newMessages,
+              data.updated_state.uploaded_files || []
+            );
+          } else {
+            console.log('🚫 Service mismatch - not submitting');
+            setSubmissionComplete(true);
+            setIsSubmitting(false);
+            setLoading(false);
+          }
         }
       }
 
