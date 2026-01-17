@@ -368,7 +368,7 @@ If the user asks questions about any previously uploaded document, you can answe
                 content: `The user just told you: ${messages[messages.length - 1]?.content}\n\nYou extracted: ${acknowledgedFields.join(', ')}.\n\nMissing info still needed: ${allRequiredKeys.filter(k => !extractedInfo[k]).slice(0, 3).join(', ')}.\n\nGenerate a brief acknowledgment and ask for the next piece of info.`,
               },
             ],
-            max_tokens: 100,
+            max_completion_tokens: 100,
             stream: true,
           });
 
